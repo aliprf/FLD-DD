@@ -34,13 +34,13 @@ class WflwConf:
     Wflw_prefix_path = '/media/data3/ali/FL/new_data/wflw/'  # --> zeus
     # Wflw_prefix_path = '/media/ali/data/new_data/wflw/'  # --> local
 
-    orig_COFW_test = Wflw_prefix_path + 'orig_COFW_test/'
+    orig_WFLW_test = Wflw_prefix_path + 'orig_WFLW__test/'
     test_annotation_path = Wflw_prefix_path + 'testing_set/annotations/'
     test_pose_path = Wflw_prefix_path + 'testing_set/pose/'
     test_image_path = Wflw_prefix_path + 'testing_set/images/'
     test_tf_path = Wflw_prefix_path + 'testing_set/tf/'
 
-    orig_WFLW_train = Wflw_prefix_path + 'orig_COFW_train/'
+    orig_WFLW_train = Wflw_prefix_path + 'orig_WFLW__train/'
     augmented_train_pose = Wflw_prefix_path + 'training_set/augmented/pose/'
     augmented_train_annotation = Wflw_prefix_path + 'training_set/augmented/annotations/'
     augmented_train_image = Wflw_prefix_path + 'training_set/augmented/images/'
@@ -70,8 +70,8 @@ class WflwConf:
 
 
 class CofwConf:
-    Cofw_prefix_path = '/media/data3/ali/FL/new_data/wflw/'  # --> zeus
-    # Cofw_prefix_path = '/media/ali/data/new_data/wflw/'  # --> local
+    Cofw_prefix_path = '/media/data3/ali/FL/new_data/cofw/'  # --> zeus
+    # Cofw_prefix_path = '/media/ali/data/new_data/cofw/'  # --> local
 
     orig_COFW_test = Cofw_prefix_path + 'orig_COFW_test/'
     test_annotation_path = Cofw_prefix_path + 'testing_set/annotations/'

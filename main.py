@@ -1,5 +1,5 @@
 from CofwClass import CofwClass
-from WflwClass import WflwClass
+# from WflwClass import WflwClass
 
 if __name__ == '__main__':
     pca_accuracy = 90

@@ -31,7 +31,7 @@ class CofwClass:
             self._do_random_augment(i, img, annotation, bbox, need_hm=need_hm,
                                     need_pose=need_pose)
 
-    print("create_train_set DONE!!")
+        print("create_train_set DONE!!")
 
     def create_test_set(self, need_pose=False, need_tf_ref=False):
         """
