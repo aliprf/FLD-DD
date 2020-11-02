@@ -31,7 +31,7 @@ class InputDataSize:
 
 
 class WflwConf:
-    Wflw_prefix_path = '/media/ali/data3/FL/new_data/wflw/'  # --> zeus
+    Wflw_prefix_path = '/media/data3/ali/FL/new_data/wflw/'  # --> zeus
     # Wflw_prefix_path = '/media/ali/data/new_data/wflw/'  # --> local
 
     orig_COFW_test = Wflw_prefix_path + 'orig_COFW_test/'
@@ -70,7 +70,7 @@ class WflwConf:
 
 
 class CofwConf:
-    Cofw_prefix_path = '/media/ali/data3/FL/new_data/wflw/'  # --> zeus
+    Cofw_prefix_path = '/media/data3/ali/FL/new_data/wflw/'  # --> zeus
     # Cofw_prefix_path = '/media/ali/data/new_data/wflw/'  # --> local
 
     orig_COFW_test = Cofw_prefix_path + 'orig_COFW_test/'
