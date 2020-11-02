@@ -3,7 +3,6 @@ from ImageModification import ImageModification
 from pose_detection.code.PoseDetector import PoseDetector
 from pca_utility import PCAUtility
 
-
 import os, sys
 import numpy as np
 from numpy import load, save
@@ -14,10 +13,10 @@ import tensorflow as tf
 
 
 class TfUtility:
-    def create_tf_ref(self, tf_file_paths, img_file_paths, annotation_file_paths, pose_file_paths, need_pose, need_hm,
-                       accuracy, is_test):
+    def create_tf_ref(self, tf_file_paths, img_file_paths, annotation_file_paths, pose_file_paths, need_pose,
+                      accuracy, is_test):
 
-        main_tf_name = 'train'+str(accuracy)+'.tfrecords'
+        main_tf_name = 'train' + str(accuracy) + '.tfrecords'
         num_main_samples = CofwConf.num_train_samples
         num_eval_samples = CofwConf.num_eval_samples
         if is_test:
@@ -26,7 +25,7 @@ class TfUtility:
 
         for index in range(len(tf_file_paths)):
             tf_main_path = tf_file_paths[index] + main_tf_name  # could be test or train
-            tf_evaluation_path = tf_file_paths[index] + 'eval'+str(accuracy)+'.tfrecords'
+            tf_evaluation_path = tf_file_paths[index] + 'eval' + str(accuracy) + '.tfrecords'
 
             counter = 0
             writer_main = tf.python_io.TFRecordWriter(tf_main_path)

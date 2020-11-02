@@ -1,4 +1,4 @@
-from Config import CofwConf, DatasetName, InputDataSize
+from Config import WflwConf, DatasetName, InputDataSize
 from ImageModification import ImageModification
 from pose_detection.code.PoseDetector import PoseDetector
 from pca_utility import PCAUtility
@@ -12,16 +12,16 @@ from PIL import Image
 import random
 
 
-class CofwClass:
+class WflwClass:
     """PUBLIC"""
 
     def create_pca_obj(self, accuracy):
         pca_utils = PCAUtility()
-        pca_utils.create_pca_from_npy(annotation_path=CofwConf.augmented_train_annotation,
-                                      pca_accuracy=accuracy, pca_file_name='cofw')
+        pca_utils.create_pca_from_npy(annotation_path=WflwConf.augmented_train_annotation,
+                                      pca_accuracy=accuracy, pca_file_name='wflw')
 
     def create_train_set(self, need_pose=False, need_hm=False, need_tf_ref=False, accuracy=100):
-        images_path, annotations_path, bboxes_path = self._load_data(CofwConf.orig_COFW_train)
+        images_path, annotations_path, bboxes_path = self._load_data(WflwConf.orig_WFLW_train)
 
         for i in tqdm(range(len(images_path))):
             img = self._load_image(images_path[i])
@@ -30,6 +30,9 @@ class CofwClass:
 
             self._do_random_augment(i, img, annotation, bbox, need_hm=need_hm,
                                     need_pose=need_pose)
+        '''create tf_record here: tf need to be created when all samples has been created'''
+        if need_tf_ref:
+            self._cofw_create_tf_record(ds_type=0, need_pose=need_pose, need_hm=need_hm, accuracy=accuracy)
 
     print("create_train_set DONE!!")
 
@@ -40,7 +43,7 @@ class CofwClass:
         """
         tf_utility = TfUtility()
 
-        images_path, annotations_path, bboxes_path = self._load_data(CofwConf.orig_COFW_test)
+        images_path, annotations_path, bboxes_path = self._load_data(WflwConf.orig_COFW_test)
 
         for i in range(len(images_path)):
             img = self._load_image(images_path[i])
@@ -52,35 +55,35 @@ class CofwClass:
             if need_pose:
                 pose = tf_utility.detect_pose([img])
             self._save(img=img, annotation=annotation, file_name=str(i), pose=pose,
-                       image_save_path=CofwConf.test_image_path,
-                       annotation_save_path=CofwConf.test_annotation_path, pose_save_path=CofwConf.test_pose_path)
+                       image_save_path=WflwConf.test_image_path,
+                       annotation_save_path=WflwConf.test_annotation_path, pose_save_path=WflwConf.test_pose_path)
 
         '''tf_record'''
         if need_tf_ref:
-            self.cofw_create_tf_record(ds_type=1, need_pose=need_pose)  # we don't need hm for test
+            self._cofw_create_tf_record(ds_type=1, need_pose=need_pose)  # we don't need hm for test
         print("create_test_set DONE!!")
 
     """PRIVATE"""
 
-    def cofw_create_tf_record(self, ds_type, need_pose, accuracy=100):
+    def _cofw_create_tf_record(self, ds_type, need_pose, need_hm=False, accuracy=100):
         tf_utility = TfUtility()
 
         if ds_type == 0:  # train
-            tf_file_paths = [CofwConf.no_aug_train_tf_path, CofwConf.augmented_train_tf_path]
-            img_file_paths = [CofwConf.no_aug_train_image, CofwConf.augmented_train_image]
-            annotation_file_paths = [CofwConf.no_aug_train_annotation, CofwConf.augmented_train_annotation]
-            pose_file_paths = [CofwConf.no_aug_train_pose, CofwConf.augmented_train_pose]
+            tf_file_paths = [WflwConf.no_aug_train_tf_path, WflwConf.augmented_train_tf_path]
+            img_file_paths = [WflwConf.no_aug_train_image, WflwConf.augmented_train_image]
+            annotation_file_paths = [WflwConf.no_aug_train_annotation, WflwConf.augmented_train_annotation]
+            pose_file_paths = [WflwConf.no_aug_train_pose, WflwConf.augmented_train_pose]
             is_test = False
         else:
-            tf_file_paths = [CofwConf.test_tf_path]
-            img_file_paths = [CofwConf.test_image_path]
-            annotation_file_paths = [CofwConf.test_annotation_path]
-            pose_file_paths = [CofwConf.test_pose_path]
+            tf_file_paths = [WflwConf.test_tf_path]
+            img_file_paths = [WflwConf.test_image_path]
+            annotation_file_paths = [WflwConf.test_annotation_path]
+            pose_file_paths = [WflwConf.test_pose_path]
             is_test = True
 
         tf_utility.create_tf_ref(tf_file_paths=tf_file_paths, img_file_paths=img_file_paths,
                                  annotation_file_paths=annotation_file_paths, pose_file_paths=pose_file_paths,
-                                 need_pose=need_pose, accuracy=accuracy, is_test=is_test)
+                                 need_pose=need_pose, need_hm=need_hm, accuracy=accuracy, is_test=is_test)
 
     def _do_random_augment(self, index, img, annotation, _bbox, need_hm, need_pose):
         tf_utility = TfUtility()
@@ -103,8 +106,8 @@ class CofwClass:
         bbox_me = [xmin, ymin, xmin, ymax, xmax, ymin, xmax, ymax]
 
         imgs, annotations = img_mod.random_augment(index=index, img_orig=img, landmark_orig=annotation,
-                                                   num_of_landmarks=CofwConf.num_of_landmarks,
-                                                   augmentation_factor=CofwConf.augmentation_factor,
+                                                   num_of_landmarks=WflwConf.num_of_landmarks,
+                                                   augmentation_factor=WflwConf.augmentation_factor,
                                                    ymin=ymin, ymax=ymax, xmin=xmin, xmax=xmax,
                                                    ds_name=DatasetName.dsCofw, bbox_me_orig=bbox_me)
         '''create pose'''
@@ -114,16 +117,16 @@ class CofwClass:
 
         '''this is the original image we save in the original path for ablation study'''
         self._save(img=imgs[0], annotation=annotations[0], file_name=str(index), pose=poses[0],
-                   image_save_path=CofwConf.no_aug_train_image,
-                   annotation_save_path=CofwConf.no_aug_train_annotation,
-                   pose_save_path=CofwConf.no_aug_train_pose)
+                   image_save_path=WflwConf.no_aug_train_image,
+                   annotation_save_path=WflwConf.no_aug_train_annotation,
+                   pose_save_path=WflwConf.no_aug_train_pose)
 
         '''this is the augmented images+original one'''
         for i in range(len(imgs)):
             self._save(img=imgs[i], annotation=annotations[i], file_name=str(index) + '_' + str(i), pose=poses[i],
-                       image_save_path=CofwConf.augmented_train_image,
-                       annotation_save_path=CofwConf.augmented_train_annotation,
-                       pose_save_path=CofwConf.augmented_train_pose)
+                       image_save_path=WflwConf.augmented_train_image,
+                       annotation_save_path=WflwConf.augmented_train_annotation,
+                       pose_save_path=WflwConf.augmented_train_pose)
             # img_mod.test_image_print('zzz_final'+str(index)+'-'+str(i), imgs[i], annotations[i])
 
         return imgs, annotations
@@ -187,11 +190,11 @@ class CofwClass:
             while line:
                 annotation_arr = line.strip().split('\t')
                 line = fp.readline()
-        annotation_arr = list(map(float, annotation_arr[0:CofwConf.num_of_landmarks*2]))
+        annotation_arr = list(map(float, annotation_arr[0:WflwConf.num_of_landmarks*2]))
         annotation_arr_correct = []
 
         for i in range(0, len(annotation_arr) // 2, 1):
             annotation_arr_correct.append(annotation_arr[i])
-            annotation_arr_correct.append(annotation_arr[i + CofwConf.num_of_landmarks])
+            annotation_arr_correct.append(annotation_arr[i + WflwConf.num_of_landmarks])
 
         return annotation_arr_correct

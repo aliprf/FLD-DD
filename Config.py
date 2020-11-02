@@ -33,6 +33,23 @@ class InputDataSize:
 class WflwConf:
     Wflw_prefix_path = '/media/ali/data/new_data/wflw/'  # --> local
 
+    orig_COFW_test = Wflw_prefix_path + 'orig_COFW_test/'
+    test_annotation_path = Wflw_prefix_path + 'testing_set/annotations/'
+    test_pose_path = Wflw_prefix_path + 'testing_set/pose/'
+    test_image_path = Wflw_prefix_path + 'testing_set/images/'
+    test_tf_path = Wflw_prefix_path + 'testing_set/tf/'
+
+    orig_WFLW_train = Wflw_prefix_path + 'orig_COFW_train/'
+    augmented_train_pose = Wflw_prefix_path + 'training_set/augmented/pose/'
+    augmented_train_annotation = Wflw_prefix_path + 'training_set/augmented/annotations/'
+    augmented_train_image = Wflw_prefix_path + 'training_set/augmented/images/'
+    augmented_train_tf_path = Wflw_prefix_path + 'training_set/augmented/tf/'
+
+    no_aug_train_annotation = Wflw_prefix_path + 'training_set/no_aug/annotations/'
+    no_aug_train_pose = Wflw_prefix_path + 'training_set/no_aug/pose/'
+    no_aug_train_image = Wflw_prefix_path + 'training_set/no_aug/images/'
+    no_aug_train_tf_path = Wflw_prefix_path + 'training_set/no_aug/tf/'
+
     orig_number_of_training = 7500
     orig_number_of_test = 2500
 
@@ -43,9 +60,12 @@ class WflwConf:
     orig_of_all_test_makeup = 206
     orig_of_all_test_occlusion = 736
 
-    augmentation_factor = 4  # create . image from 4
+    augmentation_factor = 10  # create . image from 4
     num_of_landmarks = 98
     hm_stride = 3
+    '''for tf record:'''
+    num_eval_samples = int(orig_number_of_training * augmentation_factor * 0.5)  # 75000* 0.05 = 3750
+    num_train_samples = orig_number_of_training * augmentation_factor - num_eval_samples  # 75000 - 3750 = 71250
 
 
 class CofwConf:
