@@ -4,7 +4,7 @@ from pose_detection.code.PoseDetector import PoseDetector
 from pca_utility import PCAUtility
 from tf_utility import TfUtility
 
-import os
+import os, sys
 import numpy as np
 from numpy import load, save
 from tqdm import tqdm
@@ -32,9 +32,9 @@ class WflwClass:
                                     need_pose=need_pose)
         '''create tf_record here: tf need to be created when all samples has been created'''
         if need_tf_ref:
-            self._cofw_create_tf_record(ds_type=0, need_pose=need_pose, need_hm=need_hm, accuracy=accuracy)
+            self._wflw_create_tf_record(ds_type=0, need_pose=need_pose, need_hm=need_hm, accuracy=accuracy)
 
-    print("create_train_set DONE!!")
+        print("create_train_set DONE!!")
 
     def create_test_set(self, need_pose=False, need_tf_ref=False):
         """
@@ -42,30 +42,30 @@ class WflwClass:
         :return:
         """
         tf_utility = TfUtility()
+        pose_detector = PoseDetector()
+        img_mod = ImageModification()
 
-        images_path, annotations_path, bboxes_path = self._load_data(WflwConf.orig_COFW_test)
+        imgs, annotations, bboxs, atrs = self._load_data(WflwConf.orig_WFLW_test)
 
-        for i in range(len(images_path)):
-            img = self._load_image(images_path[i])
-            bbox = self._load_bbox(bboxes_path[i])
-            annotation = self._load_annotation(annotations_path[i])
+        for i in range(len(imgs)):
+            # img_mod.test_image_print('wflw_tst_' + str(i), imgs[i], annotations[i], bboxs[i])
 
-            img, annotation = self._crop(img=img, annotation=annotation, bbox=bbox)
+            img, annotation = self._crop(img=imgs[i], annotation=annotations[i], bbox=bboxs[i])
             pose = None
             if need_pose:
-                pose = tf_utility.detect_pose([img])
+                pose = tf_utility.detect_pose([img], pose_detector)
             self._save(img=img, annotation=annotation, file_name=str(i), pose=pose,
                        image_save_path=WflwConf.test_image_path,
                        annotation_save_path=WflwConf.test_annotation_path, pose_save_path=WflwConf.test_pose_path)
 
         '''tf_record'''
         if need_tf_ref:
-            self._cofw_create_tf_record(ds_type=1, need_pose=need_pose)  # we don't need hm for test
+            self._wflw_create_tf_record(ds_type=1, need_pose=need_pose)  # we don't need hm for test
         print("create_test_set DONE!!")
 
     """PRIVATE"""
 
-    def _cofw_create_tf_record(self, ds_type, need_pose, need_hm=False, accuracy=100):
+    def _wflw_create_tf_record(self, ds_type, need_pose, need_hm=False, accuracy=100):
         tf_utility = TfUtility()
 
         if ds_type == 0:  # train
@@ -142,7 +142,7 @@ class WflwClass:
         img, annotation = img_mod.crop_image_test(img, ymin, ymax, xmin, xmax, annotation, padding_percentage=0.05)
         # img_mod.test_image_print('zz'+str(annotation[0]), img, landmarks)
         img, annotation = img_mod.resize_image(img, annotation)
-        # img_mod.test_image_print('zz'+str(annotation[0]), img, annotation)
+        img_mod.test_image_print('zz'+str(annotation[0]), img, annotation)
 
         return img, annotation
 
@@ -153,35 +153,47 @@ class WflwClass:
         if pose is not None:
             np.save(pose_save_path + file_name, pose)
 
-    def _load_data(self, path_folder):
+    def _load_data(self, annotation_path):
         """
         load all images, annotations and boundingBoxes
-        :param path_folder: path to the folder
+        :param annotation_path: path to the folder
         :return: images, annotations, bboxes
         """
-        images_path = []
-        annotations_path = []
-        bboxes_path = []
+        image_arr = []
+        annotation_arr = []
+        bbox_arr = []
+        atr_arr = []
 
-        for file in os.listdir(path_folder):
-            if file.endswith(".png"):
-                images_path.append(os.path.join(path_folder, file))
-                annotations_path.append(os.path.join(path_folder, "an_" + str(file)[:-3] + "txt"))
-                bboxes_path.append(os.path.join(path_folder, "bb_" + str(file)[:-3] + "txt"))
-        return images_path, annotations_path, bboxes_path
+        counter = 0
+        with open(annotation_path) as fp:
+            line = fp.readline()
+            while line and counter < 10:
+                sys.stdout.write('\r \r line --> \033[92m' + str(counter))
+
+                total_data = line.strip().split(' ')
+                annotation_arr.append(list(map(float, total_data[0:WflwConf.num_of_landmarks * 2])))
+                bbox_arr.append(self._create_bbox(list(map(int, total_data[WflwConf.num_of_landmarks * 2:WflwConf.num_of_landmarks * 2 + 4]))))
+                atr_arr.append(
+                    list(map(int, total_data[WflwConf.num_of_landmarks * 2 + 4:WflwConf.num_of_landmarks * 2 + 10])))
+                image_arr.append(self._load_image(WflwConf.orig_WFLW_image + total_data[-1]))
+                line = fp.readline()
+                counter += 1
+        print('Loading Done')
+        return image_arr, annotation_arr, bbox_arr, atr_arr
 
     def _load_image(self, path):
         return np.array(Image.open(path))
 
-    def _load_bbox(self, path):
-        bbox_arr = []
-        with open(path) as fp:
-            line = fp.readline()
-            while line:
-                bbox_arr = line.strip().split('\t')
-                line = fp.readline()
-        assert len(bbox_arr) == 4
-        return list(map(int, bbox_arr))
+    def _create_bbox(self, _bbox):
+        bbox_me = []
+
+        xmin = _bbox[0]
+        ymin = _bbox[1]
+        xmax = _bbox[2]
+        ymax = _bbox[3]
+        bbox_me = [xmin, ymin, xmin, ymax, xmax, ymin, xmax, ymax]
+
+        return bbox_me
 
     def _load_annotation(self, path):
         annotation_arr = []
@@ -190,7 +202,7 @@ class WflwClass:
             while line:
                 annotation_arr = line.strip().split('\t')
                 line = fp.readline()
-        annotation_arr = list(map(float, annotation_arr[0:WflwConf.num_of_landmarks*2]))
+        annotation_arr = list(map(float, annotation_arr[0:WflwConf.num_of_landmarks * 2]))
         annotation_arr_correct = []
 
         for i in range(0, len(annotation_arr) // 2, 1):

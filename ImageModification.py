@@ -161,54 +161,6 @@ class ImageModification:
         croped_img = img[ymin:ymax, xmin:xmax]
         return croped_img
 
-        # landmark_arr_xy, landmark_arr_x, landmark_arr_y = self.create_landmarks(landmark, 1, 1)
-
-        # x_land_min = int(min(landmark_arr_x)) - padding_percentage * int(min(landmark_arr_x))
-        # if x_land_min < 0: x_land_min = int(min(landmark_arr_x))
-        # x_land_max = int(max(landmark_arr_x)) + padding_percentage * int(max(landmark_arr_x))
-        # y_land_min = int(min(landmark_arr_y)) - padding_percentage * int(min(landmark_arr_y))
-        # if y_land_min < 0: y_land_min = int(min(landmark_arr_y))
-        # y_land_max = int(max(landmark_arr_y)) + padding_percentage * int(max(landmark_arr_y))
-        #
-        # xmin = int(x_land_min)
-        # ymin = int(y_land_min)
-        # xmax = int(x_land_max)
-        # ymax = int(y_land_max)
-        '''before cropping, we need to translate image to the correct coordinates, based on the min x,y'''
-        # x_offset = xmin - 10
-        # y_offset = ymin - 10
-        # landmark_new = []
-        # x_lands = []
-        # y_lands = []
-        # for i in range(0, len(landmark), 2):
-        #     landmark_new.append(landmark[i] - x_offset)
-        #     x_lands.append(landmark[i] - x_offset)
-        #     landmark_new.append(landmark[i + 1] - y_offset)
-        #     y_lands.append(landmark[i + 1] - y_offset)
-        #
-        # xmin = int(min(x_lands))
-        # ymin = int(min(y_lands))
-        # xmax = int(max(x_lands))
-        # ymax = int(max(y_lands))
-
-        # if ymin < 10 or xmin < 10 or ymax > InputDataSize.image_input_size or xmax > InputDataSize.image_input_size:
-        #     return None, None
-
-        # landmark = landmark_new
-        # croped_img = img[ymin:ymax, xmin:xmax]
-
-        # '''grayscale to color'''
-        # if len(croped_img.shape) < 3:
-        #     croped_img = np.stack([croped_img, croped_img, croped_img], axis=-1)
-        #     print('crop_image_train: grayscale to color')
-
-        # landmarks_new = []
-        # for i in range(0, len(landmark), 2):
-        #     landmarks_new.append(landmark[i] - xmin)
-        #     landmarks_new.append(landmark[i+1] - ymin)
-
-        return croped_img
-
     def resize_image(self, img, annotation):
         if img.shape[0] == 0 or img.shape[1] == 0:
             print('resize_image  ERRORRR')
@@ -279,9 +231,8 @@ class ImageModification:
             landmarks_x.append(landmarks[i])
             landmarks_y.append(landmarks[i + 1])
 
-        plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='b', s=5)
-        for i in range(len(landmarks_x)):
-            plt.annotate(str(i), (landmarks_x[i], landmarks_y[i]), fontsize=6)
+        # for i in range(len(landmarks_x)):
+        #     plt.annotate(str(i), (landmarks_x[i], landmarks_y[i]), fontsize=6)
 
         plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='b', s=5)
         plt.savefig(img_name + '.png')

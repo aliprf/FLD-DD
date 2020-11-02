@@ -31,21 +31,24 @@ class InputDataSize:
 
 
 class WflwConf:
-    Wflw_prefix_path = '/media/data3/ali/FL/new_data/wflw/'  # --> zeus
-    # Wflw_prefix_path = '/media/ali/data/new_data/wflw/'  # --> local
-
-    orig_WFLW_test = Wflw_prefix_path + 'orig_WFLW__test/'
+    # Wflw_prefix_path = '/media/data3/ali/FL/new_data/wflw/'  # --> zeus
+    Wflw_prefix_path = '/media/ali/data/new_data/wflw/'  # --> local
+    '''original ds data'''
+    orig_WFLW_test = Wflw_prefix_path + 'WFLW_annotations/list_98pt_rect_attr_train_test/list_98pt_rect_attr_test.txt'
+    orig_WFLW_train = Wflw_prefix_path + 'WFLW_annotations/list_98pt_rect_attr_train_test/list_98pt_rect_attr_train.txt'
+    orig_WFLW_image = Wflw_prefix_path + 'WFLW_images/'
+    '''created testset data'''
     test_annotation_path = Wflw_prefix_path + 'testing_set/annotations/'
     test_pose_path = Wflw_prefix_path + 'testing_set/pose/'
     test_image_path = Wflw_prefix_path + 'testing_set/images/'
     test_tf_path = Wflw_prefix_path + 'testing_set/tf/'
-
-    orig_WFLW_train = Wflw_prefix_path + 'orig_WFLW__train/'
+    '''created trainset data'''
+    '''     augmented version'''
     augmented_train_pose = Wflw_prefix_path + 'training_set/augmented/pose/'
     augmented_train_annotation = Wflw_prefix_path + 'training_set/augmented/annotations/'
     augmented_train_image = Wflw_prefix_path + 'training_set/augmented/images/'
     augmented_train_tf_path = Wflw_prefix_path + 'training_set/augmented/tf/'
-
+    '''     original version'''
     no_aug_train_annotation = Wflw_prefix_path + 'training_set/no_aug/annotations/'
     no_aug_train_pose = Wflw_prefix_path + 'training_set/no_aug/pose/'
     no_aug_train_image = Wflw_prefix_path + 'training_set/no_aug/images/'

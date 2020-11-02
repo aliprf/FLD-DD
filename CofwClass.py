@@ -17,6 +17,8 @@ class CofwClass:
 
     def create_pca_obj(self, accuracy):
         pca_utils = PCAUtility()
+        pose_detector = PoseDetector()
+
         pca_utils.create_pca_from_npy(annotation_path=CofwConf.augmented_train_annotation,
                                       pca_accuracy=accuracy, pca_file_name='cofw')
 
@@ -29,7 +31,7 @@ class CofwClass:
             annotation = self._load_annotation(annotations_path[i])
 
             self._do_random_augment(i, img, annotation, bbox, need_hm=need_hm,
-                                    need_pose=need_pose)
+                                    need_pose=need_pose, pose_detector=pose_detector)
 
         print("create_train_set DONE!!")
 
@@ -83,14 +85,14 @@ class CofwClass:
                                  annotation_file_paths=annotation_file_paths, pose_file_paths=pose_file_paths,
                                  need_pose=need_pose, accuracy=accuracy, is_test=is_test)
 
-    def _do_random_augment(self, index, img, annotation, _bbox, need_hm, need_pose):
+    def _do_random_augment(self, index, img, annotation, _bbox, need_hm, need_pose, pose_detector):
         tf_utility = TfUtility()
 
         img_mod = ImageModification()
         xmin = _bbox[0]
         ymin = _bbox[1]
         xmax = xmin + _bbox[2]
-        ymax = ymin + _bbox[2]
+        ymax = ymin + _bbox[3]
 
         '''create 4-point bounding box'''
         rand_padd = random.randint(0, 10)
@@ -111,7 +113,7 @@ class CofwClass:
         '''create pose'''
         poses = None
         if need_pose:
-            poses = tf_utility.detect_pose(images=imgs)
+            poses = tf_utility.detect_pose(images=imgs, pose_detector=pose_detector)
 
         '''this is the original image we save in the original path for ablation study'''
         self._save(img=imgs[0], annotation=annotations[0], file_name=str(index), pose=poses[0],
@@ -135,7 +137,7 @@ class CofwClass:
         xmin = bbox[0]
         ymin = bbox[1]
         xmax = xmin + bbox[2]
-        ymax = ymin + bbox[2]
+        ymax = ymin + bbox[3]
 
         img, annotation = img_mod.crop_image_test(img, ymin, ymax, xmin, xmax, annotation, padding_percentage=0.05)
         # img_mod.test_image_print('zz'+str(annotation[0]), img, landmarks)
