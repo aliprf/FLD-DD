@@ -39,6 +39,7 @@ class CofwClass:
         :return:
         """
         tf_utility = TfUtility()
+        pose_detector = PoseDetector()
 
         images_path, annotations_path, bboxes_path = self._load_data(CofwConf.orig_COFW_test)
 
@@ -50,7 +51,7 @@ class CofwClass:
             img, annotation = self._crop(img=img, annotation=annotation, bbox=bbox)
             pose = None
             if need_pose:
-                pose = tf_utility.detect_pose([img])
+                pose = tf_utility.detect_pose([img], pose_detector)
             self._save(img=img, annotation=annotation, file_name=str(i), pose=pose,
                        image_save_path=CofwConf.test_image_path,
                        annotation_save_path=CofwConf.test_annotation_path, pose_save_path=CofwConf.test_pose_path)

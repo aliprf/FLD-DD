@@ -98,8 +98,7 @@ class TfUtility:
             if tf_evaluation_path is not None:
                 writer_evaluate.close()
 
-    def detect_pose(self, images):
-        pose_detector = PoseDetector()
+    def detect_pose(self, images, pose_detector):
         poses = []
         _images = np.copy(np.array(images))
         for i in range(len(_images)):
