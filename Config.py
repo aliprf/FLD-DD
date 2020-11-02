@@ -55,21 +55,28 @@ class CofwConf:
     test_annotation_path = Cofw_prefix_path + 'testing_set/annotations/'
     test_pose_path = Cofw_prefix_path + 'testing_set/pose/'
     test_image_path = Cofw_prefix_path + 'testing_set/images/'
+    test_tf_path = Cofw_prefix_path + 'testing_set/tf/'
 
     orig_COFW_train = Cofw_prefix_path + 'orig_COFW_train/'
     augmented_train_pose = Cofw_prefix_path + 'training_set/augmented/pose/'
     augmented_train_annotation = Cofw_prefix_path + 'training_set/augmented/annotations/'
     augmented_train_image = Cofw_prefix_path + 'training_set/augmented/images/'
+    augmented_train_tf_path = Cofw_prefix_path + 'training_set/augmented/tf/'
+
     no_aug_train_annotation = Cofw_prefix_path + 'training_set/no_aug/annotations/'
     no_aug_train_pose = Cofw_prefix_path + 'training_set/no_aug/pose/'
     no_aug_train_image = Cofw_prefix_path + 'training_set/no_aug/images/'
+    no_aug_train_tf_path = Cofw_prefix_path + 'training_set/no_aug/tf/'
 
     orig_number_of_training = 1345
     orig_number_of_test = 507
 
-    augmentation_factor = 5
+    augmentation_factor = 10
     num_of_landmarks = 29
     hm_stride = 3
+    '''for tf record:'''
+    num_eval_samples = int(orig_number_of_training * augmentation_factor * 0.5)  # 13450* 0.05 = 670
+    num_train_samples = orig_number_of_training * augmentation_factor - num_eval_samples  # 13450 - 670 = 12775
 
 
 class W300W:
