@@ -11,7 +11,7 @@ import random
 class CofwClass:
     """PUBLIC"""
 
-    def create_train_set(self):
+    def create_train_set(self, need_pose=False, need_hm=False):
         images_path, annotations_path, bboxes_path = self._load_data(CofwConf.orig_COFW_train)
 
         for i in tqdm(range(len(images_path))):
@@ -19,7 +19,7 @@ class CofwClass:
             bbox = self._load_bbox(bboxes_path[i])
             annotation = self._load_annotation(annotations_path[i])
 
-            self._do_random_augment(i, img, annotation, bbox)
+            self._do_random_augment(i, img, annotation, bbox, need_hm=need_hm, need_pose=need_pose)
     print("create_train_set DONE!!")
 
     def create_test_set(self):
@@ -41,7 +41,7 @@ class CofwClass:
         print("create_test_set DONE!!")
 
     """PRIVATE"""
-    def _do_random_augment(self, index, img, annotation, _bbox):
+    def _do_random_augment(self, index, img, annotation, _bbox, need_hm, need_pose):
         img_mod = ImageModification()
         xmin = _bbox[0]
         ymin = _bbox[1]
@@ -64,7 +64,8 @@ class CofwClass:
                                                    augmentation_factor=CofwConf.augmentation_factor,
                                                    ymin=ymin, ymax=ymax, xmin=xmin, xmax=xmax,
                                                    ds_name=DatasetName.dsCofw, bbox_me_orig=bbox_me)
-        ''''''
+        '''create pose'''
+
         '''this is the original image we save in the original path for ablation study'''
         self._save(img=imgs[0], annotation=annotations[0], file_name=str(index),
                    image_save_path=CofwConf.no_aug_train_image,
@@ -75,7 +76,7 @@ class CofwClass:
             self._save(img=imgs[i], annotation=annotations[i], file_name=str(index)+'_'+str(i),
                        image_save_path=CofwConf.augmented_train_image,
                        annotation_save_path=CofwConf.augmented_train_annotation)
-            img_mod.test_image_print('zzz_final'+str(index)+'-'+str(i), imgs[i], annotations[i])
+            # img_mod.test_image_print('zzz_final'+str(index)+'-'+str(i), imgs[i], annotations[i])
 
         return imgs, annotations
 
