@@ -53,12 +53,15 @@ class CofwConf:
 
     orig_COFW_test = Cofw_prefix_path + 'orig_COFW_test/'
     test_annotation_path = Cofw_prefix_path + 'testing_set/annotations/'
+    test_pose_path = Cofw_prefix_path + 'testing_set/pose/'
     test_image_path = Cofw_prefix_path + 'testing_set/images/'
 
     orig_COFW_train = Cofw_prefix_path + 'orig_COFW_train/'
+    augmented_train_pose = Cofw_prefix_path + 'training_set/augmented/pose/'
     augmented_train_annotation = Cofw_prefix_path + 'training_set/augmented/annotations/'
     augmented_train_image = Cofw_prefix_path + 'training_set/augmented/images/'
     no_aug_train_annotation = Cofw_prefix_path + 'training_set/no_aug/annotations/'
+    no_aug_train_pose = Cofw_prefix_path + 'training_set/no_aug/pose/'
     no_aug_train_image = Cofw_prefix_path + 'training_set/no_aug/images/'
 
     orig_number_of_training = 1345

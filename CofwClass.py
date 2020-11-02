@@ -1,5 +1,6 @@
 from Config import CofwConf, DatasetName
 from ImageModification import ImageModification
+from pose_detection.code.PoseDetector import PoseDetector
 
 import os
 import numpy as np
@@ -11,7 +12,7 @@ import random
 class CofwClass:
     """PUBLIC"""
 
-    def create_train_set(self, need_pose=False, need_hm=False):
+    def create_train_set(self, need_pose=False, need_hm=False, need_tf_ref=False):
         images_path, annotations_path, bboxes_path = self._load_data(CofwConf.orig_COFW_train)
 
         for i in tqdm(range(len(images_path))):
@@ -19,10 +20,13 @@ class CofwClass:
             bbox = self._load_bbox(bboxes_path[i])
             annotation = self._load_annotation(annotations_path[i])
 
-            self._do_random_augment(i, img, annotation, bbox, need_hm=need_hm, need_pose=need_pose)
+            self._do_random_augment(i, img, annotation, bbox, need_hm=need_hm,
+                                    need_pose=need_pose)
+        '''create tf_record here:'''
+
     print("create_train_set DONE!!")
 
-    def create_test_set(self):
+    def create_test_set(self, need_pose=False, need_tf_ref=False):
         """
         create test set from original test data
         :return:
@@ -35,9 +39,12 @@ class CofwClass:
             annotation = self._load_annotation(annotations_path[i])
 
             img, annotation = self._crop(img=img, annotation=annotation, bbox=bbox)
+            pose = None
+            if need_pose:
+                pose = self.detect_pose([img])
+            self._save(img=img, annotation=annotation, file_name=str(i), pose=pose, image_save_path=CofwConf.test_image_path,
+                       annotation_save_path=CofwConf.test_annotation_path, pose_save_path=CofwConf.test_pose_path)
 
-            self._save(img=img, annotation=annotation, file_name=str(i), image_save_path=CofwConf.test_image_path,
-                       annotation_save_path=CofwConf.test_annotation_path)
         print("create_test_set DONE!!")
 
     """PRIVATE"""
@@ -65,20 +72,42 @@ class CofwClass:
                                                    ymin=ymin, ymax=ymax, xmin=xmin, xmax=xmax,
                                                    ds_name=DatasetName.dsCofw, bbox_me_orig=bbox_me)
         '''create pose'''
+        poses = None
+        if need_pose:
+            poses = self.detect_pose(images=imgs)
 
         '''this is the original image we save in the original path for ablation study'''
-        self._save(img=imgs[0], annotation=annotations[0], file_name=str(index),
+        self._save(img=imgs[0], annotation=annotations[0], file_name=str(index), pose=poses[0],
                    image_save_path=CofwConf.no_aug_train_image,
-                   annotation_save_path=CofwConf.no_aug_train_annotation)
+                   annotation_save_path=CofwConf.no_aug_train_annotation,
+                   pose_save_path=CofwConf.no_aug_train_pose)
 
         '''this is the augmented images+original one'''
         for i in range(len(imgs)):
-            self._save(img=imgs[i], annotation=annotations[i], file_name=str(index)+'_'+str(i),
+            self._save(img=imgs[i], annotation=annotations[i], file_name=str(index)+'_'+str(i), pose=poses[i],
                        image_save_path=CofwConf.augmented_train_image,
-                       annotation_save_path=CofwConf.augmented_train_annotation)
+                       annotation_save_path=CofwConf.augmented_train_annotation,
+                       pose_save_path=CofwConf.augmented_train_pose)
             # img_mod.test_image_print('zzz_final'+str(index)+'-'+str(i), imgs[i], annotations[i])
 
         return imgs, annotations
+
+    def detect_pose(self, images):
+        pose_detector = PoseDetector()
+        poses = []
+        _images = np.copy(np.array(images))
+        for i in range(len(_images)):
+            yaw_predicted, pitch_predicted, roll_predicted = pose_detector.detect(_images[i], isFile=False, show=False)
+            '''normalize pose -1 -> +1 '''
+            min_degree = -65
+            max_degree = 65
+            yaw_normalized = 2 * ((yaw_predicted - min_degree) / (max_degree - min_degree)) - 1
+            pitch_normalized = 2 * ((pitch_predicted - min_degree) / (max_degree - min_degree)) - 1
+            roll_normalized = 2 * ((roll_predicted - min_degree) / (max_degree - min_degree)) - 1
+
+            pose_array = np.array([yaw_normalized, pitch_normalized, roll_normalized])
+            poses.append(pose_array)
+        return poses
 
     def _crop(self, img, annotation, bbox):
         img_mod = ImageModification()
@@ -95,10 +124,12 @@ class CofwClass:
 
         return img, annotation
 
-    def _save(self, img, annotation, file_name, image_save_path, annotation_save_path):
+    def _save(self, img, annotation, pose, file_name, image_save_path, annotation_save_path, pose_save_path):
         im = Image.fromarray(np.round(img * 255).astype(np.uint8))
         im.save(image_save_path + file_name + '.jpg')
         np.save(annotation_save_path + file_name, annotation)
+        if pose is not None:
+            np.save(pose_save_path + file_name, pose)
 
     def _load_data(self, path_folder):
         """
