@@ -17,12 +17,11 @@ class CofwClass:
 
     def create_pca_obj(self, accuracy):
         pca_utils = PCAUtility()
-        pose_detector = PoseDetector()
-
         pca_utils.create_pca_from_npy(annotation_path=CofwConf.augmented_train_annotation,
                                       pca_accuracy=accuracy, pca_file_name='cofw')
 
     def create_train_set(self, need_pose=False, need_hm=False, need_tf_ref=False, accuracy=100):
+        pose_detector = PoseDetector()
         images_path, annotations_path, bboxes_path = self._load_data(CofwConf.orig_COFW_train)
 
         for i in tqdm(range(len(images_path))):
@@ -83,7 +82,7 @@ class CofwClass:
 
         tf_utility.create_tf_ref(tf_file_paths=tf_file_paths, img_file_paths=img_file_paths,
                                  annotation_file_paths=annotation_file_paths, pose_file_paths=pose_file_paths,
-                                 need_pose=need_pose, accuracy=accuracy, is_test=is_test)
+                                 need_pose=need_pose, accuracy=accuracy, is_test=is_test, ds_name=DatasetName.dsCofw)
 
     def _do_random_augment(self, index, img, annotation, _bbox, need_hm, need_pose, pose_detector):
         tf_utility = TfUtility()
@@ -95,7 +94,7 @@ class CofwClass:
         ymax = ymin + _bbox[3]
 
         '''create 4-point bounding box'''
-        rand_padd = random.randint(0, 10)
+        rand_padd = random.randint(0, 1)
 
         ann_xy, ann_x, ann_y = img_mod.create_landmarks(annotation, 1, 1)
         xmin = min(min(ann_x) - rand_padd, xmin)

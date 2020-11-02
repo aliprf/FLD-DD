@@ -20,20 +20,14 @@ class WflwClass:
         pca_utils.create_pca_from_npy(annotation_path=WflwConf.augmented_train_annotation,
                                       pca_accuracy=accuracy, pca_file_name='wflw')
 
-    def create_train_set(self, need_pose=False, need_hm=False, need_tf_ref=False, accuracy=100):
-        images_path, annotations_path, bboxes_path = self._load_data(WflwConf.orig_WFLW_train)
+    def create_train_set(self, need_pose=False, need_hm=False, accuracy=100):
+        pose_detector = PoseDetector()
 
-        for i in tqdm(range(len(images_path))):
-            img = self._load_image(images_path[i])
-            bbox = self._load_bbox(bboxes_path[i])
-            annotation = self._load_annotation(annotations_path[i])
+        imgs, annotations, bboxs, atrs = self._load_data(WflwConf.orig_WFLW_train)
 
-            self._do_random_augment(i, img, annotation, bbox, need_hm=need_hm,
-                                    need_pose=need_pose)
-        '''create tf_record here: tf need to be created when all samples has been created'''
-        if need_tf_ref:
-            self._wflw_create_tf_record(ds_type=0, need_pose=need_pose, need_hm=need_hm, accuracy=accuracy)
-
+        for i in tqdm(range(len(imgs))):
+            self._do_random_augment(index=i, img=imgs[i], annotation=annotations[i], _bbox=bboxs[i],
+                                    atr=atrs[i], need_hm=need_hm, need_pose=need_pose, pose_detector=pose_detector)
         print("create_train_set DONE!!")
 
     def create_test_set(self, need_pose=False, need_tf_ref=False):
@@ -47,25 +41,24 @@ class WflwClass:
 
         imgs, annotations, bboxs, atrs = self._load_data(WflwConf.orig_WFLW_test)
 
-        for i in range(len(imgs)):
-            # img_mod.test_image_print('wflw_tst_' + str(i), imgs[i], annotations[i], bboxs[i])
-
+        for i in tqdm(range(len(imgs))):
             img, annotation = self._crop(img=imgs[i], annotation=annotations[i], bbox=bboxs[i])
             pose = None
             if need_pose:
                 pose = tf_utility.detect_pose([img], pose_detector)
-            self._save(img=img, annotation=annotation, file_name=str(i), pose=pose,
+            self._save(img=img, annotation=annotation, atr=atrs[i], file_name=str(i), pose=pose,
                        image_save_path=WflwConf.test_image_path,
-                       annotation_save_path=WflwConf.test_annotation_path, pose_save_path=WflwConf.test_pose_path)
+                       annotation_save_path=WflwConf.test_annotation_path, pose_save_path=WflwConf.test_pose_path,
+                       atr_save_path=WflwConf.test_atr_path)
 
         '''tf_record'''
         if need_tf_ref:
-            self._wflw_create_tf_record(ds_type=1, need_pose=need_pose)  # we don't need hm for test
+            self.wflw_create_tf_record(ds_type=1, need_pose=need_pose)  # we don't need hm for test
         print("create_test_set DONE!!")
 
     """PRIVATE"""
 
-    def _wflw_create_tf_record(self, ds_type, need_pose, need_hm=False, accuracy=100):
+    def wflw_create_tf_record(self, ds_type, need_pose, accuracy=100):
         tf_utility = TfUtility()
 
         if ds_type == 0:  # train
@@ -83,19 +76,20 @@ class WflwClass:
 
         tf_utility.create_tf_ref(tf_file_paths=tf_file_paths, img_file_paths=img_file_paths,
                                  annotation_file_paths=annotation_file_paths, pose_file_paths=pose_file_paths,
-                                 need_pose=need_pose, need_hm=need_hm, accuracy=accuracy, is_test=is_test)
+                                 need_pose=need_pose, accuracy=accuracy, is_test=is_test, ds_name=DatasetName.dsWflw)
 
-    def _do_random_augment(self, index, img, annotation, _bbox, need_hm, need_pose):
+    def _do_random_augment(self, index, img, annotation, _bbox, atr, need_hm, need_pose, pose_detector):
         tf_utility = TfUtility()
 
         img_mod = ImageModification()
+
         xmin = _bbox[0]
         ymin = _bbox[1]
-        xmax = xmin + _bbox[2]
-        ymax = ymin + _bbox[2]
-
+        xmax = _bbox[6]
+        ymax = _bbox[7]
         '''create 4-point bounding box'''
-        rand_padd = random.randint(0, 10)
+        rand_padd = 1
+        # rand_padd = random.randint(1, 5)
 
         ann_xy, ann_x, ann_y = img_mod.create_landmarks(annotation, 1, 1)
         xmin = min(min(ann_x) - rand_padd, xmin)
@@ -109,23 +103,25 @@ class WflwClass:
                                                    num_of_landmarks=WflwConf.num_of_landmarks,
                                                    augmentation_factor=WflwConf.augmentation_factor,
                                                    ymin=ymin, ymax=ymax, xmin=xmin, xmax=xmax,
-                                                   ds_name=DatasetName.dsCofw, bbox_me_orig=bbox_me)
+                                                   ds_name=DatasetName.dsWflw, bbox_me_orig=bbox_me, atr=atr)
         '''create pose'''
         poses = None
         if need_pose:
-            poses = tf_utility.detect_pose(images=imgs)
+            poses = tf_utility.detect_pose(images=imgs, pose_detector=pose_detector)
 
         '''this is the original image we save in the original path for ablation study'''
-        self._save(img=imgs[0], annotation=annotations[0], file_name=str(index), pose=poses[0],
+        self._save(img=imgs[0], annotation=annotations[0], file_name=str(index), atr=atr, pose=poses[0],
                    image_save_path=WflwConf.no_aug_train_image,
                    annotation_save_path=WflwConf.no_aug_train_annotation,
+                   atr_save_path=WflwConf.augmented_train_tf_path,
                    pose_save_path=WflwConf.no_aug_train_pose)
 
         '''this is the augmented images+original one'''
         for i in range(len(imgs)):
-            self._save(img=imgs[i], annotation=annotations[i], file_name=str(index) + '_' + str(i), pose=poses[i],
+            self._save(img=imgs[i], annotation=annotations[i], file_name=str(index) + '_' + str(i), pose=poses[i], atr=atr,
                        image_save_path=WflwConf.augmented_train_image,
                        annotation_save_path=WflwConf.augmented_train_annotation,
+                       atr_save_path=WflwConf.augmented_train_tf_path,
                        pose_save_path=WflwConf.augmented_train_pose)
             # img_mod.test_image_print('zzz_final'+str(index)+'-'+str(i), imgs[i], annotations[i])
 
@@ -133,23 +129,30 @@ class WflwClass:
 
     def _crop(self, img, annotation, bbox):
         img_mod = ImageModification()
-
+        ann_xy, ann_x, ann_y = img_mod.create_landmarks(annotation, 1, 1)
+        fix_pad = 10
         xmin = bbox[0]
         ymin = bbox[1]
-        xmax = xmin + bbox[2]
-        ymax = ymin + bbox[2]
+        xmax = bbox[6]
+        ymax = bbox[7]
 
-        img, annotation = img_mod.crop_image_test(img, ymin, ymax, xmin, xmax, annotation, padding_percentage=0.05)
-        # img_mod.test_image_print('zz'+str(annotation[0]), img, landmarks)
+        xmin = min(min(ann_x) - fix_pad, xmin)
+        xmax = max(max(ann_x) + fix_pad, xmax)
+        ymin = min(min(ann_y) - fix_pad, ymin)
+        ymax = max(max(ann_y) + fix_pad, ymax)
+
+        img, annotation = img_mod.crop_image_test(img, ymin, ymax, xmin, xmax, annotation)
+        # img_mod.test_image_print('zz'+str(annotation[0]), img, annotation)
         img, annotation = img_mod.resize_image(img, annotation)
-        img_mod.test_image_print('zz'+str(annotation[0]), img, annotation)
+        # img_mod.test_image_print('zz'+str(annotation[0]), img, annotation)
 
         return img, annotation
 
-    def _save(self, img, annotation, pose, file_name, image_save_path, annotation_save_path, pose_save_path):
+    def _save(self, img, annotation, atr, pose, file_name, image_save_path, annotation_save_path, pose_save_path, atr_save_path):
         im = Image.fromarray(np.round(img * 255).astype(np.uint8))
         im.save(image_save_path + file_name + '.jpg')
         np.save(annotation_save_path + file_name, annotation)
+        np.save(atr_save_path + file_name, atr)
         if pose is not None:
             np.save(pose_save_path + file_name, pose)
 
@@ -185,8 +188,6 @@ class WflwClass:
         return np.array(Image.open(path))
 
     def _create_bbox(self, _bbox):
-        bbox_me = []
-
         xmin = _bbox[0]
         ymin = _bbox[1]
         xmax = _bbox[2]

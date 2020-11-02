@@ -1,4 +1,4 @@
-from Config import CofwConf, DatasetName, InputDataSize
+from Config import CofwConf, DatasetName, InputDataSize, WflwConf, W300W
 from ImageModification import ImageModification
 from pose_detection.code.PoseDetector import PoseDetector
 from pca_utility import PCAUtility
@@ -14,14 +14,31 @@ import tensorflow as tf
 
 class TfUtility:
     def create_tf_ref(self, tf_file_paths, img_file_paths, annotation_file_paths, pose_file_paths, need_pose,
-                      accuracy, is_test):
+                      accuracy, is_test, ds_name):
 
         main_tf_name = 'train' + str(accuracy) + '.tfrecords'
-        num_main_samples = CofwConf.num_train_samples
-        num_eval_samples = CofwConf.num_eval_samples
+        if ds_name == DatasetName.dsCofw:
+            num_main_samples = CofwConf.num_train_samples
+            num_eval_samples = CofwConf.num_eval_samples
+        elif ds_name == DatasetName.dsWflw:
+            num_main_samples = WflwConf.num_train_samples
+            num_eval_samples = WflwConf.num_eval_samples
+        elif ds_name == DatasetName.ds300W:
+            num_main_samples = W300W.num_train_samples
+            num_eval_samples = W300W.num_eval_samples
+
         if is_test:
             main_tf_name = 'test.tfrecords'
-            num_main_samples = CofwConf.orig_number_of_test
+            if ds_name == DatasetName.dsCofw:
+                num_main_samples = CofwConf.orig_number_of_test
+            elif ds_name == DatasetName.dsWflw:
+                print('we dont create test for WFLW')
+                return 0
+                # num_main_samples = WflwConf.orig_number_of_test
+            elif ds_name == DatasetName.ds300W:
+                print('we dont create test for WFLW')
+                return 0
+                # num_main_samples = WflwConf.orig_number_of_test
 
         for index in range(len(tf_file_paths)):
             tf_main_path = tf_file_paths[index] + main_tf_name  # could be test or train
@@ -51,7 +68,7 @@ class TfUtility:
 
                     '''create new landmark using accuracy'''
                     if accuracy != 100:
-                        landmark = self._get_asm(landmark, DatasetName.dsCofw, accuracy)
+                        landmark = self._get_asm(landmark, ds_name, accuracy)
                     '''create tf_record:'''
                     writable_img = np.reshape(img,
                                               [InputDataSize.image_input_size * InputDataSize.image_input_size * 3])

@@ -26,7 +26,7 @@ class PCAUtility:
                 npy_file = os.path.join(annotation_path, file)
                 lbl_arr.append(load(npy_file))
 
-        lbl_arr = np.array(lbl_arr)
+        # lbl_arr = np.array(lbl_arr)
 
         ''' no normalization is needed, since we want to generate hm'''
         reduced_lbl_arr, eigenvalues, eigenvectors = self._func_PCA(lbl_arr, pca_accuracy)

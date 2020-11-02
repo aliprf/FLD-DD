@@ -15,8 +15,7 @@ from skimage.transform import SimilarityTransform, AffineTransform
 class ImageModification:
 
     def random_augment(self, index, img_orig, landmark_orig, num_of_landmarks, augmentation_factor, ymin, ymax, xmin,
-                       xmax,
-                       ds_name, bbox_me_orig):
+                       xmax, ds_name, bbox_me_orig, atr=None):
         """"""
         '''keep original'''
         if len(img_orig.shape) < 3:
@@ -34,6 +33,15 @@ class ImageModification:
         shear = 0
 
         aug_num = 0
+        '''if atr is not null'''
+        if atr is not None:
+            augmentation_factor += atr[0] * augmentation_factor  # _pose = atr[0]
+            augmentation_factor += atr[1] * augmentation_factor  # _exp = atr[1]
+            augmentation_factor += atr[2] * 2  # _illu = atr[2]
+            augmentation_factor += atr[3] * 2  # _mkup = atr[3]
+            augmentation_factor += atr[4] * augmentation_factor  # _occl = atr[4]
+            augmentation_factor += atr[5] * 2  # _blr = atr[5]
+
         while aug_num < augmentation_factor:
             img = img_orig
             landmark = landmark_orig
@@ -95,7 +103,7 @@ class ImageModification:
 
             '''crop data: we add a small margin to the images'''
             # c_img = self.crop_image_train(img=t_img, bbox=t_bbox)
-            c_img = self.crop_image_train(img=img_new, bbox=bbox_new)
+            c_img, landmark_new = self.crop_image_train(img=img_new, bbox=bbox_new, annotation=landmark_new, ds_name=ds_name)
             # self.test_image_print(img_name='bb' + str(index + 1) + '_' + str(aug_num), img=c_img,
             #                       landmarks=landmark_new, bbox_me=bbox_new)
 
@@ -144,22 +152,40 @@ class ImageModification:
             index_src = [0, 2, 4, 5, 8, 10, 12, 13, 16, 18, 22]
             index_dst = [1, 3, 6, 7, 9, 11, 14, 15, 17, 19, 23]
             for i in range(len(index_src)):
-                new_labels[index_src[i]*2] = labels[index_dst[i]*2]
-                new_labels[index_src[i]*2+1] = labels[index_dst[i]*2+1]
+                new_labels[index_src[i] * 2] = labels[index_dst[i] * 2]
+                new_labels[index_src[i] * 2 + 1] = labels[index_dst[i] * 2 + 1]
 
                 new_labels[index_dst[i] * 2] = labels[index_src[i] * 2]
                 new_labels[index_dst[i] * 2 + 1] = labels[index_src[i] * 2 + 1]
-        return  new_labels
+            return new_labels
 
-    def crop_image_train(self, img, bbox):
-        bb_xy, bb_x, bb_y = self.create_landmarks(bbox, 1, 1)
-        xmin = int(min(bb_x))
-        xmax = int(max(bb_x))
-        ymin = int(min(bb_y))
-        ymax = int(max(bb_y))
+        else:
+            return labels
 
-        croped_img = img[ymin:ymax, xmin:xmax]
-        return croped_img
+    def crop_image_train(self, img, bbox, annotation, ds_name):
+        if ds_name != DatasetName.dsCofw:
+            rand_padd = 0.005 * random.randint(1, 5) * img.shape[0]
+            ann_xy, ann_x, ann_y = self.create_landmarks(annotation, 1, 1)
+            xmin = int(max(0, min(ann_x) - rand_padd))
+            xmax = int(max(ann_x) + rand_padd)
+            ymin = int(max(0, min(ann_y) - rand_padd))
+            ymax = int(max(ann_y) + rand_padd)
+            annotation_new = []
+            for i in range(0, len(annotation), 2):
+                annotation_new.append(annotation[i]-xmin)
+                annotation_new.append(annotation[i+1]-ymin)
+            croped_img = img[ymin:ymax, xmin:xmax]
+            # if croped_img.shape[1] == 0 or croped_img.shape[0] == 0:
+            #     print('--')
+            return croped_img, annotation_new
+        else:
+            bb_xy, bb_x, bb_y = self.create_landmarks(bbox, 1, 1)
+            xmin = int(min(bb_x))
+            xmax = int(max(bb_x))
+            ymin = int(min(bb_y))
+            ymax = int(max(bb_y))
+            croped_img = img[ymin:ymax, xmin:xmax]
+            return croped_img, annotation
 
     def resize_image(self, img, annotation):
         if img.shape[0] == 0 or img.shape[1] == 0:
