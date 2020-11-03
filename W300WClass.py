@@ -52,7 +52,7 @@ class W300WClass:
                            image_save_path=W300W.test_image_path+ds_type,
                            annotation_save_path=W300W.test_annotation_path+ds_type,
                            pose_save_path=W300W.test_pose_path+ds_type)
-                # img_mod.test_image_print('zzz_final-'+str(i), img, annotation)
+                img_mod.test_image_print('zzz_final-'+str(i), img, annotation)
 
         '''tf_record'''
         # if need_tf_ref:
@@ -97,7 +97,7 @@ class W300WClass:
                                                    num_of_landmarks=W300W.num_of_landmarks,
                                                    augmentation_factor=W300W.augmentation_factor,
                                                    ymin=ymin, ymax=ymax, xmin=xmin, xmax=xmax,
-                                                   ds_name=DatasetName.dsWflw, bbox_me_orig=bbox_me)
+                                                   ds_name=DatasetName.ds300W, bbox_me_orig=bbox_me)
         '''create pose'''
         poses = None
         if need_pose:

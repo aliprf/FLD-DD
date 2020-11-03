@@ -102,7 +102,8 @@ class ImageModification:
 
             '''crop data: we add a small margin to the images'''
             # c_img = self.crop_image_train(img=t_img, bbox=t_bbox)
-            c_img, landmark_new = self.crop_image_train(img=img_new, bbox=bbox_new, annotation=landmark_new, ds_name=ds_name)
+            c_img, landmark_new = self.crop_image_train(img=img_new, bbox=bbox_new, annotation=landmark_new,
+                                                        ds_name=ds_name)
             # self.test_image_print(img_name='bb' + str(index + 1) + '_' + str(aug_num), img=c_img,
             #                       landmarks=landmark_new, bbox_me=bbox_new)
 
@@ -147,19 +148,30 @@ class ImageModification:
 
     def relabel_ds(self, ds_name, labels):
         new_labels = np.copy(labels)
-        if ds_name == DatasetName.dsCofw:
+        if ds_name == DatasetName.ds300W:
+            index_src = [0, 1, 2, 3, 4, 5, 6, 7, 17, 18, 19, 20, 21, 31, 32, 36, 37, 38, 39, 40, 41, 48, 49, 50,
+                         60, 61, 67, 59, 58]
+            index_dst = [16, 15, 14, 13, 12, 11, 10, 9, 26, 25, 24, 23, 22, 35, 34, 45, 44, 43, 42, 47, 46, 54, 53, 52,
+                         64, 63, 65, 55, 56]
+
+        elif ds_name == DatasetName.dsWflw:
+            index_src = [0, 1, 2, 3, 4, 5, 6, 7, 8, 8, 10, 11, 12, 13, 14, 15, 33, 34, 35, 36, 37, 38, 39, 40, 41,
+                         60, 61, 62, 63, 64, 65, 66, 67, 96, 55, 56, 76, 77, 78, 88, 89, 95, 87, 86]
+            index_dst = [32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 46, 45, 44, 43, 42, 50, 49, 48,
+                         47,
+                         72, 71, 70, 69, 68, 75, 74, 73, 97, 59, 58, 82, 81, 80, 92, 91, 93, 83, 84]
+
+        elif ds_name == DatasetName.dsCofw:
             index_src = [0, 2, 4, 5, 8, 10, 12, 13, 16, 18, 22]
             index_dst = [1, 3, 6, 7, 9, 11, 14, 15, 17, 19, 23]
-            for i in range(len(index_src)):
-                new_labels[index_src[i] * 2] = labels[index_dst[i] * 2]
-                new_labels[index_src[i] * 2 + 1] = labels[index_dst[i] * 2 + 1]
 
-                new_labels[index_dst[i] * 2] = labels[index_src[i] * 2]
-                new_labels[index_dst[i] * 2 + 1] = labels[index_src[i] * 2 + 1]
-            return new_labels
+        for i in range(len(index_src)):
+            new_labels[index_src[i] * 2] = labels[index_dst[i] * 2]
+            new_labels[index_src[i] * 2 + 1] = labels[index_dst[i] * 2 + 1]
 
-        else:
-            return labels
+            new_labels[index_dst[i] * 2] = labels[index_src[i] * 2]
+            new_labels[index_dst[i] * 2 + 1] = labels[index_src[i] * 2 + 1]
+        return new_labels
 
     def crop_image_train(self, img, bbox, annotation, ds_name):
         if ds_name != DatasetName.dsCofw:
@@ -171,8 +183,8 @@ class ImageModification:
             ymax = int(max(ann_y) + rand_padd)
             annotation_new = []
             for i in range(0, len(annotation), 2):
-                annotation_new.append(annotation[i]-xmin)
-                annotation_new.append(annotation[i+1]-ymin)
+                annotation_new.append(annotation[i] - xmin)
+                annotation_new.append(annotation[i + 1] - ymin)
             croped_img = img[ymin:ymax, xmin:xmax]
             # if croped_img.shape[1] == 0 or croped_img.shape[0] == 0:
             #     print('--')
@@ -256,8 +268,8 @@ class ImageModification:
             landmarks_x.append(landmarks[i])
             landmarks_y.append(landmarks[i + 1])
 
-        # for i in range(len(landmarks_x)):
-        #     plt.annotate(str(i), (landmarks_x[i], landmarks_y[i]), fontsize=6)
+        for i in range(len(landmarks_x)):
+            plt.annotate(str(i), (landmarks_x[i], landmarks_y[i]), fontsize=6, color='red')
 
         plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='b', s=5)
         plt.savefig(img_name + '.png')
