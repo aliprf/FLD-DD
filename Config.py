@@ -111,13 +111,13 @@ class W300W:
     # w300w_prefix_path = '/media/data3/ali/FL/new_data/cofw/'  # --> zeus
     w300w_prefix_path = '/media/ali/data/new_data/300W/'  # --> local
 
-    orig_COFW_test = w300w_prefix_path + 'orig_300W_test/'
+    orig_300W_test = w300w_prefix_path + 'orig_300W_test/'
     test_annotation_path = w300w_prefix_path + 'testing_set/annotations/'
     test_pose_path = w300w_prefix_path + 'testing_set/pose/'
     test_image_path = w300w_prefix_path + 'testing_set/images/'
     test_tf_path = w300w_prefix_path + 'testing_set/tf/'
 
-    orig_COFW_train = w300w_prefix_path + 'orig_300W_train/'
+    orig_300W_train = w300w_prefix_path + 'orig_300W_train/'
     augmented_train_pose = w300w_prefix_path + 'training_set/augmented/pose/'
     augmented_train_annotation = w300w_prefix_path + 'training_set/augmented/annotations/'
     augmented_train_image = w300w_prefix_path + 'training_set/augmented/images/'
