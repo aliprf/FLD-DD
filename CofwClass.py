@@ -162,7 +162,7 @@ class CofwClass:
         annotations_path = []
         bboxes_path = []
 
-        for file in os.listdir(path_folder):
+        for file in tqdm(os.listdir(path_folder)):
             if file.endswith(".png"):
                 images_path.append(os.path.join(path_folder, file))
                 annotations_path.append(os.path.join(path_folder, "an_" + str(file)[:-3] + "txt"))
