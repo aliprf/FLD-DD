@@ -118,7 +118,8 @@ class WflwClass:
 
         '''this is the augmented images+original one'''
         for i in range(len(imgs)):
-            self._save(img=imgs[i], annotation=annotations[i], file_name=str(index) + '_' + str(i), pose=poses[i], atr=atr,
+            self._save(img=imgs[i], annotation=annotations[i], file_name=str(index) + '_' + str(i), pose=poses[i],
+                       atr=atr,
                        image_save_path=WflwConf.augmented_train_image,
                        annotation_save_path=WflwConf.augmented_train_annotation,
                        atr_save_path=WflwConf.augmented_train_tf_path,
@@ -148,7 +149,8 @@ class WflwClass:
 
         return img, annotation
 
-    def _save(self, img, annotation, atr, pose, file_name, image_save_path, annotation_save_path, pose_save_path, atr_save_path):
+    def _save(self, img, annotation, atr, pose, file_name, image_save_path, annotation_save_path, pose_save_path,
+              atr_save_path):
         im = Image.fromarray(np.round(img * 255).astype(np.uint8))
         im.save(image_save_path + file_name + '.jpg')
         np.save(annotation_save_path + file_name, annotation)
@@ -170,12 +172,13 @@ class WflwClass:
         counter = 0
         with open(annotation_path) as fp:
             line = fp.readline()
-            while line and counter < 10:
+            while line:  # and counter < 10:
                 sys.stdout.write('\r \r line --> \033[92m' + str(counter))
 
                 total_data = line.strip().split(' ')
                 annotation_arr.append(list(map(float, total_data[0:WflwConf.num_of_landmarks * 2])))
-                bbox_arr.append(self._create_bbox(list(map(int, total_data[WflwConf.num_of_landmarks * 2:WflwConf.num_of_landmarks * 2 + 4]))))
+                bbox_arr.append(self._create_bbox(
+                    list(map(int, total_data[WflwConf.num_of_landmarks * 2:WflwConf.num_of_landmarks * 2 + 4]))))
                 atr_arr.append(
                     list(map(int, total_data[WflwConf.num_of_landmarks * 2 + 4:WflwConf.num_of_landmarks * 2 + 10])))
                 image_arr.append(self._load_image(WflwConf.orig_WFLW_image + total_data[-1]))
