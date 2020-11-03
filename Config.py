@@ -133,6 +133,9 @@ class W300W:
     orig_number_of_test_common = 554
     orig_number_of_test_challenging = 135
 
-    augmentation_factor = 3  # create . image from 1
+    augmentation_factor = 5  # create . image from 1
     num_of_landmarks = 68
     hm_stride = 3
+    '''for tf record:'''
+    num_eval_samples = int(3507 * augmentation_factor * 0.5)  #
+    num_train_samples = 3507 * augmentation_factor - num_eval_samples  #

@@ -18,12 +18,12 @@ class W300WClass:
     def create_pca_obj(self, accuracy):
         pca_utils = PCAUtility()
         pca_utils.create_pca_from_npy(annotation_path=W300W.augmented_train_annotation,
-                                      pca_accuracy=accuracy, pca_file_name='300w')
+                                      pca_accuracy=accuracy, pca_file_name=DatasetName.ds300W)
 
     def create_train_set(self, need_pose=False, need_hm=False, accuracy=100):
         pose_detector = PoseDetector()
 
-        imgs, annotations, bboxs = self._load_data(W300W.orig_300W_test)
+        imgs, annotations, bboxs = self._load_data(W300W.orig_300W_train)
 
         for i in tqdm(range(len(imgs))):
             self._do_random_augment(index=i, img=imgs[i], annotation=annotations[i], _bbox=bboxs[i]
@@ -79,7 +79,7 @@ class W300WClass:
 
         tf_utility.create_tf_ref(tf_file_paths=tf_file_paths, img_file_paths=img_file_paths,
                                  annotation_file_paths=annotation_file_paths, pose_file_paths=pose_file_paths,
-                                 need_pose=need_pose, accuracy=accuracy, is_test=is_test, ds_name=DatasetName.dsWflw)
+                                 need_pose=need_pose, accuracy=accuracy, is_test=is_test, ds_name=DatasetName.ds300W)
 
     def _do_random_augment(self, index, img, annotation, _bbox, need_hm, need_pose, pose_detector):
         tf_utility = TfUtility()
@@ -91,22 +91,13 @@ class W300WClass:
         xmax = _bbox[6]
         ymax = _bbox[7]
         '''create 4-point bounding box'''
-        rand_padd = 1
-        # rand_padd = random.randint(1, 5)
-
-        ann_xy, ann_x, ann_y = img_mod.create_landmarks(annotation, 1, 1)
-        xmin = min(min(ann_x) - rand_padd, xmin)
-        xmax = max(max(ann_x) + rand_padd, xmax)
-        ymin = min(min(ann_y) - rand_padd, ymin)
-        ymax = max(max(ann_y) + rand_padd, ymax)
-
         bbox_me = [xmin, ymin, xmin, ymax, xmax, ymin, xmax, ymax]
 
         imgs, annotations = img_mod.random_augment(index=index, img_orig=img, landmark_orig=annotation,
                                                    num_of_landmarks=W300W.num_of_landmarks,
                                                    augmentation_factor=W300W.augmentation_factor,
                                                    ymin=ymin, ymax=ymax, xmin=xmin, xmax=xmax,
-                                                   ds_name=DatasetName.dsWflw, bbox_me_orig=bbox_me, atr=atr)
+                                                   ds_name=DatasetName.dsWflw, bbox_me_orig=bbox_me)
         '''create pose'''
         poses = None
         if need_pose:
@@ -124,7 +115,7 @@ class W300WClass:
                        image_save_path=W300W.augmented_train_image,
                        annotation_save_path=W300W.augmented_train_annotation,
                        pose_save_path=W300W.augmented_train_pose)
-            # img_mod.test_image_print('zzz_final'+str(index)+'-'+str(i), imgs[i], annotations[i])
+            img_mod.test_image_print('zzz_final'+str(index)+'-'+str(i), imgs[i], annotations[i])
 
         return imgs, annotations
 
@@ -161,15 +152,20 @@ class W300WClass:
         annotation_arr = []
         bbox_arr = []
 
-        for file in os.listdir(path_folder):
-            if file.endswith(".png") or file.endswith(".jpg"):
-                images_path = os.path.join(path_folder, file)
-                annotations_path = os.path.join(path_folder, str(file)[:-3] + "pts")
-                '''load data'''
-                image_arr.append(self._load_image(images_path))
-                annotation = self._load_annotation(annotations_path)
-                annotation_arr.append(annotation)
-                bbox_arr.append(self._create_bbox(annotation))
+        counter =0
+        for file in tqdm(os.listdir(path_folder)):
+            if (file.endswith(".png") or file.endswith(".jpg")) and counter < 100:
+                try:
+                    images_path = os.path.join(path_folder, file)
+                    annotations_path = os.path.join(path_folder, str(file)[:-3] + "pts")
+                    '''load data'''
+                    image_arr.append(self._load_image(images_path))
+                    annotation = self._load_annotation(annotations_path)
+                    annotation_arr.append(annotation)
+                    bbox_arr.append(self._create_bbox(annotation))
+                except Exception as e:
+                    print('300W: _load_data-Exception')
+                counter += 1
 
         print('300W Loading Done')
         return image_arr, annotation_arr, bbox_arr

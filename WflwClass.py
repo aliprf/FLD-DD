@@ -18,7 +18,7 @@ class WflwClass:
     def create_pca_obj(self, accuracy):
         pca_utils = PCAUtility()
         pca_utils.create_pca_from_npy(annotation_path=WflwConf.augmented_train_annotation,
-                                      pca_accuracy=accuracy, pca_file_name='wflw')
+                                      pca_accuracy=accuracy, pca_file_name=DatasetName.dsWflw)
 
     def create_train_set(self, need_pose=False, need_hm=False, accuracy=100):
         pose_detector = PoseDetector()

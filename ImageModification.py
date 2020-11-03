@@ -47,8 +47,7 @@ class ImageModification:
             landmark = landmark_orig
             bbox_me = np.array(bbox_me_orig)
             '''flipping image'''
-            flip_rand = random.randint(0, 4)
-            if flip_rand < 2:
+            if aug_num % 2 == 0:
                 img, landmark, bbox_me = self._flip_and_relabel(img, landmark, ds_name, num_of_landmarks, bbox_me)
             '''noise'''
             img = self._noisy(img)
