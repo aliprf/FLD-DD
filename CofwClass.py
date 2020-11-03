@@ -58,8 +58,8 @@ class CofwClass:
                        annotation_save_path=CofwConf.test_annotation_path, pose_save_path=CofwConf.test_pose_path)
 
         '''tf_record'''
-        if need_tf_ref:
-            self.cofw_create_tf_record(ds_type=1, need_pose=need_pose)  # we don't need hm for test
+        # if need_tf_ref:
+        #     self.cofw_create_tf_record(ds_type=1, need_pose=need_pose)  # we don't need hm for test
         print("create_test_set DONE!!")
 
     """PRIVATE"""
