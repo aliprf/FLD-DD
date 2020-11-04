@@ -1,6 +1,6 @@
 from Config import WflwConf, DatasetName, InputDataSize
 from ImageModification import ImageModification
-from pose_detection.code.PoseDetector import PoseDetector
+# from pose_detection.code.PoseDetector import PoseDetector
 from pca_utility import PCAUtility
 from tf_utility import TfUtility
 
@@ -21,13 +21,13 @@ class WflwClass:
                                       pca_accuracy=accuracy, pca_file_name=DatasetName.dsWflw)
 
     def create_train_set(self, need_pose=False, need_hm=False, accuracy=100):
-        pose_detector = PoseDetector()
+        # pose_detector = PoseDetector()
 
         imgs, annotations, bboxs, atrs = self._load_data(WflwConf.orig_WFLW_train)
 
         for i in tqdm(range(len(imgs))):
             self._do_random_augment(index=i, img=imgs[i], annotation=annotations[i], _bbox=bboxs[i],
-                                    atr=atrs[i], need_hm=need_hm, need_pose=need_pose, pose_detector=pose_detector)
+                                    atr=atrs[i], need_hm=need_hm, need_pose=need_pose)
         print("create_train_set DONE!!")
 
     def create_test_set(self, need_pose=False, need_tf_ref=False):
@@ -36,16 +36,16 @@ class WflwClass:
         :return:
         """
         tf_utility = TfUtility()
-        pose_detector = PoseDetector()
+        # pose_detector = PoseDetector()
         img_mod = ImageModification()
 
         imgs, annotations, bboxs, atrs = self._load_data(WflwConf.orig_WFLW_test)
 
         for i in tqdm(range(len(imgs))):
             img, annotation = self._crop(img=imgs[i], annotation=annotations[i], bbox=bboxs[i])
-            pose = None
-            if need_pose:
-                pose = tf_utility.detect_pose([img], pose_detector)
+            # pose = None
+            # if need_pose:
+            #     pose = tf_utility.detect_pose([img], pose_detector)
             self._save(img=img, annotation=annotation, atr=atrs[i], file_name=str(i),
                        image_save_path=WflwConf.test_image_path,
                        annotation_save_path=WflwConf.test_annotation_path, pose_save_path=WflwConf.test_pose_path,
@@ -78,7 +78,7 @@ class WflwClass:
                                  annotation_file_paths=annotation_file_paths, pose_file_paths=pose_file_paths,
                                  need_pose=need_pose, accuracy=accuracy, is_test=is_test, ds_name=DatasetName.dsWflw)
 
-    def _do_random_augment(self, index, img, annotation, _bbox, atr, need_hm, need_pose, pose_detector):
+    def _do_random_augment(self, index, img, annotation, _bbox, atr, need_hm, need_pose, pose_detector=None):
         tf_utility = TfUtility()
 
         img_mod = ImageModification()

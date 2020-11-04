@@ -1,6 +1,6 @@
 from Config import CofwConf, DatasetName, InputDataSize
 from ImageModification import ImageModification
-from pose_detection.code.PoseDetector import PoseDetector
+# from pose_detection.code.PoseDetector import PoseDetector
 from pca_utility import PCAUtility
 from tf_utility import TfUtility
 
@@ -21,7 +21,7 @@ class CofwClass:
                                       pca_accuracy=accuracy, pca_file_name=DatasetName.dsCofw)
 
     def create_train_set(self, need_pose=False, need_hm=False, need_tf_ref=False, accuracy=100):
-        pose_detector = PoseDetector()
+        # pose_detector = PoseDetector()
         images_path, annotations_path, bboxes_path = self._load_data(CofwConf.orig_COFW_train)
 
         for i in tqdm(range(len(images_path))):
@@ -29,8 +29,8 @@ class CofwClass:
             bbox = self._load_bbox(bboxes_path[i])
             annotation = self._load_annotation(annotations_path[i])
 
-            self._do_random_augment(i, img, annotation, bbox, need_hm=need_hm,
-                                    need_pose=need_pose, pose_detector=pose_detector)
+            self._do_random_augment(index=i, img=img, annotation=annotation, _bbox=bbox, need_hm=need_hm,
+                                    need_pose=need_pose)
 
         print("create_train_set DONE!!")
 
@@ -40,7 +40,7 @@ class CofwClass:
         :return:
         """
         tf_utility = TfUtility()
-        pose_detector = PoseDetector()
+        # pose_detector = PoseDetector()
 
         images_path, annotations_path, bboxes_path = self._load_data(CofwConf.orig_COFW_test)
 
@@ -50,9 +50,9 @@ class CofwClass:
             annotation = self._load_annotation(annotations_path[i])
 
             img, annotation = self._crop(img=img, annotation=annotation, bbox=bbox)
-            pose = None
-            if need_pose:
-                pose = tf_utility.detect_pose([img], pose_detector)
+            # pose = None
+            # if need_pose:
+            #     pose = tf_utility.detect_pose([img], pose_detector)
             self._save(img=img, annotation=annotation, file_name=str(i),
                        image_save_path=CofwConf.test_image_path,
                        annotation_save_path=CofwConf.test_annotation_path, pose_save_path=CofwConf.test_pose_path)
@@ -84,7 +84,7 @@ class CofwClass:
                                  annotation_file_paths=annotation_file_paths, pose_file_paths=pose_file_paths,
                                  need_pose=need_pose, accuracy=accuracy, is_test=is_test, ds_name=DatasetName.dsCofw)
 
-    def _do_random_augment(self, index, img, annotation, _bbox, need_hm, need_pose, pose_detector):
+    def _do_random_augment(self, index, img, annotation, _bbox, need_hm, need_pose, pose_detector=None):
         tf_utility = TfUtility()
 
         img_mod = ImageModification()
@@ -110,9 +110,9 @@ class CofwClass:
                                                    ymin=ymin, ymax=ymax, xmin=xmin, xmax=xmax,
                                                    ds_name=DatasetName.dsCofw, bbox_me_orig=bbox_me)
         '''create pose'''
-        poses = []
-        if need_pose:
-            poses = tf_utility.detect_pose(images=imgs, pose_detector=pose_detector)
+        # poses = []
+        # if need_pose:
+        #     poses = tf_utility.detect_pose(images=imgs, pose_detector=pose_detector)
 
         '''this is the original image we save in the original path for ablation study'''
         self._save(img=imgs[0], annotation=annotations[0], file_name=str(index),

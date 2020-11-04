@@ -1,6 +1,6 @@
 from Config import W300W, DatasetName, InputDataSize
 from ImageModification import ImageModification
-from pose_detection.code.PoseDetector import PoseDetector
+# from pose_detection.code.PoseDetector import PoseDetector
 from pca_utility import PCAUtility
 from tf_utility import TfUtility
 
@@ -21,13 +21,13 @@ class W300WClass:
                                       pca_accuracy=accuracy, pca_file_name=DatasetName.ds300W)
 
     def create_train_set(self, need_pose=False, need_hm=False, accuracy=100):
-        pose_detector = PoseDetector()
+        # pose_detector = PoseDetector()
 
         imgs, annotations, bboxs = self._load_data(W300W.orig_300W_train)
 
         for i in tqdm(range(len(imgs))):
             self._do_random_augment(index=i, img=imgs[i], annotation=annotations[i], _bbox=bboxs[i]
-                                    , need_hm=need_hm, need_pose=need_pose, pose_detector=pose_detector)
+                                    , need_hm=need_hm, need_pose=need_pose)
         print("create_train_set DONE!!")
 
     def create_test_set(self, need_pose=False, need_tf_ref=False):
@@ -36,7 +36,7 @@ class W300WClass:
         :return:
         """
         tf_utility = TfUtility()
-        pose_detector = PoseDetector()
+        # pose_detector = PoseDetector()
         img_mod = ImageModification()
 
         ds_types = ['challenging/', 'common/', 'full/']
@@ -45,9 +45,9 @@ class W300WClass:
 
             for i in tqdm(range(len(imgs))):
                 img, annotation = self._crop(img=imgs[i], annotation=annotations[i], bbox=bboxs[i])
-                pose = None
-                if need_pose:
-                    pose = tf_utility.detect_pose([img], pose_detector)
+                # pose = None
+                # if need_pose:
+                #     pose = tf_utility.detect_pose([img], pose_detector)
                 self._save(img=img, annotation=annotation, file_name=str(i),
                            image_save_path=W300W.test_image_path+ds_type,
                            annotation_save_path=W300W.test_annotation_path+ds_type,
@@ -81,7 +81,7 @@ class W300WClass:
                                  annotation_file_paths=annotation_file_paths, pose_file_paths=pose_file_paths,
                                  need_pose=need_pose, accuracy=accuracy, is_test=is_test, ds_name=DatasetName.ds300W)
 
-    def _do_random_augment(self, index, img, annotation, _bbox, need_hm, need_pose, pose_detector):
+    def _do_random_augment(self, index, img, annotation, _bbox, need_hm, need_pose, pose_detector=None):
         tf_utility = TfUtility()
 
         img_mod = ImageModification()
@@ -99,9 +99,9 @@ class W300WClass:
                                                    ymin=ymin, ymax=ymax, xmin=xmin, xmax=xmax,
                                                    ds_name=DatasetName.ds300W, bbox_me_orig=bbox_me)
         '''create pose'''
-        poses = None
-        if need_pose:
-            poses = tf_utility.detect_pose(images=imgs, pose_detector=pose_detector)
+        # poses = None
+        # if need_pose:
+        #     poses = tf_utility.detect_pose(images=imgs, pose_detector=pose_detector)
 
         '''this is the original image we save in the original path for ablation study'''
         self._save(img=imgs[0], annotation=annotations[0], file_name=str(index),

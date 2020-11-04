@@ -1,6 +1,5 @@
 from Config import CofwConf, DatasetName, InputDataSize, WflwConf, W300W
 from ImageModification import ImageModification
-from pose_detection.code.PoseDetector import PoseDetector
 from pca_utility import PCAUtility
 
 import os, sys
