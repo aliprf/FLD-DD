@@ -234,12 +234,10 @@ class ImageModification:
         if y_land_min < 0: y_land_min = int(min(landmark_arr_y))
         y_land_max = int(max(landmark_arr_y)) + padding_percentage * int(max(landmark_arr_y))
 
-        _xmin = int(min(xmin, x_land_min))
-        _ymin = int(min(ymin, y_land_min))
+        _xmin = max(0, int(min(xmin, x_land_min)))
+        _ymin = max(0, int(min(ymin, y_land_min)))
         _xmax = int(max(xmax, x_land_max))
         _ymax = int(max(ymax, y_land_max))
-
-
 
         if _xmax - _xmin <= 0 or _ymax - _ymin <= 0:
             print('ERRORRR xmax - xmin <= 0 or ymax - ymin <= 0')
