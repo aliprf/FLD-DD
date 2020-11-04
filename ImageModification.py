@@ -21,7 +21,8 @@ class ImageModification:
         if len(img_orig.shape) < 3:
             landmark_orig = np.stack([img_orig, img_orig, img_orig], axis=-1)
 
-        _img, _landmark = self.crop_image_test(img_orig, ymin, ymax, xmin, xmax, landmark_orig, padding_percentage=0.02)
+        _img, _landmark = self.crop_image_test(img=img_orig, ymin=ymin, ymax=ymax, xmin=xmin, xmax=xmax,
+                                               landmark=landmark_orig, padding_percentage=0.02)
         _img, _landmark = self.resize_image(_img, _landmark)
 
         augmented_images = [_img]
