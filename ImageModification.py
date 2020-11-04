@@ -234,17 +234,18 @@ class ImageModification:
         if y_land_min < 0: y_land_min = int(min(landmark_arr_y))
         y_land_max = int(max(landmark_arr_y)) + padding_percentage * int(max(landmark_arr_y))
 
-        xmin = int(min(xmin, x_land_min))
-        ymin = int(min(ymin, y_land_min))
-        xmax = int(max(xmax, x_land_max))
-        ymax = int(max(ymax, y_land_max))
+        _xmin = int(min(xmin, x_land_min))
+        _ymin = int(min(ymin, y_land_min))
+        _xmax = int(max(xmax, x_land_max))
+        _ymax = int(max(ymax, y_land_max))
 
-        croped_img = img[ymin:ymax, xmin:xmax]
 
-        if xmax - xmin <= 0 or ymax - ymin <= 0:
-            print('ERRORRR11111111111')
-        if croped_img.shape[0] == 0 or croped_img.shape[1] == 0:
-            print('ERRORRR')
+
+        if _xmax - _xmin <= 0 or _ymax - _ymin <= 0:
+            print('ERRORRR xmax - xmin <= 0 or ymax - ymin <= 0')
+            croped_img = img[ymin:ymax, xmin:xmax]
+        else:
+            croped_img = img[_ymin:_ymax, _xmin:_xmax]
         '''grayscale to color'''
         if len(croped_img.shape) < 3:
             croped_img = np.stack([croped_img, croped_img, croped_img], axis=-1)
