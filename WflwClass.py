@@ -97,9 +97,9 @@ class WflwClass:
         # rand_padd = random.randint(1, 5)
 
         ann_xy, ann_x, ann_y = img_mod.create_landmarks(annotation, 1, 1)
-        xmin = min(min(ann_x) - rand_padd, xmin)
+        xmin = max(0, min(min(ann_x) - rand_padd, xmin))
         xmax = max(max(ann_x) + rand_padd, xmax)
-        ymin = min(min(ann_y) - rand_padd, ymin)
+        ymin = max(0,min(min(ann_y) - rand_padd, ymin))
         ymax = max(max(ann_y) + rand_padd, ymax)
 
         bbox_me = [xmin, ymin, xmin, ymax, xmax, ymin, xmax, ymax]
@@ -142,9 +142,9 @@ class WflwClass:
         xmax = bbox[6]
         ymax = bbox[7]
 
-        xmin = min(min(ann_x) - fix_pad, xmin)
+        xmin = max(0, min(min(ann_x) - fix_pad, xmin))
         xmax = max(max(ann_x) + fix_pad, xmax)
-        ymin = min(min(ann_y) - fix_pad, ymin)
+        ymin = max(0, min(min(ann_y) - fix_pad, ymin))
         ymax = max(max(ann_y) + fix_pad, ymax)
 
         img, annotation = img_mod.crop_image_test(img, ymin, ymax, xmin, xmax, annotation)
