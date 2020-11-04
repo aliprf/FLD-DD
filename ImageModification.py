@@ -18,6 +18,9 @@ class ImageModification:
                        xmax, ds_name, bbox_me_orig, atr=None):
         """"""
         '''keep original'''
+        print('img_orig:' + str(np.array(img_orig).shape))
+        print('landmark_orig: ' + str(np.array(landmark_orig).shape))
+
         if len(img_orig.shape) < 3:
             landmark_orig = np.stack([img_orig, img_orig, img_orig], axis=-1)
 
