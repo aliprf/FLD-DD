@@ -217,7 +217,7 @@ class ImageModification:
         return resized_img, landmark_arr_xy
 
     def crop_image_test(self, img, ymin, ymax, xmin, xmax, landmark, padding_percentage=0.0):
-        print(np.array(landmark.shape))
+        print(np.array(landmark).shape)
         landmark_arr_xy, landmark_arr_x, landmark_arr_y = self.create_landmarks(landmark, 1, 1)
 
         if ymin < 0: ymin = 0
