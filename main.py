@@ -8,7 +8,7 @@ if __name__ == '__main__':
     need_hm = True
     '''cofw'''
     cofw = CofwClass()
-    cofw.create_test_set(need_pose=need_pose, need_tf_ref=False)
+    # cofw.create_test_set(need_pose=need_pose, need_tf_ref=False)
     cofw.create_train_set(need_pose=need_pose, need_hm=True, need_tf_ref=False,
                           accuracy=pca_accuracy)
     cofw.create_pca_obj(accuracy=pca_accuracy)
