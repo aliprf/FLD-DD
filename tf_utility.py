@@ -13,31 +13,12 @@ import tensorflow as tf
 
 class TfUtility:
     def create_tf_ref(self, tf_file_paths, img_file_paths, annotation_file_paths, pose_file_paths, need_pose,
-                      accuracy, is_test, ds_name):
-
+                      accuracy, is_test, num_train_samples, num_eval_samples, ds_name):
+        img_mod = ImageModification()
         main_tf_name = 'train' + str(accuracy) + '.tfrecords'
-        if ds_name == DatasetName.dsCofw:
-            num_main_samples = CofwConf.num_train_samples
-            num_eval_samples = CofwConf.num_eval_samples
-        elif ds_name == DatasetName.dsWflw:
-            num_main_samples = WflwConf.num_train_samples
-            num_eval_samples = WflwConf.num_eval_samples
-        elif ds_name == DatasetName.ds300W:
-            num_main_samples = W300W.num_train_samples
-            num_eval_samples = W300W.num_eval_samples
 
         if is_test:
             main_tf_name = 'test.tfrecords'
-            if ds_name == DatasetName.dsCofw:
-                num_main_samples = CofwConf.orig_number_of_test
-            elif ds_name == DatasetName.dsWflw:
-                print('we dont create test for WFLW')
-                return 0
-                # num_main_samples = WflwConf.orig_number_of_test
-            elif ds_name == DatasetName.ds300W:
-                print('we dont create test for WFLW')
-                return 0
-                # num_main_samples = WflwConf.orig_number_of_test
 
         for index in range(len(tf_file_paths)):
             tf_main_path = tf_file_paths[index] + main_tf_name  # could be test or train
@@ -58,55 +39,57 @@ class TfUtility:
                     landmark_file_name = os.path.join(annotation_file_paths[index], file[:-3] + "npy")
                     landmark = load(landmark_file_name)
 
-                    '''load pose npy'''
-                    pose_file_name = os.path.join(pose_file_paths[index], file[:-3] + "npy")
-                    if need_pose:
-                        pose = load(pose_file_name)
-                    else:
-                        pose = None
+                    # '''load pose npy'''
+                    # pose_file_name = os.path.join(pose_file_paths[index], file[:-3] + "npy")
+                    # if need_pose:
+                    #     pose = load(pose_file_name)
+                    # else:
+                    #     pose = None
 
                     '''create new landmark using accuracy'''
                     if accuracy != 100:
                         landmark = self._get_asm(landmark, ds_name, accuracy)
+                    # img_mod.test_image_print(img_name=str(index), landmarks=landmark, img=img)
+
                     '''create tf_record:'''
                     writable_img = np.reshape(img,
                                               [InputDataSize.image_input_size * InputDataSize.image_input_size * 3])
 
                     if is_test:
-                        if need_pose:
-                            feature = {'landmarks': self._float_feature(landmark),
-                                       'image_raw': self._float_feature(writable_img)
-                                       }
-                        else:
-                            feature = {'landmarks': self._float_feature(landmark),
-                                       'pose': self._float_feature(pose),
-                                       'image_raw': self._float_feature(writable_img)
-                                       }
+                        # if need_pose:
+                        #     feature = {'landmarks': self._float_feature(landmark),
+                        #                'image_raw': self._float_feature(writable_img)
+                        #                }
+                        # else:
+                        feature = {'landmarks': self._float_feature(landmark),
+                                   'pose': self._float_feature(pose),
+                                   'image_raw': self._float_feature(writable_img)
+                                   }
                     else:
-                        if need_pose:
-                            feature = {'landmarks': self._float_feature(landmark),
-                                       'pose': self._float_feature(pose),
-                                       'image_raw': self._float_feature(writable_img),
-                                       'image_name': self._bytes_feature(img_tf_name.encode('utf-8')),
-                                       }
-                        else:
-                            feature = {'landmarks': self._float_feature(landmark),
-                                       'image_raw': self._float_feature(writable_img),
-                                       'image_name': self._bytes_feature(img_tf_name.encode('utf-8')),
-                                       }
+                        # if need_pose:
+                        #     feature = {'landmarks': self._float_feature(landmark),
+                        #                'pose': self._float_feature(pose),
+                        #                'image_raw': self._float_feature(writable_img),
+                        #                'image_name': self._bytes_feature(img_tf_name.encode('utf-8')),
+                        #                }
+                        # else:
+                        feature = {'landmarks': self._float_feature(landmark),
+                                   'image_raw': self._float_feature(writable_img),
+                                   'image_name': self._bytes_feature(img_tf_name.encode('utf-8')),
+                                   }
 
                     example = tf.train.Example(features=tf.train.Features(feature=feature))
 
-                    if counter <= num_main_samples:
+                    if counter <= num_train_samples[index]:
                         writer_main.write(example.SerializeToString())
                         msg = 'train --> \033[92m' + " sample number " + str(counter + 1) + \
-                              " created." + '\033[94m' + "remains " + str(num_main_samples - counter - 1)
+                              " created." + '\033[94m' + "remains " + str(num_train_samples[index] - counter - 1)
                         sys.stdout.write('\r' + msg)
 
                     elif tf_evaluation_path is not None:
                         writer_evaluate.write(example.SerializeToString())
                         msg = 'eval --> \033[92m' + " sample number " + str(counter + 1) + \
-                              " created." + '\033[94m' + "remains " + str(num_main_samples - counter - 1)
+                              " created." + '\033[94m' + "remains " + str(num_train_samples[index] - counter - 1)
                         sys.stdout.write('\r' + msg)
                     counter += 1
 

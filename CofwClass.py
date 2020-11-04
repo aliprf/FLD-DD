@@ -64,25 +64,30 @@ class CofwClass:
 
     """PRIVATE"""
 
-    def cofw_create_tf_record(self, ds_type, need_pose, accuracy=100):
+    def cofw_create_tf_record(self, need_pose, accuracy=100, ds_type=0):
         tf_utility = TfUtility()
 
-        if ds_type == 0:  # train
-            tf_file_paths = [CofwConf.no_aug_train_tf_path, CofwConf.augmented_train_tf_path]
-            img_file_paths = [CofwConf.no_aug_train_image, CofwConf.augmented_train_image]
-            annotation_file_paths = [CofwConf.no_aug_train_annotation, CofwConf.augmented_train_annotation]
-            pose_file_paths = [CofwConf.no_aug_train_pose, CofwConf.augmented_train_pose]
-            is_test = False
-        else:
-            tf_file_paths = [CofwConf.test_tf_path]
-            img_file_paths = [CofwConf.test_image_path]
-            annotation_file_paths = [CofwConf.test_annotation_path]
-            pose_file_paths = [CofwConf.test_pose_path]
-            is_test = True
+        # if ds_type == 0:  # train
+        tf_file_paths = [CofwConf.no_aug_train_tf_path, CofwConf.augmented_train_tf_path]
+        img_file_paths = [CofwConf.no_aug_train_image, CofwConf.augmented_train_image]
+        annotation_file_paths = [CofwConf.no_aug_train_annotation, CofwConf.augmented_train_annotation]
+        pose_file_paths = [CofwConf.no_aug_train_pose, CofwConf.augmented_train_pose]
+        num_train_samples = [CofwConf.num_train_samples_orig, CofwConf.num_train_samples_aug]
+        num_eval_samples = [CofwConf.num_eval_samples_orig, CofwConf.num_eval_samples_aug]
+        is_test = False
+        # else:
+        #     tf_file_paths = [CofwConf.test_tf_path]
+        #     img_file_paths = [CofwConf.test_image_path]
+        #     annotation_file_paths = [CofwConf.test_annotation_path]
+        #     pose_file_paths = [CofwConf.test_pose_path]
+        #     num_train_samples = [CofwConf.orig_number_of_test]
+        #     num_eval_samples = [0]
+        #     is_test = True
 
         tf_utility.create_tf_ref(tf_file_paths=tf_file_paths, img_file_paths=img_file_paths,
                                  annotation_file_paths=annotation_file_paths, pose_file_paths=pose_file_paths,
-                                 need_pose=need_pose, accuracy=accuracy, is_test=is_test, ds_name=DatasetName.dsCofw)
+                                 need_pose=need_pose, accuracy=accuracy, is_test=is_test, ds_name=DatasetName.dsCofw,
+                                 num_train_samples=num_train_samples, num_eval_samples=num_eval_samples)
 
     def _do_random_augment(self, index, img, annotation, _bbox, need_hm, need_pose, pose_detector=None):
         tf_utility = TfUtility()
