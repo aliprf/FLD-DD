@@ -46,7 +46,7 @@ class WflwClass:
             pose = None
             if need_pose:
                 pose = tf_utility.detect_pose([img], pose_detector)
-            self._save(img=img, annotation=annotation, atr=atrs[i], file_name=str(i), pose=pose,
+            self._save(img=img, annotation=annotation, atr=atrs[i], file_name=str(i),
                        image_save_path=WflwConf.test_image_path,
                        annotation_save_path=WflwConf.test_annotation_path, pose_save_path=WflwConf.test_pose_path,
                        atr_save_path=WflwConf.test_atr_path)
@@ -110,7 +110,7 @@ class WflwClass:
             poses = tf_utility.detect_pose(images=imgs, pose_detector=pose_detector)
 
         '''this is the original image we save in the original path for ablation study'''
-        self._save(img=imgs[0], annotation=annotations[0], file_name=str(index), atr=atr, pose=poses[0],
+        self._save(img=imgs[0], annotation=annotations[0], file_name=str(index), atr=atr,
                    image_save_path=WflwConf.no_aug_train_image,
                    annotation_save_path=WflwConf.no_aug_train_annotation,
                    atr_save_path=WflwConf.augmented_train_tf_path,
@@ -118,7 +118,7 @@ class WflwClass:
 
         '''this is the augmented images+original one'''
         for i in range(len(imgs)):
-            self._save(img=imgs[i], annotation=annotations[i], file_name=str(index) + '_' + str(i), pose=poses[i],
+            self._save(img=imgs[i], annotation=annotations[i], file_name=str(index) + '_' + str(i),
                        atr=atr,
                        image_save_path=WflwConf.augmented_train_image,
                        annotation_save_path=WflwConf.augmented_train_annotation,
@@ -149,8 +149,8 @@ class WflwClass:
 
         return img, annotation
 
-    def _save(self, img, annotation, atr, pose, file_name, image_save_path, annotation_save_path, pose_save_path,
-              atr_save_path):
+    def _save(self, img, annotation, atr, file_name, image_save_path, annotation_save_path, pose_save_path,
+              atr_save_path, pose=None):
         im = Image.fromarray(np.round(img * 255).astype(np.uint8))
         im.save(image_save_path + file_name + '.jpg')
         np.save(annotation_save_path + file_name, annotation)
