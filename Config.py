@@ -70,7 +70,7 @@ class WflwConf:
     augmentation_factor = 5  # create . image from 4
     num_of_landmarks = 98
     hm_stride = 3
-    '''for tf record:'''
+    '''for tf record: 60890'''
     num_eval_samples_aug = int(orig_number_of_training * augmentation_factor * 0.5)  # 75000* 0.05 = 3750
     num_train_samples_aug = orig_number_of_training * augmentation_factor - num_eval_samples_aug  # 75000 - 3750 = 71250
 
@@ -79,8 +79,8 @@ class WflwConf:
 
 
 class CofwConf:
-    # Cofw_prefix_path = '/media/data3/ali/FL/new_data/cofw/'  # --> zeus
-    Cofw_prefix_path = '/media/ali/data/new_data/cofw/'  # --> local
+    Cofw_prefix_path = '/media/data3/ali/FL/new_data/cofw/'  # --> zeus
+    # Cofw_prefix_path = '/media/ali/data/new_data/cofw/'  # --> local
     #
     orig_COFW_test = Cofw_prefix_path + 'orig_COFW_test/'
     test_annotation_path = Cofw_prefix_path + 'testing_set/annotations/'
@@ -106,15 +106,15 @@ class CofwConf:
     num_of_landmarks = 29
     hm_stride = 3
     '''for tf record:'''
-    num_eval_samples_aug = int(14795 * 0.05)#int(orig_number_of_training * augmentation_factor * 0.5)  # 13450* 0.05 = 670
-    num_train_samples_aug = 14795 - num_eval_samples_aug #orig_number_of_training * augmentation_factor - num_eval_samples  # 13450 - 670 = 12775
+    num_eval_samples_aug = int(orig_number_of_training * augmentation_factor * 0.5)
+    num_train_samples_aug = orig_number_of_training * augmentation_factor - num_eval_samples_aug  # 13450 - 670 = 12775
 
-    num_eval_samples_orig = int(orig_number_of_training * 0.5)  # 13450* 0.05 = 670
-    num_train_samples_orig = orig_number_of_training - num_eval_samples_orig  # 13450 - 670 = 12775
+    num_eval_samples_orig = int(orig_number_of_training * 0.5)  #
+    num_train_samples_orig = orig_number_of_training - num_eval_samples_orig  #
 
 
 class W300W:
-    w300w_prefix_path = '/media/data3/ali/FL/new_data/cofw/'  # --> zeus
+    w300w_prefix_path = '/media/data3/ali/FL/new_data/300W/'  # --> zeus
     # w300w_prefix_path = '/media/ali/data/new_data/300W/'  # --> local
 
     orig_300W_test = w300w_prefix_path + 'orig_300W_test/'

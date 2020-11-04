@@ -177,7 +177,7 @@ class WflwClass:
         counter = 0
         with open(annotation_path) as fp:
             line = fp.readline()
-            while line:  # and counter < 10:
+            while line: # and counter < 10:
                 sys.stdout.write('\r \r line --> \033[92m' + str(counter))
 
                 total_data = line.strip().split(' ')

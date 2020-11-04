@@ -52,7 +52,7 @@ class W300WClass:
                            image_save_path=W300W.test_image_path+ds_type,
                            annotation_save_path=W300W.test_annotation_path+ds_type,
                            pose_save_path=W300W.test_pose_path+ds_type)
-                img_mod.test_image_print('zzz_final-'+str(i), img, annotation)
+                # img_mod.test_image_print('zzz_final-'+str(i), img, annotation)
 
         '''tf_record'''
         # if need_tf_ref:
@@ -120,7 +120,7 @@ class W300WClass:
                        image_save_path=W300W.augmented_train_image,
                        annotation_save_path=W300W.augmented_train_annotation,
                        pose_save_path=W300W.augmented_train_pose)
-            img_mod.test_image_print('zzz_final'+str(index)+'-'+str(i), imgs[i], annotations[i])
+            # img_mod.test_image_print('zzz_final'+str(index)+'-'+str(i), imgs[i], annotations[i])
 
         return imgs, annotations
 
@@ -159,7 +159,7 @@ class W300WClass:
 
         counter =0
         for file in tqdm(os.listdir(path_folder)):
-            if file.endswith(".png") or file.endswith(".jpg"):# and counter < 100:
+            if (file.endswith(".png") or file.endswith(".jpg")): #and counter < 10:
                 try:
                     images_path = os.path.join(path_folder, file)
                     annotations_path = os.path.join(path_folder, str(file)[:-3] + "pts")
@@ -182,7 +182,7 @@ class W300WClass:
         img_mod = ImageModification()
         ann_xy, an_x, an_y = img_mod.create_landmarks(annotation, 1, 1)
 
-        fix_padd = 15
+        fix_padd = 10
         xmin = int(max(0, min(an_x) - fix_padd))
         ymin = int(max(0, min(an_y) - fix_padd))
         xmax = int(max(an_x) + fix_padd)

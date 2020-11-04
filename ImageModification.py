@@ -25,14 +25,14 @@ class ImageModification:
             img_orig = np.stack([img_orig, img_orig, img_orig], axis=-1)
 
         _img, _landmark = self.crop_image_test(img=img_orig, ymin=ymin, ymax=ymax, xmin=xmin, xmax=xmax,
-                                               landmark=landmark_orig, padding_percentage=0.02)
+                                               landmark=landmark_orig, padding_percentage=0.0)
         _img, _landmark = self.resize_image(_img, _landmark)
 
         augmented_images = [_img]
         augmented_landmarks = [_landmark]
         '''affine'''
-        scale = (np.random.uniform(0.75, 1.25), np.random.uniform(0.75, 1.25))
-        # scale = (1, 1)
+        # scale = (np.random.uniform(0.9, 1.1), np.random.uniform(0.9, 1.1))
+        scale = (1, 1)
         translation = (0, 0)
         shear = 0
 
@@ -46,17 +46,31 @@ class ImageModification:
             augmentation_factor += atr[4] * augmentation_factor  # _occl = atr[4]
             augmentation_factor += atr[5] * 2  # _blr = atr[5]
 
-        while aug_num < augmentation_factor:
-            img = img_orig
-            landmark = landmark_orig
-            bbox_me = np.array(bbox_me_orig)
+        while aug_num < augmentation_factor-1:
+            '''keep original'''
+            img = np.copy(img_orig)
+            landmark = np.copy(landmark_orig)
+            bbox_me = np.copy(np.array(bbox_me_orig))
+
+            '''let's pad image before'''
+            fix_pad = InputDataSize.image_input_size * 2
+            img = np.pad(img, ((fix_pad, fix_pad), (fix_pad, fix_pad), (0, 0)), 'constant')
+            for jj in range(len(landmark)):
+                landmark[jj] = landmark[jj] + fix_pad
+            for jj in range(len(bbox_me)):
+                bbox_me[jj] = bbox_me[jj] + fix_pad
+
+            # self.test_image_print(img_name='zzz_affine' + str(index + 1) + '_' + str(aug_num),
+            #                       img=img, landmarks=landmark, bbox_me=bbox_me)
+
             '''flipping image'''
             if aug_num % 2 == 0:
                 img, landmark, bbox_me = self._flip_and_relabel(img, landmark, ds_name, num_of_landmarks, bbox_me)
+
             '''noise'''
             img = self._noisy(img)
 
-            rot = np.random.uniform(-1 * 0.6, 0.6)
+            rot = np.random.uniform(-1 * 0.5, 0.5)
             sx, sy = scale
             t_matrix = np.array([
                 [sx * math.cos(rot), -sy * math.sin(rot + shear), 0],
@@ -70,7 +84,7 @@ class ImageModification:
             tform = AffineTransform(scale=scale, rotation=rot, translation=translation, shear=np.deg2rad(shear))
 
             t_img = transform.warp(img, tform.inverse, mode='edge')
-
+            # self.test_image_print(img_name='zzz_affine' + str(index + 1) + '_' + str(aug_num), img=t_img, landmarks=landmark)
             '''affine landmark'''
             landmark_arr_xy, landmark_arr_x, landmark_arr_y = self.create_landmarks(landmark, 1, 1)
             label = np.array(landmark_arr_x + landmark_arr_y).reshape([2, num_of_landmarks])
@@ -179,7 +193,8 @@ class ImageModification:
 
     def crop_image_train(self, img, bbox, annotation, ds_name):
         if ds_name != DatasetName.dsCofw:
-            rand_padd = 0.005 * random.randint(1, 5) * img.shape[0]
+            rand_padd = 0.005 * img.shape[0] + random.randint(0, 5)
+            # rand_padd = 0.005 * img.shape[0]
             ann_xy, ann_x, ann_y = self.create_landmarks(annotation, 1, 1)
             xmin = int(max(0, min(ann_x) - rand_padd))
             xmax = int(max(ann_x) + rand_padd)
@@ -194,13 +209,30 @@ class ImageModification:
             #     print('--')
             return croped_img, annotation_new
         else:
-            bb_xy, bb_x, bb_y = self.create_landmarks(bbox, 1, 1)
-            xmin = int(min(bb_x))
-            xmax = int(max(bb_x))
-            ymin = int(min(bb_y))
-            ymax = int(max(bb_y))
+            '''following block just used the bbox'''
+            # bb_xy, bb_x, bb_y = self.create_landmarks(bbox, 1, 1)
+            # xmin = int(min(bb_x))
+            # xmax = int(max(bb_x))
+            # ymin = int(min(bb_y))
+            # ymax = int(max(bb_y))
+            # croped_img = img[ymin:ymax, xmin:xmax]
+            # return croped_img, annotation
+            '''this block use the landmarks'''
+            rand_padd = 0.005 * img.shape[0] + random.randint(5, 10)
+            ann_xy, ann_x, ann_y = self.create_landmarks(annotation, 1, 1)
+            xmin = int(max(0, min(ann_x) - rand_padd))
+            xmax = int(max(ann_x) + rand_padd)
+            ymin = int(max(0, min(ann_y) - rand_padd))
+            ymax = int(max(ann_y) + rand_padd)
+            annotation_new = []
+            for i in range(0, len(annotation), 2):
+                annotation_new.append(annotation[i] - xmin)
+                annotation_new.append(annotation[i + 1] - ymin)
             croped_img = img[ymin:ymax, xmin:xmax]
-            return croped_img, annotation
+            # if croped_img.shape[1] == 0 or croped_img.shape[0] == 0:
+            #     print('--')
+            return croped_img, annotation_new
+
 
     def resize_image(self, img, annotation):
         if img.shape[0] == 0 or img.shape[1] == 0:
@@ -272,8 +304,8 @@ class ImageModification:
             landmarks_x.append(landmarks[i])
             landmarks_y.append(landmarks[i + 1])
 
-        for i in range(len(landmarks_x)):
-            plt.annotate(str(i), (landmarks_x[i], landmarks_y[i]), fontsize=6, color='red')
+        # for i in range(len(landmarks_x)):
+        #     plt.annotate(str(i), (landmarks_x[i], landmarks_y[i]), fontsize=6, color='red')
 
         plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='b', s=5)
         plt.savefig(img_name + '.png')
