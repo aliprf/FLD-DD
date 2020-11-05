@@ -32,6 +32,7 @@ class InputDataSize:
 
 class WflwConf:
     Wflw_prefix_path = '/media/data3/ali/FL/new_data/wflw/'  # --> zeus
+    # Cofw_prefix_path = '/media/data2/alip/FL/new_data/wflw/'  # --> atlas
     # Wflw_prefix_path = '/media/ali/data/new_data/wflw/'  # --> local
     '''original ds data'''
     orig_WFLW_test = Wflw_prefix_path + 'WFLW_annotations/list_98pt_rect_attr_train_test/list_98pt_rect_attr_test.txt'
@@ -71,15 +72,16 @@ class WflwConf:
     num_of_landmarks = 98
     hm_stride = 3
     '''for tf record: 60890'''
-    num_eval_samples_aug = int(orig_number_of_training * augmentation_factor * 0.5)  # 75000* 0.05 = 3750
+    num_eval_samples_aug = int(orig_number_of_training * augmentation_factor * 0.05)  # 75000* 0.05 = 3750
     num_train_samples_aug = orig_number_of_training * augmentation_factor - num_eval_samples_aug  # 75000 - 3750 = 71250
 
-    num_eval_samples_orig = int(orig_number_of_training * 0.5)  # 7500* 0.05 =
+    num_eval_samples_orig = int(orig_number_of_training * 0.05)  # 7500* 0.05 =
     num_train_samples_orig = orig_number_of_training - num_eval_samples_orig  # 7500 - 7500* 0.05 =
 
 
 class CofwConf:
     Cofw_prefix_path = '/media/data3/ali/FL/new_data/cofw/'  # --> zeus
+    # Cofw_prefix_path = '/media/data2/alip/FL/new_data/cofw/'  # --> atlas
     # Cofw_prefix_path = '/media/ali/data/new_data/cofw/'  # --> local
     #
     orig_COFW_test = Cofw_prefix_path + 'orig_COFW_test/'
@@ -106,15 +108,16 @@ class CofwConf:
     num_of_landmarks = 29
     hm_stride = 3
     '''for tf record:'''
-    num_eval_samples_aug = int(orig_number_of_training * augmentation_factor * 0.5)
+    num_eval_samples_aug = int(orig_number_of_training * augmentation_factor * 0.05)
     num_train_samples_aug = orig_number_of_training * augmentation_factor - num_eval_samples_aug  # 13450 - 670 = 12775
 
-    num_eval_samples_orig = int(orig_number_of_training * 0.5)  #
+    num_eval_samples_orig = int(orig_number_of_training * 0.05)  #
     num_train_samples_orig = orig_number_of_training - num_eval_samples_orig  #
 
 
 class W300W:
     w300w_prefix_path = '/media/data3/ali/FL/new_data/300W/'  # --> zeus
+    # w300w_prefix_path = '/media/data2/alip/FL/new_data/300W/'  # --> atlas
     # w300w_prefix_path = '/media/ali/data/new_data/300W/'  # --> local
 
     orig_300W_test = w300w_prefix_path + 'orig_300W_test/'
@@ -143,7 +146,7 @@ class W300W:
     num_of_landmarks = 68
     hm_stride = 3
     '''for tf record:'''
-    num_eval_samples_aug = int(3507 * augmentation_factor * 0.5)  #
+    num_eval_samples_aug = int(3507 * augmentation_factor * 0.05)  #
     num_train_samples_aug = 3507 * augmentation_factor - num_eval_samples_aug  #
-    num_eval_samples_orig = int(orig_number_of_training * 0.5)  # 13450* 0.05 = 670
+    num_eval_samples_orig = int(orig_number_of_training * 0.05)  # 13450* 0.05 = 670
     num_train_samples_orig = orig_number_of_training - num_eval_samples_orig  # 13450 - 670 = 12775
