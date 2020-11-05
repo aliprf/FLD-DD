@@ -115,7 +115,7 @@ class ImageModification:
                 bbox_new.append(t_bbox[i] - x_offset)
                 bbox_new.append(t_bbox[i + 1] - y_offset)
             '''translate image'''
-            tform_1 = AffineTransform(scale=1, rotation=0, translation=(-x_offset, -y_offset), shear=np.deg2rad(0))
+            tform_1 = AffineTransform(scale=(1, 1), rotation=0, translation=(-x_offset, -y_offset), shear=np.deg2rad(0))
             img_new = transform.warp(t_img, tform_1.inverse, mode='edge')
 
             '''crop data: we add a small margin to the images'''
