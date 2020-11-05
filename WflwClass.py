@@ -80,7 +80,7 @@ class WflwClass:
 
         tf_utility.create_tf_ref(tf_file_paths=tf_file_paths, img_file_paths=img_file_paths,
                                  annotation_file_paths=annotation_file_paths, pose_file_paths=pose_file_paths,
-                                 need_pose=need_pose, accuracy=accuracy, is_test=is_test,ds_name=DatasetName.dsWflw,
+                                 need_pose=need_pose, accuracy=accuracy, is_test=is_test, ds_name=DatasetName.dsWflw,
                                  num_train_samples=num_train_samples, num_eval_samples=num_eval_samples)
 
     def _do_random_augment(self, index, img, annotation, _bbox, atr, need_hm, need_pose, pose_detector=None):
@@ -118,7 +118,7 @@ class WflwClass:
         self._save(img=imgs[0], annotation=annotations[0], file_name=str(index), atr=atr,
                    image_save_path=WflwConf.no_aug_train_image,
                    annotation_save_path=WflwConf.no_aug_train_annotation,
-                   atr_save_path=WflwConf.augmented_train_tf_path,
+                   atr_save_path=WflwConf.no_aug_train_atr,
                    pose_save_path=WflwConf.no_aug_train_pose)
 
         '''this is the augmented images+original one'''
@@ -127,7 +127,7 @@ class WflwClass:
                        atr=atr,
                        image_save_path=WflwConf.augmented_train_image,
                        annotation_save_path=WflwConf.augmented_train_annotation,
-                       atr_save_path=WflwConf.augmented_train_tf_path,
+                       atr_save_path=WflwConf.augmented_train_atr,
                        pose_save_path=WflwConf.augmented_train_pose)
             # img_mod.test_image_print('zzz_final'+str(index)+'-'+str(i), imgs[i], annotations[i])
 
