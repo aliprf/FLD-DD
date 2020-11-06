@@ -47,89 +47,92 @@ class ImageModification:
             augmentation_factor += atr[5] * 2  # _blr = atr[5]
 
         while aug_num < augmentation_factor-1:
-            '''keep original'''
-            img = np.copy(img_orig)
-            landmark = np.copy(landmark_orig)
-            bbox_me = np.copy(np.array(bbox_me_orig))
+            try:
+                '''keep original'''
+                img = np.copy(img_orig)
+                landmark = np.copy(landmark_orig)
+                bbox_me = np.copy(np.array(bbox_me_orig))
 
-            '''let's pad image before'''
-            fix_pad = InputDataSize.image_input_size * 2
-            img = np.pad(img, ((fix_pad, fix_pad), (fix_pad, fix_pad), (0, 0)), 'constant')
-            for jj in range(len(landmark)):
-                landmark[jj] = landmark[jj] + fix_pad
-            for jj in range(len(bbox_me)):
-                bbox_me[jj] = bbox_me[jj] + fix_pad
+                '''let's pad image before'''
+                fix_pad = InputDataSize.image_input_size * 2
+                img = np.pad(img, ((fix_pad, fix_pad), (fix_pad, fix_pad), (0, 0)), 'constant')
+                for jj in range(len(landmark)):
+                    landmark[jj] = landmark[jj] + fix_pad
+                for jj in range(len(bbox_me)):
+                    bbox_me[jj] = bbox_me[jj] + fix_pad
 
-            # self.test_image_print(img_name='zzz_affine' + str(index + 1) + '_' + str(aug_num),
-            #                       img=img, landmarks=landmark, bbox_me=bbox_me)
+                # self.test_image_print(img_name='zzz_affine' + str(index + 1) + '_' + str(aug_num),
+                #                       img=img, landmarks=landmark, bbox_me=bbox_me)
 
-            '''flipping image'''
-            if aug_num % 2 == 0:
-                img, landmark, bbox_me = self._flip_and_relabel(img, landmark, ds_name, num_of_landmarks, bbox_me)
+                '''flipping image'''
+                if aug_num % 2 == 0:
+                    img, landmark, bbox_me = self._flip_and_relabel(img, landmark, ds_name, num_of_landmarks, bbox_me)
 
-            '''noise'''
-            img = self._noisy(img)
+                '''noise'''
+                img = self._noisy(img)
 
-            rot = np.random.uniform(-1 * 0.5, 0.5)
-            sx, sy = scale
-            t_matrix = np.array([
-                [sx * math.cos(rot), -sy * math.sin(rot + shear), 0],
-                [sx * math.sin(rot), sy * math.cos(rot + shear), 0],
-                [0, 0, 1]
-            ])
-            t_matrix_2d = np.array([
-                [sx * math.cos(rot), -sy * math.sin(rot + shear)],
-                [sx * math.sin(rot), sy * math.cos(rot + shear)]
-            ])
-            tform = AffineTransform(scale=scale, rotation=rot, translation=translation, shear=np.deg2rad(shear))
+                rot = np.random.uniform(-1 * 0.5, 0.5)
+                sx, sy = scale
+                t_matrix = np.array([
+                    [sx * math.cos(rot), -sy * math.sin(rot + shear), 0],
+                    [sx * math.sin(rot), sy * math.cos(rot + shear), 0],
+                    [0, 0, 1]
+                ])
+                t_matrix_2d = np.array([
+                    [sx * math.cos(rot), -sy * math.sin(rot + shear)],
+                    [sx * math.sin(rot), sy * math.cos(rot + shear)]
+                ])
+                tform = AffineTransform(scale=scale, rotation=rot, translation=translation, shear=np.deg2rad(shear))
 
-            t_img = transform.warp(img, tform.inverse, mode='edge')
-            # self.test_image_print(img_name='zzz_affine' + str(index + 1) + '_' + str(aug_num), img=t_img, landmarks=landmark)
-            '''affine landmark'''
-            landmark_arr_xy, landmark_arr_x, landmark_arr_y = self.create_landmarks(landmark, 1, 1)
-            label = np.array(landmark_arr_x + landmark_arr_y).reshape([2, num_of_landmarks])
-            margin = np.ones([1, num_of_landmarks])
-            label = np.concatenate((label, margin), axis=0)
+                t_img = transform.warp(img, tform.inverse, mode='edge')
+                # self.test_image_print(img_name='zzz_affine' + str(index + 1) + '_' + str(aug_num), img=t_img, landmarks=landmark)
+                '''affine landmark'''
+                landmark_arr_xy, landmark_arr_x, landmark_arr_y = self.create_landmarks(landmark, 1, 1)
+                label = np.array(landmark_arr_x + landmark_arr_y).reshape([2, num_of_landmarks])
+                margin = np.ones([1, num_of_landmarks])
+                label = np.concatenate((label, margin), axis=0)
 
-            t_label = self._reorder(np.delete(np.dot(t_matrix, label), 2, axis=0)
-                                    .reshape([2 * num_of_landmarks]), num_of_landmarks)
-            '''affine bbox_me'''
-            bbox_xy, bbox_x, bbox_y = self.create_landmarks(bbox_me, 1, 1)
-            bbox_flat = np.array(bbox_x + bbox_y).reshape([2, len(bbox_me) // 2])
-            t_bbox = self._reorder(np.dot(t_matrix_2d, bbox_flat).reshape([len(bbox_me)]), len(bbox_me) // 2)
+                t_label = self._reorder(np.delete(np.dot(t_matrix, label), 2, axis=0)
+                                        .reshape([2 * num_of_landmarks]), num_of_landmarks)
+                '''affine bbox_me'''
+                bbox_xy, bbox_x, bbox_y = self.create_landmarks(bbox_me, 1, 1)
+                bbox_flat = np.array(bbox_x + bbox_y).reshape([2, len(bbox_me) // 2])
+                t_bbox = self._reorder(np.dot(t_matrix_2d, bbox_flat).reshape([len(bbox_me)]), len(bbox_me) // 2)
 
-            # self.test_image_print(img_name='aa' + str(index + 1) + '_' + str(aug_num), img=t_img, landmarks=t_label,
-            #                       bbox_me=t_bbox)
+                # self.test_image_print(img_name='aa' + str(index + 1) + '_' + str(aug_num), img=t_img, landmarks=t_label,
+                #                       bbox_me=t_bbox)
 
-            '''now we need to translate image again'''
-            t_bbox_xy, t_bbox_x, t_bbox_y = self.create_landmarks(t_bbox, 1, 1)
-            x_offset = min(t_bbox_x)
-            y_offset = min(t_bbox_y)
+                '''now we need to translate image again'''
+                t_bbox_xy, t_bbox_x, t_bbox_y = self.create_landmarks(t_bbox, 1, 1)
+                x_offset = min(t_bbox_x)
+                y_offset = min(t_bbox_y)
 
-            landmark_new = []
-            for i in range(0, len(t_label), 2):
-                landmark_new.append(t_label[i] - x_offset)
-                landmark_new.append(t_label[i + 1] - y_offset)
-            bbox_new = []
-            for i in range(0, len(t_bbox), 2):
-                bbox_new.append(t_bbox[i] - x_offset)
-                bbox_new.append(t_bbox[i + 1] - y_offset)
-            '''translate image'''
-            tform_1 = AffineTransform(scale=(1, 1), rotation=0, translation=(-x_offset, -y_offset), shear=np.deg2rad(0))
-            img_new = transform.warp(t_img, tform_1.inverse, mode='edge')
+                landmark_new = []
+                for i in range(0, len(t_label), 2):
+                    landmark_new.append(t_label[i] - x_offset)
+                    landmark_new.append(t_label[i + 1] - y_offset)
+                bbox_new = []
+                for i in range(0, len(t_bbox), 2):
+                    bbox_new.append(t_bbox[i] - x_offset)
+                    bbox_new.append(t_bbox[i + 1] - y_offset)
+                '''translate image'''
+                tform_1 = AffineTransform(scale=(1, 1), rotation=0, translation=(-x_offset, -y_offset), shear=np.deg2rad(0))
+                img_new = transform.warp(t_img, tform_1.inverse, mode='edge')
 
-            '''crop data: we add a small margin to the images'''
-            # c_img = self.crop_image_train(img=t_img, bbox=t_bbox)
-            c_img, landmark_new = self.crop_image_train(img=img_new, bbox=bbox_new, annotation=landmark_new,
-                                                        ds_name=ds_name)
-            # self.test_image_print(img_name='bb' + str(index + 1) + '_' + str(aug_num), img=c_img,
-            #                       landmarks=landmark_new, bbox_me=bbox_new)
+                '''crop data: we add a small margin to the images'''
+                # c_img = self.crop_image_train(img=t_img, bbox=t_bbox)
+                c_img, landmark_new = self.crop_image_train(img=img_new, bbox=bbox_new, annotation=landmark_new,
+                                                            ds_name=ds_name)
+                # self.test_image_print(img_name='bb' + str(index + 1) + '_' + str(aug_num), img=c_img,
+                #                       landmarks=landmark_new, bbox_me=bbox_new)
 
-            '''resize'''
-            _img, _landmark = self.resize_image(c_img, landmark_new)
-            augmented_images.append(_img)
-            augmented_landmarks.append(_landmark)
-            aug_num += 1
+                '''resize'''
+                _img, _landmark = self.resize_image(c_img, landmark_new)
+                augmented_images.append(_img)
+                augmented_landmarks.append(_landmark)
+                aug_num += 1
+            except Exception as e:
+                print('Exception in random augment')
 
         return augmented_images, augmented_landmarks
 
