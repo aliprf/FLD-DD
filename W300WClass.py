@@ -1,4 +1,4 @@
-from Config import W300W, DatasetName, InputDataSize
+from Config import W300WConf, DatasetName, InputDataSize
 from ImageModification import ImageModification
 # from pose_detection.code.PoseDetector import PoseDetector
 from pca_utility import PCAUtility
@@ -17,13 +17,13 @@ class W300WClass:
 
     def create_pca_obj(self, accuracy):
         pca_utils = PCAUtility()
-        pca_utils.create_pca_from_npy(annotation_path=W300W.augmented_train_annotation,
+        pca_utils.create_pca_from_npy(annotation_path=W300WConf.augmented_train_annotation,
                                       pca_accuracy=accuracy, pca_file_name=DatasetName.ds300W)
 
     def create_train_set(self, need_pose=False, need_hm=False, accuracy=100):
         # pose_detector = PoseDetector()
 
-        imgs, annotations, bboxs = self._load_data(W300W.orig_300W_train)
+        imgs, annotations, bboxs = self._load_data(W300WConf.orig_300W_train)
 
         for i in tqdm(range(len(imgs))):
             self._do_random_augment(index=i, img=imgs[i], annotation=annotations[i], _bbox=bboxs[i]
@@ -41,17 +41,20 @@ class W300WClass:
 
         ds_types = ['challenging/', 'common/', 'full/']
         for ds_type in ds_types:
-            imgs, annotations, bboxs = self._load_data(W300W.orig_300W_test+ds_type)
+            imgs, annotations, bboxs = self._load_data(W300WConf.orig_300W_test + ds_type)
 
             for i in tqdm(range(len(imgs))):
                 img, annotation = self._crop(img=imgs[i], annotation=annotations[i], bbox=bboxs[i])
+
+                # annotation = img_mod.normalize_annotations(annotation=annotation)
+
                 # pose = None
                 # if need_pose:
                 #     pose = tf_utility.detect_pose([img], pose_detector)
                 self._save(img=img, annotation=annotation, file_name=str(i),
-                           image_save_path=W300W.test_image_path+ds_type,
-                           annotation_save_path=W300W.test_annotation_path+ds_type,
-                           pose_save_path=W300W.test_pose_path+ds_type)
+                           image_save_path=W300WConf.test_image_path + ds_type,
+                           annotation_save_path=W300WConf.test_annotation_path + ds_type,
+                           pose_save_path=W300WConf.test_pose_path + ds_type)
                 # img_mod.test_image_print('zzz_final-'+str(i), img, annotation)
 
         '''tf_record'''
@@ -59,18 +62,30 @@ class W300WClass:
         #     self.wflw_create_tf_record(ds_type=1, need_pose=need_pose)  # we don't need hm for test
         print("create_test_set DONE!!")
 
+    def create_point_imgpath_map(self):
+        """
+        only used for KD:
+        """
+        tf_utility = TfUtility()
+
+        img_file_paths = [W300WConf.no_aug_train_image, W300WConf.augmented_train_image]
+        annotation_file_paths = [W300WConf.no_aug_train_annotation, W300WConf.augmented_train_annotation]
+        map_name = ['map_orig' + DatasetName.ds300W, 'map_aug' + DatasetName.ds300W]
+        tf_utility.create_point_imgpath_map(img_file_paths=img_file_paths,
+                                            annotation_file_paths=annotation_file_paths, map_name=map_name)
+
     """PRIVATE"""
 
     def w300w_create_tf_record(self, need_pose, accuracy=100, ds_type=0):
         tf_utility = TfUtility()
 
         # if ds_type == 0:  # train
-        tf_file_paths = [W300W.no_aug_train_tf_path, W300W.augmented_train_tf_path]
-        img_file_paths = [W300W.no_aug_train_image, W300W.augmented_train_image]
-        annotation_file_paths = [W300W.no_aug_train_annotation, W300W.augmented_train_annotation]
-        pose_file_paths = [W300W.no_aug_train_pose, W300W.augmented_train_pose]
-        num_train_samples = [W300W.num_train_samples_orig, W300W.num_train_samples_aug]
-        num_eval_samples = [W300W.num_eval_samples_orig, W300W.num_eval_samples_aug]
+        tf_file_paths = [W300WConf.no_aug_train_tf_path, W300WConf.augmented_train_tf_path]
+        img_file_paths = [W300WConf.no_aug_train_image, W300WConf.augmented_train_image]
+        annotation_file_paths = [W300WConf.no_aug_train_annotation, W300WConf.augmented_train_annotation]
+        pose_file_paths = [W300WConf.no_aug_train_pose, W300WConf.augmented_train_pose]
+        num_train_samples = [W300WConf.num_train_samples_orig, W300WConf.num_train_samples_aug]
+        num_eval_samples = [W300WConf.num_eval_samples_orig, W300WConf.num_eval_samples_aug]
         is_test = False
         # else:
         #     tf_file_paths = [W300W.test_tf_path]
@@ -99,28 +114,30 @@ class W300WClass:
         bbox_me = [xmin, ymin, xmin, ymax, xmax, ymin, xmax, ymax]
 
         imgs, annotations = img_mod.random_augment(index=index, img_orig=img, landmark_orig=annotation,
-                                                   num_of_landmarks=W300W.num_of_landmarks,
-                                                   augmentation_factor=W300W.augmentation_factor,
+                                                   num_of_landmarks=W300WConf.num_of_landmarks,
+                                                   augmentation_factor=W300WConf.augmentation_factor,
                                                    ymin=ymin, ymax=ymax, xmin=xmin, xmax=xmax,
                                                    ds_name=DatasetName.ds300W, bbox_me_orig=bbox_me)
+
         '''create pose'''
         # poses = None
         # if need_pose:
         #     poses = tf_utility.detect_pose(images=imgs, pose_detector=pose_detector)
 
         '''this is the original image we save in the original path for ablation study'''
-        self._save(img=imgs[0], annotation=annotations[0], file_name=str(index),
-                   image_save_path=W300W.no_aug_train_image,
-                   annotation_save_path=W300W.no_aug_train_annotation,
-                   pose_save_path=W300W.no_aug_train_pose)
+        if imgs is not None:
+            self._save(img=imgs[0], annotation=annotations[0], file_name=str(index),
+                       image_save_path=W300WConf.no_aug_train_image,
+                       annotation_save_path=W300WConf.no_aug_train_annotation,
+                       pose_save_path=W300WConf.no_aug_train_pose)
 
-        '''this is the augmented images+original one'''
-        for i in range(len(imgs)):
-            self._save(img=imgs[i], annotation=annotations[i], file_name=str(index) + '_' + str(i),
-                       image_save_path=W300W.augmented_train_image,
-                       annotation_save_path=W300W.augmented_train_annotation,
-                       pose_save_path=W300W.augmented_train_pose)
-            # img_mod.test_image_print('zzz_final'+str(index)+'-'+str(i), imgs[i], annotations[i])
+            '''this is the augmented images+original one'''
+            for i in range(len(imgs)):
+                self._save(img=imgs[i], annotation=annotations[i], file_name=str(index) + '_' + str(i),
+                           image_save_path=W300WConf.augmented_train_image,
+                           annotation_save_path=W300WConf.augmented_train_annotation,
+                           pose_save_path=W300WConf.augmented_train_pose)
+                # img_mod.test_image_print('zzz_final'+str(index)+'-'+str(i), imgs[i], annotations[i])
 
         return imgs, annotations
 
@@ -207,4 +224,4 @@ class W300WClass:
                 line = fp.readline()
                 cnt += 1
 
-        return annotation_arr
+        return np.round(annotation_arr,3)

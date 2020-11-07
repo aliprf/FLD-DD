@@ -23,7 +23,7 @@ class DatasetType:
 
 
 class InputDataSize:
-    image_input_size = 256
+    image_input_size = 224
     img_center = image_input_size // 2  # 128
 
     hm_size = image_input_size // 4  # 64
@@ -115,7 +115,7 @@ class CofwConf:
     num_train_samples_orig = orig_number_of_training - num_eval_samples_orig  #
 
 
-class W300W:
+class W300WConf:
     w300w_prefix_path = '/media/data3/ali/FL/new_data/300W/'  # --> zeus
     # w300w_prefix_path = '/media/data2/alip/FL/new_data/300W/'  # --> atlas
     # w300w_prefix_path = '/media/ali/data/new_data/300W/'  # --> local

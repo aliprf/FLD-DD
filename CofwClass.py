@@ -3,13 +3,15 @@ from ImageModification import ImageModification
 # from pose_detection.code.PoseDetector import PoseDetector
 from pca_utility import PCAUtility
 from tf_utility import TfUtility
-
+from Evaluation import Evaluation
 import os
 import numpy as np
 from numpy import load, save
 from tqdm import tqdm
 from PIL import Image
 import random
+import tensorflow as tf
+from tensorflow import keras
 
 
 class CofwClass:
@@ -39,6 +41,7 @@ class CofwClass:
         create test set from original test data
         :return:
         """
+        img_mod = ImageModification()
         tf_utility = TfUtility()
         # pose_detector = PoseDetector()
 
@@ -50,6 +53,9 @@ class CofwClass:
             annotation = self._load_annotation(annotations_path[i])
 
             img, annotation = self._crop(img=img, annotation=annotation, bbox=bbox)
+
+            # annotation = img_mod.normalize_annotations(annotation=annotation)
+
             # pose = None
             # if need_pose:
             #     pose = tf_utility.detect_pose([img], pose_detector)
@@ -62,7 +68,31 @@ class CofwClass:
         #     self.cofw_create_tf_record(ds_type=1, need_pose=need_pose)  # we don't need hm for test
         print("create_test_set DONE!!")
 
-    """PRIVATE"""
+    def evaluate_on_cofw(self, model_file):
+        '''create model using the h.5 model and its wights'''
+        model = tf.keras.models.load_model(model_file)
+        '''load test files and categories:'''
+        test_annotation_paths, test_image_paths = self._get_test_set()
+
+        """"""
+        evaluation = Evaluation(model=model, anno_paths=test_annotation_paths, img_paths=test_image_paths,
+                                ds_name=DatasetName.dsCofw, ds_number_of_points=CofwConf.num_of_landmarks,
+                                fr_threshold=0.1)
+        '''predict labels:'''
+        evaluation.predict_annotation()
+        '''evaluate with meta data: best to worst'''
+
+    def create_point_imgpath_map(self):
+        """
+        only used for KD:
+        """
+        tf_utility = TfUtility()
+
+        img_file_paths = [CofwConf.no_aug_train_image, CofwConf.augmented_train_image]
+        annotation_file_paths = [CofwConf.no_aug_train_annotation, CofwConf.augmented_train_annotation]
+        map_name = ['map_orig' + DatasetName.dsCofw, 'map_aug' + DatasetName.dsCofw]
+        tf_utility.create_point_imgpath_map(img_file_paths=img_file_paths,
+                                            annotation_file_paths=annotation_file_paths,map_name=map_name)
 
     def cofw_create_tf_record(self, need_pose, accuracy=100, ds_type=0):
         tf_utility = TfUtility()
@@ -88,6 +118,17 @@ class CofwClass:
                                  annotation_file_paths=annotation_file_paths, pose_file_paths=pose_file_paths,
                                  need_pose=need_pose, accuracy=accuracy, is_test=is_test, ds_name=DatasetName.dsCofw,
                                  num_train_samples=num_train_samples, num_eval_samples=num_eval_samples)
+
+    """PRIVATE"""
+    def _get_test_set(self):
+        test_annotation_paths = []
+        test_image_paths = []
+        for file in tqdm(os.listdir(CofwConf.test_image_path)):
+            if file.endswith(".png") or file.endswith(".jpg"):
+                test_annotation_paths.append(os.path.join(CofwConf.test_annotation_path, str(file)[:-3] + "npy"))
+                test_image_paths.append(os.path.join(CofwConf.test_image_path, str(file)))
+        return test_annotation_paths, test_image_paths
+
 
     def _do_random_augment(self, index, img, annotation, _bbox, need_hm, need_pose, pose_detector=None):
         tf_utility = TfUtility()
@@ -198,7 +239,7 @@ class CofwClass:
         annotation_arr_correct = []
 
         for i in range(0, len(annotation_arr) // 2, 1):
-            annotation_arr_correct.append(annotation_arr[i])
-            annotation_arr_correct.append(annotation_arr[i + CofwConf.num_of_landmarks])
+            annotation_arr_correct.append(np.round(annotation_arr[i], 3))
+            annotation_arr_correct.append(np.round(annotation_arr[i + CofwConf.num_of_landmarks], 3))
 
         return annotation_arr_correct

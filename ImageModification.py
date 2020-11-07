@@ -20,121 +20,128 @@ class ImageModification:
         '''keep original'''
         # print('img_orig:' + str(np.array(img_orig).shape))
         # print('landmark_orig: ' + str(np.array(landmark_orig).shape))
+        try:
 
-        if len(img_orig.shape) < 3:
-            img_orig = np.stack([img_orig, img_orig, img_orig], axis=-1)
+            if len(img_orig.shape) < 3:
+                img_orig = np.stack([img_orig, img_orig, img_orig], axis=-1)
 
-        _img, _landmark = self.crop_image_test(img=img_orig, ymin=ymin, ymax=ymax, xmin=xmin, xmax=xmax,
-                                               landmark=landmark_orig, padding_percentage=0.0)
-        _img, _landmark = self.resize_image(_img, _landmark)
+            _img, _landmark = self.crop_image_test(img=img_orig, ymin=ymin, ymax=ymax, xmin=xmin, xmax=xmax,
+                                                   landmark=landmark_orig, padding_percentage=0.0)
+            _img, _landmark = self.resize_image(_img, _landmark)
 
-        augmented_images = [_img]
-        augmented_landmarks = [_landmark]
-        '''affine'''
-        # scale = (np.random.uniform(0.9, 1.1), np.random.uniform(0.9, 1.1))
-        scale = (1, 1)
-        translation = (0, 0)
-        shear = 0
+            augmented_images = [_img]
+            augmented_landmarks = [_landmark]
+            '''affine'''
+            # scale = (np.random.uniform(0.9, 1.1), np.random.uniform(0.9, 1.1))
+            scale = (1, 1)
+            translation = (0, 0)
+            shear = 0
 
-        aug_num = 0
-        '''if atr is not null'''
-        if atr is not None:
-            augmentation_factor += atr[0] * augmentation_factor  # _pose = atr[0]
-            augmentation_factor += atr[1] * augmentation_factor  # _exp = atr[1]
-            augmentation_factor += atr[2] * 2  # _illu = atr[2]
-            augmentation_factor += atr[3] * 2  # _mkup = atr[3]
-            augmentation_factor += atr[4] * augmentation_factor  # _occl = atr[4]
-            augmentation_factor += atr[5] * 2  # _blr = atr[5]
+            aug_num = 0
+            '''if atr is not null'''
+            if atr is not None:
+                augmentation_factor += atr[0] * augmentation_factor  # _pose = atr[0]
+                augmentation_factor += atr[1] * augmentation_factor  # _exp = atr[1]
+                augmentation_factor += atr[2] * 2  # _illu = atr[2]
+                augmentation_factor += atr[3] * 2  # _mkup = atr[3]
+                augmentation_factor += atr[4] * augmentation_factor  # _occl = atr[4]
+                augmentation_factor += atr[5] * 2  # _blr = atr[5]
 
-        while aug_num < augmentation_factor-1:
-            try:
-                '''keep original'''
-                img = np.copy(img_orig)
-                landmark = np.copy(landmark_orig)
-                bbox_me = np.copy(np.array(bbox_me_orig))
+            while aug_num < augmentation_factor-1:
+                try:
+                    '''keep original'''
+                    img = np.copy(img_orig)
+                    landmark = np.copy(landmark_orig)
+                    bbox_me = np.copy(np.array(bbox_me_orig))
 
-                '''let's pad image before'''
-                fix_pad = InputDataSize.image_input_size * 2
-                img = np.pad(img, ((fix_pad, fix_pad), (fix_pad, fix_pad), (0, 0)), 'constant')
-                for jj in range(len(landmark)):
-                    landmark[jj] = landmark[jj] + fix_pad
-                for jj in range(len(bbox_me)):
-                    bbox_me[jj] = bbox_me[jj] + fix_pad
+                    '''let's pad image before'''
+                    fix_pad = InputDataSize.image_input_size * 2
+                    img = np.pad(img, ((fix_pad, fix_pad), (fix_pad, fix_pad), (0, 0)), 'constant')
+                    for jj in range(len(landmark)):
+                        landmark[jj] = landmark[jj] + fix_pad
+                    for jj in range(len(bbox_me)):
+                        bbox_me[jj] = bbox_me[jj] + fix_pad
 
-                # self.test_image_print(img_name='zzz_affine' + str(index + 1) + '_' + str(aug_num),
-                #                       img=img, landmarks=landmark, bbox_me=bbox_me)
+                    # self.test_image_print(img_name='zzz_affine' + str(index + 1) + '_' + str(aug_num),
+                    #                       img=img, landmarks=landmark, bbox_me=bbox_me)
 
-                '''flipping image'''
-                if aug_num % 2 == 0:
-                    img, landmark, bbox_me = self._flip_and_relabel(img, landmark, ds_name, num_of_landmarks, bbox_me)
+                    '''flipping image'''
+                    if aug_num % 2 == 0:
+                        img, landmark, bbox_me = self._flip_and_relabel(img, landmark, ds_name, num_of_landmarks, bbox_me)
 
-                '''noise'''
-                img = self._noisy(img)
+                    '''noise'''
+                    img = self._noisy(img)
 
-                rot = np.random.uniform(-1 * 0.5, 0.5)
-                sx, sy = scale
-                t_matrix = np.array([
-                    [sx * math.cos(rot), -sy * math.sin(rot + shear), 0],
-                    [sx * math.sin(rot), sy * math.cos(rot + shear), 0],
-                    [0, 0, 1]
-                ])
-                t_matrix_2d = np.array([
-                    [sx * math.cos(rot), -sy * math.sin(rot + shear)],
-                    [sx * math.sin(rot), sy * math.cos(rot + shear)]
-                ])
-                tform = AffineTransform(scale=scale, rotation=rot, translation=translation, shear=np.deg2rad(shear))
+                    rot = np.random.uniform(-1 * 0.5, 0.5)
+                    sx, sy = scale
+                    t_matrix = np.array([
+                        [sx * math.cos(rot), -sy * math.sin(rot + shear), 0],
+                        [sx * math.sin(rot), sy * math.cos(rot + shear), 0],
+                        [0, 0, 1]
+                    ])
+                    t_matrix_2d = np.array([
+                        [sx * math.cos(rot), -sy * math.sin(rot + shear)],
+                        [sx * math.sin(rot), sy * math.cos(rot + shear)]
+                    ])
+                    tform = AffineTransform(scale=scale, rotation=rot, translation=translation, shear=np.deg2rad(shear))
 
-                t_img = transform.warp(img, tform.inverse, mode='edge')
-                # self.test_image_print(img_name='zzz_affine' + str(index + 1) + '_' + str(aug_num), img=t_img, landmarks=landmark)
-                '''affine landmark'''
-                landmark_arr_xy, landmark_arr_x, landmark_arr_y = self.create_landmarks(landmark, 1, 1)
-                label = np.array(landmark_arr_x + landmark_arr_y).reshape([2, num_of_landmarks])
-                margin = np.ones([1, num_of_landmarks])
-                label = np.concatenate((label, margin), axis=0)
+                    t_img = transform.warp(img, tform.inverse, mode='edge')
+                    # self.test_image_print(img_name='zzz_affine' + str(index + 1) + '_' + str(aug_num), img=t_img, landmarks=landmark)
+                    '''affine landmark'''
+                    landmark_arr_xy, landmark_arr_x, landmark_arr_y = self.create_landmarks(landmark, 1, 1)
+                    label = np.array(landmark_arr_x + landmark_arr_y).reshape([2, num_of_landmarks])
+                    margin = np.ones([1, num_of_landmarks])
+                    label = np.concatenate((label, margin), axis=0)
 
-                t_label = self._reorder(np.delete(np.dot(t_matrix, label), 2, axis=0)
-                                        .reshape([2 * num_of_landmarks]), num_of_landmarks)
-                '''affine bbox_me'''
-                bbox_xy, bbox_x, bbox_y = self.create_landmarks(bbox_me, 1, 1)
-                bbox_flat = np.array(bbox_x + bbox_y).reshape([2, len(bbox_me) // 2])
-                t_bbox = self._reorder(np.dot(t_matrix_2d, bbox_flat).reshape([len(bbox_me)]), len(bbox_me) // 2)
+                    t_label = self._reorder(np.delete(np.dot(t_matrix, label), 2, axis=0)
+                                            .reshape([2 * num_of_landmarks]), num_of_landmarks)
+                    '''affine bbox_me'''
+                    bbox_xy, bbox_x, bbox_y = self.create_landmarks(bbox_me, 1, 1)
+                    bbox_flat = np.array(bbox_x + bbox_y).reshape([2, len(bbox_me) // 2])
+                    t_bbox = self._reorder(np.dot(t_matrix_2d, bbox_flat).reshape([len(bbox_me)]), len(bbox_me) // 2)
 
-                # self.test_image_print(img_name='aa' + str(index + 1) + '_' + str(aug_num), img=t_img, landmarks=t_label,
-                #                       bbox_me=t_bbox)
+                    # self.test_image_print(img_name='aa' + str(index + 1) + '_' + str(aug_num), img=t_img, landmarks=t_label,
+                    #                       bbox_me=t_bbox)
 
-                '''now we need to translate image again'''
-                t_bbox_xy, t_bbox_x, t_bbox_y = self.create_landmarks(t_bbox, 1, 1)
-                x_offset = min(t_bbox_x)
-                y_offset = min(t_bbox_y)
+                    '''now we need to translate image again'''
+                    t_bbox_xy, t_bbox_x, t_bbox_y = self.create_landmarks(t_bbox, 1, 1)
+                    x_offset = min(t_bbox_x)
+                    y_offset = min(t_bbox_y)
 
-                landmark_new = []
-                for i in range(0, len(t_label), 2):
-                    landmark_new.append(t_label[i] - x_offset)
-                    landmark_new.append(t_label[i + 1] - y_offset)
-                bbox_new = []
-                for i in range(0, len(t_bbox), 2):
-                    bbox_new.append(t_bbox[i] - x_offset)
-                    bbox_new.append(t_bbox[i + 1] - y_offset)
-                '''translate image'''
-                tform_1 = AffineTransform(scale=(1, 1), rotation=0, translation=(-x_offset, -y_offset), shear=np.deg2rad(0))
-                img_new = transform.warp(t_img, tform_1.inverse, mode='edge')
+                    landmark_new = []
+                    for i in range(0, len(t_label), 2):
+                        landmark_new.append(t_label[i] - x_offset)
+                        landmark_new.append(t_label[i + 1] - y_offset)
+                    bbox_new = []
+                    for i in range(0, len(t_bbox), 2):
+                        bbox_new.append(t_bbox[i] - x_offset)
+                        bbox_new.append(t_bbox[i + 1] - y_offset)
+                    '''translate image'''
+                    tform_1 = AffineTransform(scale=(1, 1), rotation=0, translation=(-x_offset, -y_offset), shear=np.deg2rad(0))
+                    img_new = transform.warp(t_img, tform_1.inverse, mode='edge')
 
-                '''crop data: we add a small margin to the images'''
-                # c_img = self.crop_image_train(img=t_img, bbox=t_bbox)
-                c_img, landmark_new = self.crop_image_train(img=img_new, bbox=bbox_new, annotation=landmark_new,
-                                                            ds_name=ds_name)
-                # self.test_image_print(img_name='bb' + str(index + 1) + '_' + str(aug_num), img=c_img,
-                #                       landmarks=landmark_new, bbox_me=bbox_new)
+                    '''crop data: we add a small margin to the images'''
+                    # c_img = self.crop_image_train(img=t_img, bbox=t_bbox)
+                    c_img, landmark_new = self.crop_image_train(img=img_new, bbox=bbox_new, annotation=landmark_new,
+                                                                ds_name=ds_name)
+                    # self.test_image_print(img_name='bb' + str(index + 1) + '_' + str(aug_num), img=c_img,
+                    #                       landmarks=landmark_new, bbox_me=bbox_new)
 
-                '''resize'''
-                _img, _landmark = self.resize_image(c_img, landmark_new)
-                augmented_images.append(_img)
-                augmented_landmarks.append(_landmark)
-                aug_num += 1
-            except Exception as e:
-                print('Exception in random augment')
+                    '''resize'''
+                    _img, _landmark = self.resize_image(c_img, landmark_new)
+                    augmented_images.append(_img)
 
-        return augmented_images, augmented_landmarks
+                    # '''normalized annotations WE DON'T NORMALIZE as the accuracy will reduce'''
+                    # _landmark = self.normalize_annotations(annotation=_landmark)
+
+                    augmented_landmarks.append(_landmark)
+                    aug_num += 1
+                except Exception as e:
+                    print('Exception in random augment')
+
+            return augmented_images, augmented_landmarks
+        except Exception as e:
+            return None, None
 
     def _flip_and_relabel(self, img, landmark, ds_name, num_of_landmarks, bbox_me):
         t_matrix = np.array([
@@ -275,14 +282,14 @@ class ImageModification:
         _ymax = int(max(ymax, y_land_max))
 
         if _xmax - _xmin <= 0 or _ymax - _ymin <= 0:
-            print('ERRORRR xmax - xmin <= 0 or ymax - ymin <= 0')
+            print('crop_image_test: ERRORRR xmax - xmin <= 0 or ymax - ymin <= 0')
             croped_img = img[ymin:ymax, xmin:xmax]
         else:
             croped_img = img[_ymin:_ymax, _xmin:_xmax]
-        '''grayscale to color'''
+        '''crop_image_test:grayscale to color'''
         if len(croped_img.shape) < 3:
             croped_img = np.stack([croped_img, croped_img, croped_img], axis=-1)
-            print('grayscale to color')
+            print('crop_image_test: grayscale to color')
 
         landmarks_new = []
         for i in range(0, len(landmark), 2):
@@ -331,6 +338,32 @@ class ImageModification:
             landmark_arr_y.append(y)  # [y1, y2]
 
         return landmark_arr_xy, landmark_arr_x, landmark_arr_y
+
+    def normalize_annotations(self, annotation):
+        """for training we dont normalize"""
+
+        '''normalize landmarks based on hyperface method'''
+        width = InputDataSize.image_input_size
+        height =InputDataSize.image_input_size
+        x_center = width / 2
+        y_center = height / 2
+        annotation_norm = []
+        for p in range(0, len(annotation), 2):
+            annotation_norm.append(np.round((x_center - annotation[p]) / width, 3))
+            annotation_norm.append(np.round((y_center - annotation[p + 1]) / height, 3))
+        return annotation_norm
+
+    def de_normalized(self, annotation_norm):
+        """for training we dont normalize"""
+        width = InputDataSize.image_input_size
+        height = InputDataSize.image_input_size
+        x_center = width / 2
+        y_center = height / 2
+        annotation = []
+        for p in range(0, len(annotation_norm), 2):
+            annotation.append(x_center  - annotation_norm[p] * width)
+            annotation.append(y_center - annotation_norm[p + 1] * height)
+        return annotation
 
     def create_landmarks(self, landmarks, scale_factor_x, scale_factor_y):
         landmark_arr_xy = []

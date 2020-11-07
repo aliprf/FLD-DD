@@ -43,6 +43,9 @@ class WflwClass:
 
         for i in tqdm(range(len(imgs))):
             img, annotation = self._crop(img=imgs[i], annotation=annotations[i], bbox=bboxs[i])
+
+            # annotation = img_mod.normalize_annotations(annotation=annotation)
+
             # pose = None
             # if need_pose:
             #     pose = tf_utility.detect_pose([img], pose_detector)
@@ -55,6 +58,18 @@ class WflwClass:
         # if need_tf_ref:
         #     self.wflw_create_tf_record(ds_type=1, need_pose=need_pose)  # we don't need hm for test
         print("create_test_set DONE!!")
+
+    def create_point_imgpath_map(self):
+        """
+        only used for KD:
+        """
+        tf_utility = TfUtility()
+
+        img_file_paths = [WflwConf.no_aug_train_image, WflwConf.augmented_train_image]
+        annotation_file_paths = [WflwConf.no_aug_train_annotation, WflwConf.augmented_train_annotation]
+        map_name = ['map_orig' + DatasetName.ds300W, 'map_aug' + DatasetName.ds300W]
+        tf_utility.create_point_imgpath_map(img_file_paths=img_file_paths,
+                                            annotation_file_paths=annotation_file_paths, map_name=map_name)
 
     """PRIVATE"""
 
@@ -181,7 +196,7 @@ class WflwClass:
                 sys.stdout.write('\r \r line --> \033[92m' + str(counter))
 
                 total_data = line.strip().split(' ')
-                annotation_arr.append(list(map(float, total_data[0:WflwConf.num_of_landmarks * 2])))
+                annotation_arr.append(np.round(list(map(float, total_data[0:WflwConf.num_of_landmarks * 2])), 3))
                 bbox_arr.append(self._create_bbox(
                     list(map(int, total_data[WflwConf.num_of_landmarks * 2:WflwConf.num_of_landmarks * 2 + 4]))))
                 atr_arr.append(

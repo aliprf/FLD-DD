@@ -1,4 +1,4 @@
-from Config import CofwConf, DatasetName, InputDataSize, WflwConf, W300W
+from Config import CofwConf, DatasetName, InputDataSize, WflwConf, W300WConf
 from ImageModification import ImageModification
 from pca_utility import PCAUtility
 
@@ -136,45 +136,27 @@ class TfUtility:
         out = meanvector + np.dot(eigenvectors, b_vector_p)
         return out
 
-    # def create_point_imgpath_map_tf_record(self, dataset_name):
-    #     print('create_point_imgpath_map_tf_record')
-    #     map = {}
-    #     if dataset_name == DatasetName.ibug:
-    #         tf_path = IbugConf.tf_train_path
-    #         sample_counts = IbugConf.number_of_train_sample
-    #         landmarks_dir = IbugConf.normalized_points_npy_dir
-    #
-    #     elif dataset_name == DatasetName.cofw:
-    #         tf_path = CofwConf.tf_train_path
-    #         sample_counts = CofwConf.number_of_train_sample
-    #         landmarks_dir = CofwConf.normalized_points_npy_dir
-    #
-    #     elif dataset_name == DatasetName.wflw:
-    #         tf_path = WflwConf.tf_train_path
-    #         sample_counts = WflwConf.number_of_train_sample
-    #         landmarks_dir = WflwConf.normalized_points_npy_dir
-    #
-    #     # sample_counts = 1708
-    #     lbl_arr, img_arr, pose_arr, img_name_arr = self.retrieve_tf_record_train(tf_path,
-    #                                                                              number_of_records=sample_counts,
-    #                                                                              only_label=True)
-    #     counter = 0
-    #     # f = open("key_"+dataset_name, "a")
-    #     for lbl in tqdm(lbl_arr):
-    #         img_name = self._decode_tf_file_name(img_name_arr[counter].decode("utf-8"))
-    #         landmark_key = lbl.tostring()
-    #         # img_name = os.path.join(landmarks_dir, img_name)
-    #         map[landmark_key] = img_name
-    #
-    #         # f.write(str(landmark_key))
-    #         counter += 1
-    #     # f.close()
-    #
-    #     pkl_file = open("map_" + dataset_name, 'wb')
-    #     pickle.dump(map, pkl_file)
-    #     pkl_file.close()
-    #
-    #     file = open("map_" + dataset_name, 'rb')
-    #     load_map = pickle.load(file)
-    #     print(load_map)
-    #     file.close()
+    def create_point_imgpath_map(self, img_file_paths, annotation_file_paths, map_name):
+
+        for index in range(len(img_file_paths)):
+            map = {}
+
+            '''load all lbls'''
+            counter = 0
+            for file in tqdm(os.listdir(img_file_paths[index])):
+                if file.endswith(".png") or file.endswith(".jpg"):
+                    img_name = file
+                    lbl = np.load(os.path.join(annotation_file_paths[index], str(file)[:-3] + "npy"))
+
+                    landmark_key = lbl.tostring()
+                    map[landmark_key] = img_name
+                    counter += 1
+
+            pkl_file = open(map_name[index], 'wb')
+            pickle.dump(map, pkl_file)
+            pkl_file.close()
+
+            file = open(map_name[index], 'rb')
+            load_map = pickle.load(file)
+            print(load_map)
+            file.close()
