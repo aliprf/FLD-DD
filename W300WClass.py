@@ -3,13 +3,14 @@ from ImageModification import ImageModification
 # from pose_detection.code.PoseDetector import PoseDetector
 from pca_utility import PCAUtility
 from tf_utility import TfUtility
-
+from Evaluation import Evaluation
 import os, sys
 import numpy as np
 from numpy import load, save
 from tqdm import tqdm
 from PIL import Image
 import random
+import tensorflow as tf
 
 
 class W300WClass:
@@ -74,7 +75,31 @@ class W300WClass:
         tf_utility.create_point_imgpath_map(img_file_paths=img_file_paths,
                                             annotation_file_paths=annotation_file_paths, map_name=map_name)
 
+    def evaluate_on_300w(self, model_file):
+        '''create model using the h.5 model and its wights'''
+        model = tf.keras.models.load_model(model_file)
+        '''load test files and categories:'''
+        ds_types = ['challenging/', 'common/', 'full/']
+        for ds_type in ds_types:
+            test_annotation_paths, test_image_paths = self._get_test_set(ds_type)
+
+            """"""
+            evaluation = Evaluation(model=model, anno_paths=test_annotation_paths, img_paths=test_image_paths,
+                                    ds_name=DatasetName.ds300W, ds_number_of_points=W300WConf.num_of_landmarks,
+                                    fr_threshold=0.1, is_normalized=True)
+            '''predict labels:'''
+            evaluation.predict_annotation()
+        '''evaluate with meta data: best to worst'''
+
     """PRIVATE"""
+    def _get_test_set(self, ds_type):
+        test_annotation_paths = []
+        test_image_paths = []
+        for file in tqdm(os.listdir(W300WConf.test_image_path+ds_type)):
+            if file.endswith(".png") or file.endswith(".jpg"):
+                test_annotation_paths.append(os.path.join(W300WConf.test_annotation_path+ds_type, str(file)[:-3] + "npy"))
+                test_image_paths.append(os.path.join(W300WConf.test_image_path+ds_type, str(file)))
+        return test_annotation_paths, test_image_paths
 
     def w300w_create_tf_record(self, need_pose, accuracy=100, ds_type=0):
         tf_utility = TfUtility()

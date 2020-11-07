@@ -77,7 +77,7 @@ class CofwClass:
         """"""
         evaluation = Evaluation(model=model, anno_paths=test_annotation_paths, img_paths=test_image_paths,
                                 ds_name=DatasetName.dsCofw, ds_number_of_points=CofwConf.num_of_landmarks,
-                                fr_threshold=0.1)
+                                fr_threshold=0.1, is_normalized=True)
         '''predict labels:'''
         evaluation.predict_annotation()
         '''evaluate with meta data: best to worst'''

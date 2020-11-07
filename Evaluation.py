@@ -10,7 +10,6 @@ from ImageModification import ImageModification
 class Evaluation:
 
     def __init__(self, model, anno_paths, img_paths, ds_name, ds_number_of_points, fr_threshold, is_normalized=False):
-        self._round_factor = 3
         self.model = model
         self.anno_paths = anno_paths
         self.img_paths = img_paths
@@ -23,7 +22,8 @@ class Evaluation:
         img_mod = ImageModification()
         nme_ar = []
         fail_counter = 0
-        for i in range(len(self.anno_paths)):
+        sum_loss = 0
+        for i in tqdm(range(len(self.anno_paths))):
             anno_GT = np.load(self.anno_paths[i]) # the GT are not normalized.
             img = np.expand_dims(np.array(Image.open(self.img_paths[i])) / 255.0, axis=0)
             anno_Pre = self.model.predict(img)[0]
@@ -32,19 +32,25 @@ class Evaluation:
             nme_i = self._calculate_nme(anno_GT=anno_GT, anno_Pre=anno_Pre, ds_name=self.ds_name,
                                         ds_number_of_points=self.ds_number_of_points)
             nme_ar.append(nme_i)
+            sum_loss += nme_i
             if nme_i > self.fr_threshold:
                 fail_counter += 1
-            print('')
+
+        '''calculate total:'''
+        fr = 100 * fail_counter / len(self.anno_paths)
+        nme = 100 * sum_loss / len(self.anno_paths)
+        print('fr: ' + str(fr))
+        print('nme: ' + str(nme))
 
     def _calculate_nme(self, anno_GT, anno_Pre, ds_name, ds_number_of_points):
         normalizing_distance = self._calculate_interoccular_distance(anno_GT=anno_GT, ds_name=ds_name)
         '''here we round all data if needed'''
         sum_errors = 0
         for i in range(0, len(anno_Pre), 2):  # two step each time
-            x_pr = np.round(anno_Pre[i], self._round_factor)
-            y_pr = np.round(anno_Pre[i + 1], self._round_factor)
-            x_gt = np.round(anno_GT[i], self._round_factor)
-            y_gt = np.round(anno_GT[i + 1], self._round_factor)
+            x_pr = anno_Pre[i]
+            y_pr = anno_Pre[i + 1]
+            x_gt = anno_GT[i]
+            y_gt = anno_GT[i + 1]
             error = math.sqrt(((x_pr - x_gt) ** 2) + ((y_pr - y_gt) ** 2))
             sum_errors += error
         NME = sum_errors / (normalizing_distance * ds_number_of_points)
