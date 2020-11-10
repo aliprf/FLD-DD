@@ -148,9 +148,10 @@ class TfUtility:
                     img_name = file
                     lbl = np.load(os.path.join(annotation_file_paths[index], str(file)[:-3] + "npy"))
 
-                    # landmark_key = lbl.tostring()
-                    # landmark_key = self.get_hash_key(lbl)
-                    landmark_key = self.get_hash_key(np.array2string(lbl))
+                    landmark_key = lbl.tostring()
+                    # landmark_key = lbl.tobytes()
+                    landmark_key = self.get_hash_key(landmark_key)
+                    # landmark_key = self.get_hash_key(np.array2string(lbl))
                     map[landmark_key] = img_name
                     counter += 1
 
@@ -164,4 +165,4 @@ class TfUtility:
             file.close()
 
     def get_hash_key(self, input):
-        return hash(str(input).replace("\n", "").replace(" ", ""))
+        return str(hash(str(input).replace("\n", "").replace(" ", "")))
