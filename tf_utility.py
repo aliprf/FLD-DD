@@ -149,7 +149,8 @@ class TfUtility:
                     lbl = np.load(os.path.join(annotation_file_paths[index], str(file)[:-3] + "npy"))
 
                     # landmark_key = lbl.tostring()
-                    landmark_key = self.get_hash_key(lbl)
+                    # landmark_key = self.get_hash_key(lbl)
+                    landmark_key = np.array2string(lbl)
                     map[landmark_key] = img_name
                     counter += 1
 
