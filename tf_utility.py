@@ -163,6 +163,9 @@ class TfUtility:
             file = open(map_name[index], 'rb')
             load_map = pickle.load(file)
             print(load_map)
+            f = open("mapppp.txt", "a")
+            f.write(load_map)
+            f.close()
             file.close()
 
     def np_to_str(self, input):
