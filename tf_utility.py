@@ -144,17 +144,17 @@ class TfUtility:
             '''load all lbls'''
             counter = 0
             for file in tqdm(os.listdir(annotation_file_paths[index])):
-                if file.endswith(".png") or file.endswith(".jpg"):
-                    img_name = file
-                    lbl = np.load(os.path.join(annotation_file_paths[index], str(file)))
+                # if file.endswith(".png") or file.endswith(".jpg"):
+                img_name = file
+                lbl = np.load(os.path.join(annotation_file_paths[index], str(file)))
 
-                    landmark_key = self.np_to_str(lbl)
-                    # landmark_key = lbl.tostring()
-                    # landmark_key = lbl.tobytes()
-                    # landmark_key = self.get_hash_key(landmark_key)
-                    # landmark_key = self.get_hash_key(np.array2string(lbl))
-                    map[landmark_key] = img_name
-                    counter += 1
+                landmark_key = self.np_to_str(lbl)
+                # landmark_key = lbl.tostring()
+                # landmark_key = lbl.tobytes()
+                # landmark_key = self.get_hash_key(landmark_key)
+                # landmark_key = self.get_hash_key(np.array2string(lbl))
+                map[landmark_key] = img_name
+                counter += 1
 
             pkl_file = open(map_name[index], 'wb')
             pickle.dump(map, pkl_file)
