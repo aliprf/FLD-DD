@@ -148,9 +148,8 @@ class TfUtility:
                     img_name = file
                     lbl = np.load(os.path.join(annotation_file_paths[index], str(file)[:-3] + "npy"))
 
-                    landmark_key = self._encode_tf_file_name(lbl.tostring())
-
                     # landmark_key = lbl.tostring()
+                    landmark_key = self.get_hash_key(lbl)
                     map[landmark_key] = img_name
                     counter += 1
 
@@ -162,3 +161,6 @@ class TfUtility:
             load_map = pickle.load(file)
             print(load_map)
             file.close()
+
+    def get_hash_key(self, input):
+        return hash(str(input).replace("\n", "").replace(" ", ""))
