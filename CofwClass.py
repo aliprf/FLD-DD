@@ -91,7 +91,7 @@ class CofwClass:
         annotation_file_paths = [CofwConf.no_aug_train_annotation, CofwConf.augmented_train_annotation]
         map_name = ['map_orig' + DatasetName.dsCofw, 'map_aug' + DatasetName.dsCofw]
         tf_utility.create_point_imgpath_map(img_file_paths=img_file_paths,
-                                            annotation_file_paths=annotation_file_paths,map_name=map_name)
+                                            annotation_file_paths=annotation_file_paths, map_name=map_name)
 
     def cofw_create_tf_record(self, need_pose, accuracy=100, ds_type=0):
         tf_utility = TfUtility()
