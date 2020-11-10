@@ -14,9 +14,9 @@ if __name__ == '__main__':
     # cofw.create_pca_obj(accuracy=pca_accuracy)
     # cofw.cofw_create_tf_record(ds_type=0, need_pose=need_pose, accuracy=pca_accuracy)
     # cofw.cofw_create_tf_record(ds_type=0, need_pose=need_pose, accuracy=100)
-    cofw.create_point_imgpath_map()
+    # cofw.create_point_imgpath_map()
     # cofw.create_inter_face_web_distance(ds_type=0)
-    # cofw.evaluate_on_cofw(model_file='./models/ds_cofw_ac_100_weights-200-2.22641.h5')
+    # cofw.evaluate_on_cofw(model_file='./models/cofw_stu_20.h5')
 
     # mn-stu:       ch->{nme: 0.00, fr: 0.00}
     # mn-base:      ch->{nme: 4.0754, fr: fr: 1.9723}
@@ -28,9 +28,9 @@ if __name__ == '__main__':
     # wflw.create_test_set(need_pose=need_pose, need_tf_ref=False)
     # wflw.create_train_set(need_pose=False, need_hm=True, accuracy=pca_accuracy)  #
     # wflw.create_pca_obj(accuracy=pca_accuracy)
-    # wflw.wflw_create_tf_record(ds_type=0, need_pose=need_pose, accuracy=pca_accuracy)
-    # wflw.wflw_create_tf_record(ds_type=0, need_pose=need_pose, accuracy=100)
-    # wflw.create_point_imgpath_map()
+    wflw.wflw_create_tf_record(ds_type=0, need_pose=need_pose, accuracy=pca_accuracy)
+    wflw.wflw_create_tf_record(ds_type=0, need_pose=need_pose, accuracy=100)
+    wflw.create_point_imgpath_map()
     # wflw.evaluate_on_wflw(model_file='./models/ds_wflw_ac_100_stu.h5')
     # #
     #
@@ -40,9 +40,9 @@ if __name__ == '__main__':
     # w300w.create_test_set(need_pose=need_pose, need_tf_ref=False)
     # w300w.create_train_set(need_pose=False, need_hm=True, accuracy=pca_accuracy)  #
     # w300w.create_pca_obj(accuracy=pca_accuracy)
-    # w300w.w300w_create_tf_record(ds_type=0, need_pose=need_pose, accuracy=pca_accuracy)
-    # w300w.w300w_create_tf_record(ds_type=0, need_pose=need_pose, accuracy=100)
-    # w300w.create_point_imgpath_map()
+    w300w.w300w_create_tf_record(ds_type=0, need_pose=need_pose, accuracy=pca_accuracy)
+    w300w.w300w_create_tf_record(ds_type=0, need_pose=need_pose, accuracy=100)
+    w300w.create_point_imgpath_map()
     # w300w.create_inter_face_web_distance(ds_type=1)
 
     # w300w.evaluate_on_300w(model_file='./models/ds_300w_ac_100_stu.h5')

@@ -80,9 +80,9 @@ class WflwConf:
 
 
 class CofwConf:
-    Cofw_prefix_path = '/media/data3/ali/FL/new_data/cofw/'  # --> zeus
+    # Cofw_prefix_path = '/media/data3/ali/FL/new_data/cofw/'  # --> zeus
     # Cofw_prefix_path = '/media/data2/alip/FL/new_data/cofw/'  # --> atlas
-    # Cofw_prefix_path = '/media/ali/data/new_data/cofw/'  # --> local
+    Cofw_prefix_path = '/media/ali/data/new_data/cofw/'  # --> local
     #
     orig_COFW_test = Cofw_prefix_path + 'orig_COFW_test/'
     test_annotation_path = Cofw_prefix_path + 'testing_set/annotations/'
@@ -108,17 +108,17 @@ class CofwConf:
     num_of_landmarks = 29
     hm_stride = 3
     '''for tf record:'''
-    num_eval_samples_aug = int(orig_number_of_training * augmentation_factor * 0.05)
-    num_train_samples_aug = orig_number_of_training * augmentation_factor - num_eval_samples_aug  # 13450 - 670 = 12775
+    num_eval_samples_aug = 53390*0.05 #int(orig_number_of_training * augmentation_factor * 0.05)
+    num_train_samples_aug = 53390 - 53390*0.05 #orig_number_of_training * augmentation_factor - num_eval_samples_aug  # 13450 - 670 = 12775
 
     num_eval_samples_orig = int(orig_number_of_training * 0.05)  #
     num_train_samples_orig = orig_number_of_training - num_eval_samples_orig  #
 
 
 class W300WConf:
-    # w300w_prefix_path = '/media/data3/ali/FL/new_data/300W/'  # --> zeus
+    w300w_prefix_path = '/media/data3/ali/FL/new_data/300W/'  # --> zeus
     # w300w_prefix_path = '/media/data2/alip/FL/new_data/300W/'  # --> atlas
-    w300w_prefix_path = '/media/ali/data/new_data/300W/'  # --> local
+    # w300w_prefix_path = '/media/ali/data/new_data/300W/'  # --> local
 
     orig_300W_test = w300w_prefix_path + 'orig_300W_test/'
     test_annotation_path = w300w_prefix_path + 'testing_set/annotations/'
@@ -142,11 +142,11 @@ class W300WConf:
     orig_number_of_test_common = 554
     orig_number_of_test_challenging = 135
 
-    augmentation_factor = 5  # create . image from 1
+    augmentation_factor = 5  # create . image from 1 16155
     num_of_landmarks = 68
     hm_stride = 3
     '''for tf record:'''
-    num_eval_samples_aug = int(3507 * augmentation_factor * 0.05)  #
-    num_train_samples_aug = 3507 * augmentation_factor - num_eval_samples_aug  #
+    num_eval_samples_aug = 16155 * 0.05 #int(3507 * augmentation_factor * 0.05)  #
+    num_train_samples_aug = 16155 - 16155 * 0.05 #3507 * augmentation_factor - num_eval_samples_aug  #
     num_eval_samples_orig = int(orig_number_of_training * 0.05)  # 13450* 0.05 = 670
     num_train_samples_orig = orig_number_of_training - num_eval_samples_orig  # 13450 - 670 = 12775
