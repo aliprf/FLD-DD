@@ -10,6 +10,7 @@ from numpy import load, save
 from tqdm import tqdm
 from PIL import Image
 import random
+import efficientnet.tfkeras
 
 
 class WflwClass:

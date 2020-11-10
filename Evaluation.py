@@ -4,7 +4,7 @@ from PIL import Image
 import math
 
 from Config import DatasetName, InputDataSize
-from ImageModification import ImageModification
+# from ImageModification import ImageModification
 
 """in evaluation, round all numbers with 3 demical"""
 class Evaluation:
@@ -19,16 +19,19 @@ class Evaluation:
         self.is_normalized = is_normalized
 
     def predict_annotation(self):
-        img_mod = ImageModification()
+        # img_mod = ImageModification()
         nme_ar = []
         fail_counter = 0
         sum_loss = 0
-        for i in tqdm(range(len(self.anno_paths))):
+        for i in tqdm(range(len(sorted(self.anno_paths)))):
             anno_GT = np.load(self.anno_paths[i]) # the GT are not normalized.
             img = np.expand_dims(np.array(Image.open(self.img_paths[i])) / 255.0, axis=0)
             anno_Pre = self.model.predict(img)[0]
-            if self.is_normalized:
-                anno_Pre = img_mod.de_normalized(annotation_norm=anno_Pre)
+            # if self.is_normalized:
+            #     anno_Pre = img_mod.de_normalized(annotation_norm=anno_Pre)
+            '''print'''
+            # img_mod.test_image_print(img_name='z_'+str(i)+'_pr'+str(i), img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_Pre)
+            # img_mod.test_image_print(img_name='z_'+str(i)+'_gt', img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_GT)
             nme_i = self._calculate_nme(anno_GT=anno_GT, anno_Pre=anno_Pre, ds_name=self.ds_name,
                                         ds_number_of_points=self.ds_number_of_points)
             nme_ar.append(nme_i)
@@ -43,7 +46,7 @@ class Evaluation:
         print('nme: ' + str(nme))
 
     def _calculate_nme(self, anno_GT, anno_Pre, ds_name, ds_number_of_points):
-        normalizing_distance = self._calculate_interoccular_distance(anno_GT=anno_GT, ds_name=ds_name)
+        normalizing_distance = self.calculate_interoccular_distance(anno_GT=anno_GT, ds_name=ds_name)
         '''here we round all data if needed'''
         sum_errors = 0
         for i in range(0, len(anno_Pre), 2):  # two step each time
@@ -56,7 +59,7 @@ class Evaluation:
         NME = sum_errors / (normalizing_distance * ds_number_of_points)
         return NME
 
-    def _calculate_interoccular_distance(self, anno_GT, ds_name):
+    def calculate_interoccular_distance(self, anno_GT, ds_name):
         if ds_name == DatasetName.ds300W:
             left_oc_x = anno_GT[72]
             left_oc_y = anno_GT[73]

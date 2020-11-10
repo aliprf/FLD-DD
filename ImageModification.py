@@ -10,6 +10,10 @@ from PIL import ImageOps
 from skimage.transform import resize
 from skimage import transform
 from skimage.transform import SimilarityTransform, AffineTransform
+from tqdm import tqdm
+import os
+
+from Evaluation import Evaluation
 
 
 class ImageModification:
@@ -47,7 +51,7 @@ class ImageModification:
                 augmentation_factor += atr[4] * augmentation_factor  # _occl = atr[4]
                 augmentation_factor += atr[5] * 2  # _blr = atr[5]
 
-            while aug_num < augmentation_factor-1:
+            while aug_num < augmentation_factor - 1:
                 try:
                     '''keep original'''
                     img = np.copy(img_orig)
@@ -67,7 +71,8 @@ class ImageModification:
 
                     '''flipping image'''
                     if aug_num % 2 == 0:
-                        img, landmark, bbox_me = self._flip_and_relabel(img, landmark, ds_name, num_of_landmarks, bbox_me)
+                        img, landmark, bbox_me = self._flip_and_relabel(img, landmark, ds_name, num_of_landmarks,
+                                                                        bbox_me)
 
                     '''noise'''
                     img = self._noisy(img)
@@ -117,7 +122,8 @@ class ImageModification:
                         bbox_new.append(t_bbox[i] - x_offset)
                         bbox_new.append(t_bbox[i + 1] - y_offset)
                     '''translate image'''
-                    tform_1 = AffineTransform(scale=(1, 1), rotation=0, translation=(-x_offset, -y_offset), shear=np.deg2rad(0))
+                    tform_1 = AffineTransform(scale=(1, 1), rotation=0, translation=(-x_offset, -y_offset),
+                                              shear=np.deg2rad(0))
                     img_new = transform.warp(t_img, tform_1.inverse, mode='edge')
 
                     '''crop data: we add a small margin to the images'''
@@ -201,6 +207,95 @@ class ImageModification:
             new_labels[index_dst[i] * 2 + 1] = labels[index_src[i] * 2 + 1]
         return new_labels
 
+    def create_normalized_face_web_distance(self, points, annotation_file_path, img_file_path, ds_name):
+        """"""
+        evalu = Evaluation(model='', anno_paths='', img_paths='', ds_name=ds_name, ds_number_of_points=0,
+                           fr_threshold=0)
+        annotations = []
+        images = []
+        '''load annotations'''
+        counter = 0
+        for file in tqdm(os.listdir(annotation_file_path)):
+            if file.endswith(".npy"):
+                annotations.append(np.load(os.path.join(annotation_file_path, str(file))))
+                img_adr = os.path.join(img_file_path, str(file)[:-3] + "jpg")
+                self._print_intra_fb(landmark=annotations[counter], points=points, img=np.array(Image.open(img_adr)),
+                                     title=ds_name + 'inter Face Web', name='z_' + ds_name + 'ia_fb_' + str(counter))
+                counter += 1
+        inter_fwd = []
+        for item in annotations:
+            sum_dis = 0
+            inter_ocular_dist = evalu.calculate_interoccular_distance(anno_GT=item, ds_name=ds_name)
+            for i in range(len(points)):
+                x_1 = points[i][0] * 2
+                y_1 = points[i][0] * 2 + 1
+                x_2 = points[i][1] * 2
+                y_2 = points[i][1] * 2 + 1
+                dis = np.sqrt((x_2 - x_1) ** 2 + (y_2 - y_1) ** 2)
+                sum_dis += dis
+            n_dist = sum_dis / inter_ocular_dist
+            inter_fwd.append(n_dist)
+        # self._print_bar(data=inter_fwd, title='Intra-Face Web Distance Distribution on ' + ds_name, name='fwd_'+ds_name)
+
+        '''create distribution'''
+        count_data = []
+        inter_fwd = np.array(inter_fwd)
+        range_data = np.linspace(np.amin(inter_fwd), np.amax(inter_fwd), 50)
+        for i in range(len(range_data)):
+            _count = np.count_nonzero(inter_fwd < range_data[i])
+            if i - 1 >= 0:
+                yy = np.count_nonzero(inter_fwd < range_data[i - 1])
+                _count -= yy
+            count_data.append(_count)
+            # count_data.append(np.count_nonzero(inter_fwd<range_data[i]))
+
+        self._print_fwd_histo(data=count_data, title='Intra-Face Web Distance Distribution on ' + ds_name,
+                              name='fwd_' + ds_name)
+
+        return inter_fwd
+
+    def _print_intra_fb(self, landmark, points, img, title, name):
+        plt.figure()
+        plt.imshow(img)
+        plt.title(title)
+        _color = ['#f4a261', '#2a9d8f', '#fca311', '#e63946', '#283618', '#72efdd', '#3d405b', '#72efdd', '#f72585',
+                  '#40916c', '#283618', '#fca311', '#011627', '#ff5d8f', '#ffea00', '#ff9500', '#f72585', '#40916c',
+                  '#f72585', '#72efdd', '#40916c', '#ff5d8f', '#ffbe0b', '#011627', '#f4a261', '#3d405b', '#f72585',
+                  '#e63946', '#011627', '#283618', '#ffbe0b', '#2a9d8f']
+        for i in range(len(points)):
+            x_1 = points[i][0] * 2
+            y_1 = points[i][0] * 2 + 1
+            x_2 = points[i][1] * 2
+            y_2 = points[i][1] * 2 + 1
+            plt.plot([landmark[x_1], landmark[x_2]], [landmark[y_1], landmark[y_2]], color=_color[i])
+
+        landmarks_x = []
+        landmarks_y = []
+        for i in range(0, len(landmark), 2):
+            landmarks_x.append(landmark[i])
+            landmarks_y.append(landmark[i + 1])
+
+        # for i in range(len(landmarks_x)):
+        #     plt.annotate(str(i), (landmarks_x[i], landmarks_y[i]), fontsize=6, color='red')
+
+        plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#000000', s=15)
+        plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#fddb3a', s=3)
+
+        # plt.ylabel('Histogram Of Normalized Distances')
+        # plt.xlabel('Faces')
+        plt.savefig(name)
+
+    def _print_fwd_histo(self, data, title, name):
+        plt.figure()
+        plt.title(title)
+        # _colors = ['#{:06x}'.format(random.randint(0, 256**3)) for d in data]
+        # plt.plot(data, color='#a8dda8')
+        plt.bar(np.arange(len(data)), data, color='#01c5c4')
+        # plt.bar(np.arange(len(data)), data, color=_colors)
+        plt.ylabel('Histogram Of Normalized Distances')
+        plt.xlabel('Faces')
+        plt.savefig(name)
+
     def crop_image_train(self, img, bbox, annotation, ds_name):
         if ds_name != DatasetName.dsCofw:
             rand_padd = 0.005 * img.shape[0] + random.randint(0, 5)
@@ -242,7 +337,6 @@ class ImageModification:
             # if croped_img.shape[1] == 0 or croped_img.shape[0] == 0:
             #     print('--')
             return croped_img, annotation_new
-
 
     def resize_image(self, img, annotation):
         if img.shape[0] == 0 or img.shape[1] == 0:
@@ -314,10 +408,11 @@ class ImageModification:
             landmarks_x.append(landmarks[i])
             landmarks_y.append(landmarks[i + 1])
 
-        # for i in range(len(landmarks_x)):
-        #     plt.annotate(str(i), (landmarks_x[i], landmarks_y[i]), fontsize=6, color='red')
+        for i in range(len(landmarks_x)):
+            plt.annotate(str(i), (landmarks_x[i], landmarks_y[i]), fontsize=6, color='red')
 
-        plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='b', s=5)
+        plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#000000', s=15)
+        plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#fddb3a', s=8)
         plt.savefig(img_name + '.png')
         # plt.show()
         plt.clf()
@@ -344,7 +439,7 @@ class ImageModification:
 
         '''normalize landmarks based on hyperface method'''
         width = InputDataSize.image_input_size
-        height =InputDataSize.image_input_size
+        height = InputDataSize.image_input_size
         x_center = width / 2
         y_center = height / 2
         annotation_norm = []
@@ -361,7 +456,7 @@ class ImageModification:
         y_center = height / 2
         annotation = []
         for p in range(0, len(annotation_norm), 2):
-            annotation.append(x_center  - annotation_norm[p] * width)
+            annotation.append(x_center - annotation_norm[p] * width)
             annotation.append(y_center - annotation_norm[p + 1] * height)
         return annotation
 

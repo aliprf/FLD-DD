@@ -10,9 +10,8 @@ from numpy import load, save
 from tqdm import tqdm
 from PIL import Image
 import random
-import tensorflow as tf
 from tensorflow import keras
-
+import efficientnet.tfkeras
 
 class CofwClass:
     """PUBLIC"""
@@ -70,14 +69,14 @@ class CofwClass:
 
     def evaluate_on_cofw(self, model_file):
         '''create model using the h.5 model and its wights'''
-        model = tf.keras.models.load_model(model_file)
+        model = keras.models.load_model(model_file)
         '''load test files and categories:'''
         test_annotation_paths, test_image_paths = self._get_test_set()
 
         """"""
         evaluation = Evaluation(model=model, anno_paths=test_annotation_paths, img_paths=test_image_paths,
                                 ds_name=DatasetName.dsCofw, ds_number_of_points=CofwConf.num_of_landmarks,
-                                fr_threshold=0.1, is_normalized=True)
+                                fr_threshold=0.1, is_normalized=False)
         '''predict labels:'''
         evaluation.predict_annotation()
         '''evaluate with meta data: best to worst'''
@@ -118,6 +117,19 @@ class CofwClass:
                                  annotation_file_paths=annotation_file_paths, pose_file_paths=pose_file_paths,
                                  need_pose=need_pose, accuracy=accuracy, is_test=is_test, ds_name=DatasetName.dsCofw,
                                  num_train_samples=num_train_samples, num_eval_samples=num_eval_samples)
+
+    def create_inter_face_web_distance(self, ds_type):
+        img_mod = ImageModification()
+        if ds_type == 0:
+            img_file_path = CofwConf.no_aug_train_image
+            annotation_file_path = CofwConf.no_aug_train_annotation
+        else:
+            img_file_path = CofwConf.test_image_path
+            annotation_file_path = CofwConf.test_annotation_path
+        cofw_inter_fwd_pnt = [(0, 8), (1, 9), (2, 10), (3, 11), (2, 3), (10, 11), (10, 21), (11, 21), (21, 24), (27, 28)]
+        img_mod.create_normalized_face_web_distance(points=cofw_inter_fwd_pnt,
+                                                    annotation_file_path=annotation_file_path,
+                                                    ds_name=DatasetName.dsCofw)
 
     """PRIVATE"""
     def _get_test_set(self):
@@ -173,7 +185,7 @@ class CofwClass:
                        annotation_save_path=CofwConf.augmented_train_annotation,
                        pose_save_path=CofwConf.augmented_train_pose)
             # img_mod.test_image_print('zzz_final'+str(index)+'-'+str(i), imgs[i], annotations[i])
-
+        #
         return imgs, annotations
 
     def _crop(self, img, annotation, bbox):

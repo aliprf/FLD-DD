@@ -11,6 +11,7 @@ from tqdm import tqdm
 from PIL import Image
 import random
 import tensorflow as tf
+import efficientnet.tfkeras
 
 
 class W300WClass:
@@ -91,14 +92,31 @@ class W300WClass:
             evaluation.predict_annotation()
         '''evaluate with meta data: best to worst'''
 
+    def create_inter_face_web_distance(self, ds_type):
+        img_mod = ImageModification()
+        if ds_type == 0:
+            img_file_path = W300WConf.no_aug_train_image
+            annotation_file_path = W300WConf.no_aug_train_annotation
+        else:
+            img_file_path = W300WConf.test_image_path + 'full'
+            annotation_file_path = W300WConf.test_annotation_path + 'full'
+        w300w_inter_fwd_pnt = [(0, 3), (0, 17), (0, 36), (3, 36), (3, 48), (3, 8), (8, 57), (8, 13), (13, 54), (13, 16),
+                               (13, 45), (16, 45), (16, 26), (51, 33), (39, 33), (42, 33), (39, 42), (21, 39), (22, 42),
+                               (21, 22), (26, 45), (17, 36)]
+        img_mod.create_normalized_face_web_distance(points=w300w_inter_fwd_pnt,
+                                                    annotation_file_path=annotation_file_path,
+                                                    ds_name=DatasetName.ds300W, img_file_path=img_file_path)
+
     """PRIVATE"""
+
     def _get_test_set(self, ds_type):
         test_annotation_paths = []
         test_image_paths = []
-        for file in tqdm(os.listdir(W300WConf.test_image_path+ds_type)):
+        for file in tqdm(os.listdir(W300WConf.test_image_path + ds_type)):
             if file.endswith(".png") or file.endswith(".jpg"):
-                test_annotation_paths.append(os.path.join(W300WConf.test_annotation_path+ds_type, str(file)[:-3] + "npy"))
-                test_image_paths.append(os.path.join(W300WConf.test_image_path+ds_type, str(file)))
+                test_annotation_paths.append(
+                    os.path.join(W300WConf.test_annotation_path + ds_type, str(file)[:-3] + "npy"))
+                test_image_paths.append(os.path.join(W300WConf.test_image_path + ds_type, str(file)))
         return test_annotation_paths, test_image_paths
 
     def w300w_create_tf_record(self, need_pose, accuracy=100, ds_type=0):
@@ -123,7 +141,7 @@ class W300WClass:
 
         tf_utility.create_tf_ref(tf_file_paths=tf_file_paths, img_file_paths=img_file_paths,
                                  annotation_file_paths=annotation_file_paths, pose_file_paths=pose_file_paths,
-                                 need_pose=need_pose, accuracy=accuracy, is_test=is_test,ds_name=DatasetName.ds300W,
+                                 need_pose=need_pose, accuracy=accuracy, is_test=is_test, ds_name=DatasetName.ds300W,
                                  num_train_samples=num_train_samples, num_eval_samples=num_eval_samples)
 
     def _do_random_augment(self, index, img, annotation, _bbox, need_hm, need_pose, pose_detector=None):
@@ -199,9 +217,9 @@ class W300WClass:
         annotation_arr = []
         bbox_arr = []
 
-        counter =0
+        counter = 0
         for file in tqdm(os.listdir(path_folder)):
-            if (file.endswith(".png") or file.endswith(".jpg")): #and counter < 10:
+            if (file.endswith(".png") or file.endswith(".jpg")):  # and counter < 10:
                 try:
                     images_path = os.path.join(path_folder, file)
                     annotations_path = os.path.join(path_folder, str(file)[:-3] + "pts")
@@ -249,4 +267,4 @@ class W300WClass:
                 line = fp.readline()
                 cnt += 1
 
-        return np.round(annotation_arr,3)
+        return np.round(annotation_arr, 3)
