@@ -4,7 +4,7 @@ from PIL import Image
 import math
 
 from Config import DatasetName, InputDataSize
-# from ImageModification import ImageModification
+from ImageModification import ImageModification
 
 """in evaluation, round all numbers with 3 demical"""
 class Evaluation:
@@ -19,7 +19,7 @@ class Evaluation:
         self.is_normalized = is_normalized
 
     def predict_annotation(self):
-        # img_mod = ImageModification()
+        img_mod = ImageModification()
         nme_ar = []
         fail_counter = 0
         sum_loss = 0

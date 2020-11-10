@@ -13,7 +13,7 @@ from skimage.transform import SimilarityTransform, AffineTransform
 from tqdm import tqdm
 import os
 
-from Evaluation import Evaluation
+# from Evaluation import Evaluation
 
 
 class ImageModification:

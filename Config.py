@@ -108,8 +108,8 @@ class CofwConf:
     num_of_landmarks = 29
     hm_stride = 3
     '''for tf record:'''
-    num_eval_samples_aug = 53390*0.05 #int(orig_number_of_training * augmentation_factor * 0.05)
-    num_train_samples_aug = 53390 - 53390*0.05 #orig_number_of_training * augmentation_factor - num_eval_samples_aug  # 13450 - 670 = 12775
+    num_eval_samples_aug = 2670 #int(orig_number_of_training * augmentation_factor * 0.05)
+    num_train_samples_aug = 50720 #orig_number_of_training * augmentation_factor - num_eval_samples_aug  # 13450 - 670 = 12775
 
     num_eval_samples_orig = int(orig_number_of_training * 0.05)  #
     num_train_samples_orig = orig_number_of_training - num_eval_samples_orig  #
@@ -146,7 +146,7 @@ class W300WConf:
     num_of_landmarks = 68
     hm_stride = 3
     '''for tf record:'''
-    num_eval_samples_aug = 16155 * 0.05 #int(3507 * augmentation_factor * 0.05)  #
-    num_train_samples_aug = 16155 - 16155 * 0.05 #3507 * augmentation_factor - num_eval_samples_aug  #
+    num_eval_samples_aug = 807 #int(3507 * augmentation_factor * 0.05)  #
+    num_train_samples_aug = 15347 #3507 * augmentation_factor - num_eval_samples_aug  #
     num_eval_samples_orig = int(orig_number_of_training * 0.05)  # 13450* 0.05 = 670
     num_train_samples_orig = orig_number_of_training - num_eval_samples_orig  # 13450 - 670 = 12775

@@ -29,6 +29,10 @@ class TfUtility:
             writer_main = tf.python_io.TFRecordWriter(tf_main_path)
             if not is_test:
                 writer_evaluate = tf.python_io.TFRecordWriter(tf_evaluation_path)
+            _num_all_sample = len(os.listdir(img_file_paths[index]))
+            _num_train_sample = _num_all_sample * 0.95
+            _num_eval_sample = _num_all_sample - _num_train_sample
+
             for file in os.listdir(img_file_paths[index]):
                 if file.endswith(".jpg") or file.endswith(".png"):
                     img_tf_name = self._encode_tf_file_name(file)
@@ -80,16 +84,16 @@ class TfUtility:
 
                     example = tf.train.Example(features=tf.train.Features(feature=feature))
 
-                    if counter <= num_train_samples[index]:
+                    if counter <= _num_train_sample:
                         writer_main.write(example.SerializeToString())
                         msg = 'train --> \033[92m' + " sample number " + str(counter + 1) + \
-                              " created." + '\033[94m' + "remains " + str(num_train_samples[index] - counter - 1)
+                              " created." + '\033[94m' + "remains " + str(_num_train_sample - counter - 1)
                         sys.stdout.write('\r' + msg)
 
                     else:
                         writer_evaluate.write(example.SerializeToString())
                         msg = 'eval --> \033[92m' + " sample number " + str(counter + 1) + \
-                              " created." + '\033[94m' + "remains " + str(num_train_samples[index] - counter - 1)
+                              " created." + '\033[94m' + "remains " + str( _num_train_sample - counter - 1)
                         sys.stdout.write('\r' + msg)
                     counter += 1
 
