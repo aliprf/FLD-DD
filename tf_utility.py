@@ -164,7 +164,7 @@ class TfUtility:
             load_map = pickle.load(file)
             print(load_map)
             f = open("mapppp.txt", "a")
-            f.write(load_map)
+            f.write(str(load_map))
             f.close()
             file.close()
 
