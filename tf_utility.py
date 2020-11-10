@@ -171,7 +171,7 @@ class TfUtility:
     def np_to_str(self, input):
         str_out = ''
         for item in input:
-            str_out += str(item)[4]
+            str_out += str(item)[:3]
         return str_out
 
     def get_hash_key(self, input):
