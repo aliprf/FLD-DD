@@ -150,7 +150,7 @@ class TfUtility:
 
                     # landmark_key = lbl.tostring()
                     # landmark_key = self.get_hash_key(lbl)
-                    landmark_key = np.array2string(lbl)
+                    landmark_key = self.get_hash_key(np.array2string(lbl))
                     map[landmark_key] = img_name
                     counter += 1
 
