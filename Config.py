@@ -31,8 +31,8 @@ class InputDataSize:
 
 
 class WflwConf:
-    Wflw_prefix_path = '/media/data3/ali/FL/new_data/wflw/'  # --> zeus
-    # Wflw_prefix_path = '/media/data2/alip/FL/new_data/wflw/'  # --> atlas
+    # Wflw_prefix_path = '/media/data3/ali/FL/new_data/wflw/'  # --> zeus
+    Wflw_prefix_path = '/media/data2/alip/FL/new_data/wflw/'  # --> atlas
     # Wflw_prefix_path = '/media/ali/data/new_data/wflw/'  # --> local
     '''original ds data'''
     orig_WFLW_test = Wflw_prefix_path + 'WFLW_annotations/list_98pt_rect_attr_train_test/list_98pt_rect_attr_test.txt'
@@ -116,8 +116,8 @@ class CofwConf:
 
 
 class W300WConf:
-    w300w_prefix_path = '/media/data3/ali/FL/new_data/300W/'  # --> zeus
-    # w300w_prefix_path = '/media/data2/alip/FL/new_data/300W/'  # --> atlas
+    # w300w_prefix_path = '/media/data3/ali/FL/new_data/300W/'  # --> zeus
+    w300w_prefix_path = '/media/data2/alip/FL/new_data/300W/'  # --> atlas
     # w300w_prefix_path = '/media/ali/data/new_data/300W/'  # --> local
 
     orig_300W_test = w300w_prefix_path + 'orig_300W_test/'
