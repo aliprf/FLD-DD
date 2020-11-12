@@ -16,10 +16,10 @@ import efficientnet.tfkeras
 class WflwClass:
     """PUBLIC"""
 
-    def create_pca_obj(self, accuracy):
+    def create_pca_obj(self, accuracy, normalize):
         pca_utils = PCAUtility()
         pca_utils.create_pca_from_npy(annotation_path=WflwConf.augmented_train_annotation,
-                                      pca_accuracy=accuracy, pca_file_name=DatasetName.dsWflw)
+                                      pca_accuracy=accuracy, pca_file_name=DatasetName.dsWflw, normalize=normalize)
 
     def create_train_set(self, need_pose=False, need_hm=False, accuracy=100):
         # pose_detector = PoseDetector()

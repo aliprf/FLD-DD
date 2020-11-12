@@ -10,21 +10,24 @@ from numpy import save, load
 import math
 from PIL import Image
 from numpy import save, load
-
+from ImageModification import ImageModification
 
 class PCAUtility:
     eigenvalues_prefix = "_eigenvalues_"
     eigenvectors_prefix = "_eigenvectors_"
     meanvector_prefix = "_meanvector_"
 
-    def create_pca_from_npy(self, annotation_path, pca_accuracy, pca_file_name):
+    def create_pca_from_npy(self, annotation_path, pca_accuracy, pca_file_name, normalize=False):
         print('PCA calculation started: loading labels')
-
+        img_mod = ImageModification()
         lbl_arr = []
         for file in tqdm(os.listdir(annotation_path)):
             if file.endswith(".npy"):
                 npy_file = os.path.join(annotation_path, file)
-                lbl_arr.append(load(npy_file))
+                if normalize:
+                    lbl_arr.append(img_mod.normalize_annotations(load(npy_file)))
+                else:
+                    lbl_arr.append(load(npy_file))
 
         # lbl_arr = np.array(lbl_arr)
 

@@ -17,10 +17,10 @@ import efficientnet.tfkeras
 class W300WClass:
     """PUBLIC"""
 
-    def create_pca_obj(self, accuracy):
+    def create_pca_obj(self, accuracy, normalize):
         pca_utils = PCAUtility()
         pca_utils.create_pca_from_npy(annotation_path=W300WConf.augmented_train_annotation,
-                                      pca_accuracy=accuracy, pca_file_name=DatasetName.ds300W)
+                                      pca_accuracy=accuracy, pca_file_name=DatasetName.ds300W, normalize=normalize)
 
     def create_train_set(self, need_pose=False, need_hm=False, accuracy=100):
         # pose_detector = PoseDetector()

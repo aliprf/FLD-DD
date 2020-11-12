@@ -50,17 +50,16 @@ class TfUtility:
                     #     pose = load(pose_file_name)
                     # else:
                     #     pose = None
-
+                    landmark = img_mod.normalize_annotations(annotation=landmark)
                     '''create new landmark using accuracy'''
                     if accuracy != 100:
                         landmark = self._get_asm(landmark, ds_name, accuracy)
 
                     '''normalize landmarks'''
-                    landmark = img_mod.normalize_annotations(annotation=landmark)
 
                     '''test landmarks'''
-                    # landmark_de = img_mod.de_normalized(annotation_norm=landmark)
-                    # img_mod.test_image_print(img_name=str(index), landmarks=landmark_de, img=img)
+                    landmark_de = img_mod.de_normalized(annotation_norm=landmark)
+                    img_mod.test_image_print(img_name=str(index), landmarks=landmark_de, img=img)
 
                     '''create tf_record:'''
                     writable_img = np.reshape(img,
