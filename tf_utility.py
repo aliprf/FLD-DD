@@ -58,8 +58,8 @@ class TfUtility:
                     '''normalize landmarks'''
 
                     '''test landmarks'''
-                    landmark_de = img_mod.de_normalized(annotation_norm=landmark)
-                    img_mod.test_image_print(img_name=str(index), landmarks=landmark_de, img=img)
+                    # landmark_de = img_mod.de_normalized(annotation_norm=landmark)
+                    # img_mod.test_image_print(img_name=str(index), landmarks=landmark_de, img=img)
 
                     '''create tf_record:'''
                     writable_img = np.reshape(img,
