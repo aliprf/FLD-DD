@@ -26,9 +26,9 @@ class TfUtility:
             tf_evaluation_path = tf_file_paths[index] + 'eval' + str(accuracy) + '.tfrecords'
 
             counter = 0
-            writer_main = tf.python_io.TFRecordWriter(tf_main_path)
+            writer_main = tf.compat.v1.python_io.TFRecordWriter(tf_main_path)
             if not is_test:
-                writer_evaluate = tf.python_io.TFRecordWriter(tf_evaluation_path)
+                writer_evaluate = tf.compat.v1.python_io.TFRecordWriter(tf_evaluation_path)
             _num_all_sample = len(os.listdir(img_file_paths[index]))
             _num_train_sample = _num_all_sample * 0.95
             _num_eval_sample = _num_all_sample - _num_train_sample
@@ -54,7 +54,13 @@ class TfUtility:
                     '''create new landmark using accuracy'''
                     if accuracy != 100:
                         landmark = self._get_asm(landmark, ds_name, accuracy)
-                    # img_mod.test_image_print(img_name=str(index), landmarks=landmark, img=img)
+
+                    '''normalize landmarks'''
+                    landmark = img_mod.normalize_annotations(annotation=landmark)
+
+                    '''test landmarks'''
+                    # landmark_de = img_mod.de_normalized(annotation_norm=landmark)
+                    # img_mod.test_image_print(img_name=str(index), landmarks=landmark_de, img=img)
 
                     '''create tf_record:'''
                     writable_img = np.reshape(img,

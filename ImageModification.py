@@ -435,7 +435,7 @@ class ImageModification:
         return landmark_arr_xy, landmark_arr_x, landmark_arr_y
 
     def normalize_annotations(self, annotation):
-        """for training we dont normalize"""
+        """for training we dont normalize COFW"""
 
         '''normalize landmarks based on hyperface method'''
         width = InputDataSize.image_input_size
@@ -444,8 +444,8 @@ class ImageModification:
         y_center = height / 2
         annotation_norm = []
         for p in range(0, len(annotation), 2):
-            annotation_norm.append(np.round((x_center - annotation[p]) / width, 3))
-            annotation_norm.append(np.round((y_center - annotation[p + 1]) / height, 3))
+            annotation_norm.append((x_center - annotation[p]) / width)
+            annotation_norm.append((y_center - annotation[p + 1]) / height)
         return annotation_norm
 
     def de_normalized(self, annotation_norm):
