@@ -524,7 +524,7 @@ class ImageModification:
         image = image * 255
 
         do_or_not = random.randint(0, 2)
-        if True or do_or_not >= 1:
+        if do_or_not >= 1:
             beta = random.randint(-127, 127)
             alpha = np.random.uniform(0.1, 1.9)
 

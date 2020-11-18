@@ -220,7 +220,7 @@ class W300WClass:
 
         counter = 0
         for file in tqdm(sorted(os.listdir(path_folder))):
-            if (file.endswith(".png") or file.endswith(".jpg")) and counter < 10:
+            if (file.endswith(".png") or file.endswith(".jpg")):# and counter < 10:
                 try:
                     images_path = os.path.join(path_folder, file)
                     annotations_path = os.path.join(path_folder, str(file)[:-3] + "pts")
