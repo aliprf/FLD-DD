@@ -3,6 +3,7 @@ from ImageModification import ImageModification
 # from pose_detection.code.PoseDetector import PoseDetector
 from pca_utility import PCAUtility
 from tf_utility import TfUtility
+from Evaluation import Evaluation
 
 import os, sys
 import numpy as np
@@ -10,6 +11,7 @@ from numpy import load, save
 from tqdm import tqdm
 from PIL import Image
 import random
+import tensorflow as tf
 import efficientnet.tfkeras
 
 
@@ -40,20 +42,62 @@ class WflwClass:
         # pose_detector = PoseDetector()
         img_mod = ImageModification()
 
-        imgs, annotations, bboxs, atrs = self._load_data(WflwConf.orig_WFLW_test)
+        # subsets = ['list_98pt_test_largepose.txt', 'list_98pt_test.txt', 'list_98pt_test_blur.txt',
+        #            'list_98pt_test_expression.txt', 'list_98pt_test_illumination.txt',
+        #            'list_98pt_test_makeup.txt', 'list_98pt_test_occlusion.txt']
 
+        ds_types = ['pose/', 'expression/', 'illumination/', 'makeup/', 'occlusion/', 'blur/', 'full/']
+
+        imgs, annotations, bboxs, atrs = self._load_data(WflwConf.orig_WFLW_test)
         for i in tqdm(range(len(imgs))):
             img, annotation = self._crop(img=imgs[i], annotation=annotations[i], bbox=bboxs[i])
 
-            # annotation = img_mod.normalize_annotations(annotation=annotation)
-
+            atr_index = []
+            if 1 in list(atrs[i]):
+                # atr_index = list(atrs[i]).index(1)
+                for kk in range(len(atrs[i])):
+                    if atrs[i][kk] != 0:
+                        atr_index.append(kk)
             # pose = None
             # if need_pose:
             #     pose = tf_utility.detect_pose([img], pose_detector)
             self._save(img=img, annotation=annotation, atr=atrs[i], file_name=str(i),
-                       image_save_path=WflwConf.test_image_path,
-                       annotation_save_path=WflwConf.test_annotation_path, pose_save_path=WflwConf.test_pose_path,
-                       atr_save_path=WflwConf.test_atr_path)
+                       image_save_path=WflwConf.test_image_path + ds_types[6],
+                       annotation_save_path=WflwConf.test_annotation_path + ds_types[6],
+                       pose_save_path=WflwConf.test_pose_path + ds_types[6],
+                       atr_save_path=WflwConf.test_atr_path + ds_types[6])
+            for kk in range(len(atr_index)):
+                self._save(img=img, annotation=annotation, atr=atrs[i], file_name=str(i),
+                           image_save_path=WflwConf.test_image_path + ds_types[atr_index[kk]],
+                           annotation_save_path=WflwConf.test_annotation_path + ds_types[atr_index[kk]],
+                           pose_save_path=WflwConf.test_pose_path + ds_types[atr_index[kk]],
+                           atr_save_path=WflwConf.test_atr_path + ds_types[atr_index[kk]])
+
+
+        # imgs, annotations, bboxs, atrs = self._load_data(WflwConf.orig_WFLW_test)
+        # for i in tqdm(range(len(imgs))):
+        #     img, annotation = self._crop(img=imgs[i], annotation=annotations[i], bbox=bboxs[i])
+        #
+        #     atr_index = []
+        #     if 1 in list(atrs[i]):
+        #         # atr_index = list(atrs[i]).index(1)
+        #         for kk in range(len(atrs[i])):
+        #             if atrs[i][kk] != 0:
+        #                 atr_index.append(kk)
+        #     # pose = None
+        #     # if need_pose:
+        #     #     pose = tf_utility.detect_pose([img], pose_detector)
+        #     self._save(img=img, annotation=annotation, atr=atrs[i], file_name=str(i),
+        #                image_save_path=WflwConf.test_image_path + ds_types[0],
+        #                annotation_save_path=WflwConf.test_annotation_path + ds_types[0],
+        #                pose_save_path=WflwConf.test_pose_path + ds_types[0],
+        #                atr_save_path=WflwConf.test_atr_path + ds_types[0])
+        #     for kk in range(len(atr_index)):
+        #         self._save(img=img, annotation=annotation, atr=atrs[i], file_name=str(i),
+        #                    image_save_path=WflwConf.test_image_path + ds_types[atr_index[kk]],
+        #                    annotation_save_path=WflwConf.test_annotation_path + ds_types[atr_index[kk]],
+        #                    pose_save_path=WflwConf.test_pose_path+ ds_types[atr_index[kk]],
+        #                    atr_save_path=WflwConf.test_atr_path+ ds_types[atr_index[kk]])
 
         '''tf_record'''
         # if need_tf_ref:
@@ -68,11 +112,37 @@ class WflwClass:
 
         img_file_paths = [WflwConf.no_aug_train_image, WflwConf.augmented_train_image]
         annotation_file_paths = [WflwConf.no_aug_train_annotation, WflwConf.augmented_train_annotation]
-        map_name = ['map_orig' + DatasetName.ds300W, 'map_aug' + DatasetName.ds300W]
+        map_name = ['map_orig' + DatasetName.dsWflw, 'map_aug' + DatasetName.dsWflw]
         tf_utility.create_point_imgpath_map(img_file_paths=img_file_paths,
                                             annotation_file_paths=annotation_file_paths, map_name=map_name)
 
+    def evaluate_on_wflw(self, model_file):
+        """"""
+        '''create model using the h.5 model and its wights'''
+        model = tf.keras.models.load_model(model_file)
+        '''load test files and categories:'''
+        ds_types = ['pose', 'expression', 'illumination', 'makeup', 'occlusion', 'blur', 'full']
+        for ds_type in ds_types:
+            test_annotation_paths, test_image_paths = self._get_test_set(ds_type)
+
+            """"""
+            evaluation = Evaluation(model=model, anno_paths=test_annotation_paths, img_paths=test_image_paths,
+                                    ds_name=DatasetName.dsWflw, ds_number_of_points=WflwConf.num_of_landmarks,
+                                    fr_threshold=0.1, is_normalized=True)
+            '''predict labels:'''
+            evaluation.predict_annotation()
+        '''evaluate with meta data: best to worst'''
+
     """PRIVATE"""
+    def _get_test_set(self, ds_type):
+        test_annotation_paths = []
+        test_image_paths = []
+        for file in tqdm(os.listdir(WflwConf.test_image_path + ds_type)):
+            if file.endswith(".png") or file.endswith(".jpg"):
+                test_annotation_paths.append(
+                    os.path.join(WflwConf.test_annotation_path + ds_type, str(file)[:-3] + "npy"))
+                test_image_paths.append(os.path.join(WflwConf.test_image_path + ds_type, str(file)))
+        return test_annotation_paths, test_image_paths
 
     def wflw_create_tf_record(self, need_pose, accuracy=100, ds_type=0):
         tf_utility = TfUtility()

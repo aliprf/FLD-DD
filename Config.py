@@ -32,9 +32,11 @@ class InputDataSize:
 
 class WflwConf:
     # Wflw_prefix_path = '/media/data3/ali/FL/new_data/wflw/'  # --> zeus
-    Wflw_prefix_path = '/media/data2/alip/FL/new_data/wflw/'  # --> atlas
-    # Wflw_prefix_path = '/media/ali/data/new_data/wflw/'  # --> local
+    # Wflw_prefix_path = '/media/data2/alip/FL/new_data/wflw/'  # --> atlas
+    Wflw_prefix_path = '/media/ali/data/new_data/wflw/'  # --> local
     '''original ds data'''
+    orig_WFLW_test_path = Wflw_prefix_path + 'WFLW_annotations/list_98pt_test/'
+
     orig_WFLW_test = Wflw_prefix_path + 'WFLW_annotations/list_98pt_rect_attr_train_test/list_98pt_rect_attr_test.txt'
     orig_WFLW_train = Wflw_prefix_path + 'WFLW_annotations/list_98pt_rect_attr_train_test/list_98pt_rect_attr_train.txt'
     orig_WFLW_image = Wflw_prefix_path + 'WFLW_images/'
@@ -117,8 +119,8 @@ class CofwConf:
 
 class W300WConf:
     # w300w_prefix_path = '/media/data3/ali/FL/new_data/300W/'  # --> zeus
-    w300w_prefix_path = '/media/data2/alip/FL/new_data/300W/'  # --> atlas
-    # w300w_prefix_path = '/media/ali/data/new_data/300W/'  # --> local
+    # w300w_prefix_path = '/media/data2/alip/FL/new_data/300W/'  # --> atlas
+    w300w_prefix_path = '/media/ali/data/new_data/300W/'  # --> local
 
     orig_300W_test = w300w_prefix_path + 'orig_300W_test/'
     test_annotation_path = w300w_prefix_path + 'testing_set/annotations/'
@@ -142,7 +144,7 @@ class W300WConf:
     orig_number_of_test_common = 554
     orig_number_of_test_challenging = 135
 
-    augmentation_factor = 5  # create . image from 1 16155
+    augmentation_factor = 7  # create . image from 1 16155
     num_of_landmarks = 68
     hm_stride = 3
     '''for tf record:'''

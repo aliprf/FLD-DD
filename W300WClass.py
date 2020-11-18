@@ -37,7 +37,7 @@ class W300WClass:
         create test set from original test data
         :return:
         """
-        tf_utility = TfUtility()
+        # tf_utility = TfUtility()
         # pose_detector = PoseDetector()
         img_mod = ImageModification()
 
@@ -62,7 +62,7 @@ class W300WClass:
         '''tf_record'''
         # if need_tf_ref:
         #     self.wflw_create_tf_record(ds_type=1, need_pose=need_pose)  # we don't need hm for test
-        print("create_test_set DONE!!")
+        print("300W -> create_test_set DONE!!")
 
     def create_point_imgpath_map(self):
         """
@@ -213,13 +213,14 @@ class W300WClass:
         :param annotation_path: path to the folder
         :return: images, annotations, bboxes
         """
+        print('Loading 300W train set')
         image_arr = []
         annotation_arr = []
         bbox_arr = []
 
         counter = 0
-        for file in tqdm(os.listdir(path_folder)):
-            if (file.endswith(".png") or file.endswith(".jpg")):  # and counter < 10:
+        for file in tqdm(sorted(os.listdir(path_folder))):
+            if (file.endswith(".png") or file.endswith(".jpg")) and counter < 10:
                 try:
                     images_path = os.path.join(path_folder, file)
                     annotations_path = os.path.join(path_folder, str(file)[:-3] + "pts")
@@ -242,7 +243,7 @@ class W300WClass:
         img_mod = ImageModification()
         ann_xy, an_x, an_y = img_mod.create_landmarks(annotation, 1, 1)
 
-        fix_padd = 10
+        fix_padd = 2
         xmin = int(max(0, min(an_x) - fix_padd))
         ymin = int(max(0, min(an_y) - fix_padd))
         xmax = int(max(an_x) + fix_padd)

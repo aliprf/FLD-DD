@@ -12,7 +12,7 @@ from skimage import transform
 from skimage.transform import SimilarityTransform, AffineTransform
 from tqdm import tqdm
 import os
-
+import cv2 as cv
 # from Evaluation import Evaluation
 
 
@@ -74,9 +74,6 @@ class ImageModification:
                         img, landmark, bbox_me = self._flip_and_relabel(img, landmark, ds_name, num_of_landmarks,
                                                                         bbox_me)
 
-                    '''noise'''
-                    img = self._noisy(img)
-
                     rot = np.random.uniform(-1 * 0.5, 0.5)
                     sx, sy = scale
                     t_matrix = np.array([
@@ -135,6 +132,14 @@ class ImageModification:
 
                     '''resize'''
                     _img, _landmark = self.resize_image(c_img, landmark_new)
+
+                    '''contras and color modification '''
+                    _img = self._adjust_gamma(_img)
+                    '''noise'''
+                    _img = self._noisy(_img)
+                    ''''''
+                    _img = self._blur(_img)
+                    ''''''
                     augmented_images.append(_img)
 
                     # '''normalized annotations WE DON'T NORMALIZE as the accuracy will reduce'''
@@ -475,6 +480,66 @@ class ImageModification:
             landmark_arr_y.append(y)  # [y1, y2]
 
         return landmark_arr_xy, landmark_arr_x, landmark_arr_y
+
+    def _blur(self, image):
+        do_or_not = random.randint(0, 100)
+        if do_or_not % 2 == 0:
+            try:
+                image = image * 255.0
+                image = np.float32(image)
+                image = cv.medianBlur(image, 5)
+                image = image / 255.0
+            except Exception as e:
+                print(str(e))
+                pass
+            return image
+
+        return image
+
+    def _adjust_gamma(self, image):
+        do_or_not = random.randint(0, 100)
+        if do_or_not % 2 == 0:
+            try:
+                image = image * 255
+                image = np.int8(image)
+
+                dark_or_light = random.randint(0, 100)
+                if dark_or_light % 2 == 0:
+                    gamma = np.random.uniform(0.25, 0.5)
+                else:
+                    gamma = np.random.uniform(2, 3.5)
+                invGamma = 1.0 / gamma
+                table = np.array([((i / 255.0) ** invGamma) * 255
+                                  for i in np.arange(0, 256)]).astype("uint8")
+                image = cv.LUT(image, table)
+                image = image / 255.0
+                return image
+            except Exception as e:
+                print(str(e))
+                pass
+        return image
+
+    def _modify_color(self, image):
+        """noise is alpha*pixel_value + beta"""
+        image = image * 255
+
+        do_or_not = random.randint(0, 2)
+        if True or do_or_not >= 1:
+            beta = random.randint(-127, 127)
+            alpha = np.random.uniform(0.1, 1.9)
+
+            min_offset = random.randint(0, 20)
+            max_offset = random.randint(230, 250)
+            for row in image[:, :, 2]:
+                for pixel in row:
+                    new_pixel = alpha * pixel + beta
+                    if new_pixel <= 3:
+                        new_pixel = min_offset
+                    elif new_pixel >= 250:
+                        new_pixel = max_offset
+                    image[:, :, 2] = new_pixel
+        image = image/255.0
+        return image
 
     def _noisy(self, image):
         noise_typ = random.randint(0, 8)

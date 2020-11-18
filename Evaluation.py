@@ -102,4 +102,13 @@ class Evaluation:
         # print(dis1)
         # print('==============') both are equal
         return dis
-    
+
+    # def equation_test(self, x_gt, x_teach_tough, x_teach_tol, x_pr):
+    #     sign_delta_gt_teach_tough = np.sign(x_gt - x_teach_tough)
+    #     sign_delta_gt_teach_tol = np.sign(x_gt - x_teach_tol)
+    #     sign_delta_gt_pr = np.sign(x_gt - x_pr)
+    #
+    #     '''considering tough teacher:'''
+    #     if sign_delta_gt_pr == sign_delta_gt_teach_tough:
+    #         loss_total = abs(x_gt - x_pr) + abs(x_gt - x_teach_tough)
+    #     else:
