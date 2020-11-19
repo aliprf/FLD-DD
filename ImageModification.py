@@ -13,6 +13,8 @@ from skimage.transform import SimilarityTransform, AffineTransform
 from tqdm import tqdm
 import os
 import cv2 as cv
+
+
 # from Evaluation import Evaluation
 
 
@@ -497,27 +499,27 @@ class ImageModification:
         return image
 
     def _adjust_gamma(self, image):
-        do_or_not = random.randint(0, 100)
-        if do_or_not % 2 == 0:
-            try:
-                image = image * 255
-                image = np.int8(image)
+        # do_or_not = random.randint(0, 100)
+        # if do_or_not % 2 == 0 or do_or_not % 3 == 0:
+        try:
+            image = image * 255
+            image = np.int8(image)
 
-                dark_or_light = random.randint(0, 100)
-                if dark_or_light % 2 == 0:
-                    gamma = np.random.uniform(0.25, 0.5)
-                else:
-                    gamma = np.random.uniform(2, 3.5)
-                invGamma = 1.0 / gamma
-                table = np.array([((i / 255.0) ** invGamma) * 255
-                                  for i in np.arange(0, 256)]).astype("uint8")
-                image = cv.LUT(image, table)
-                image = image / 255.0
-                return image
-            except Exception as e:
-                print(str(e))
-                pass
-        return image
+            dark_or_light = random.randint(0, 100)
+            if dark_or_light % 2 == 0 or dark_or_light % 3 == 0:
+                gamma = np.random.uniform(0.3, 0.8)
+            else:
+                gamma = np.random.uniform(1.5, 3.5)
+            invGamma = 1.0 / gamma
+            table = np.array([((i / 255.0) ** invGamma) * 255
+                              for i in np.arange(0, 256)]).astype("uint8")
+            image = cv.LUT(image, table)
+            image = image / 255.0
+            return image
+        except Exception as e:
+            print(str(e))
+            pass
+        # return image
 
     def _modify_color(self, image):
         """noise is alpha*pixel_value + beta"""
@@ -538,7 +540,7 @@ class ImageModification:
                     elif new_pixel >= 250:
                         new_pixel = max_offset
                     image[:, :, 2] = new_pixel
-        image = image/255.0
+        image = image / 255.0
         return image
 
     def _noisy(self, image):

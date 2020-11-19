@@ -24,12 +24,13 @@ class W300WClass:
 
     def create_train_set(self, need_pose=False, need_hm=False, accuracy=100):
         # pose_detector = PoseDetector()
-
-        imgs, annotations, bboxs = self._load_data(W300WConf.orig_300W_train)
-
-        for i in tqdm(range(len(imgs))):
-            self._do_random_augment(index=i, img=imgs[i], annotation=annotations[i], _bbox=bboxs[i]
-                                    , need_hm=need_hm, need_pose=need_pose)
+        i = 0
+        for file in tqdm(sorted(os.listdir(W300WConf.orig_300W_train))):
+            if file.endswith(".png") or file.endswith(".jpg"):
+                imgs, annotations, bboxs = self._load_data_train(file, W300WConf.orig_300W_train)
+                self._do_random_augment(index=i, img=imgs[0], annotation=annotations[0], _bbox=bboxs[0]
+                                        , need_hm=need_hm, need_pose=need_pose)
+            i += 1
         print("create_train_set DONE!!")
 
     def create_test_set(self, need_pose=False, need_tf_ref=False):
@@ -207,6 +208,29 @@ class W300WClass:
         if pose is not None:
             np.save(pose_save_path + file_name, pose)
 
+    def _load_data_train(self, file, path_folder):
+        """
+        load all images, annotations and boundingBoxes
+        :param annotation_path: path to the folder
+        :return: images, annotations, bboxes
+        """
+        image_arr = []
+        annotation_arr = []
+        bbox_arr = []
+        # try:
+        images_path = os.path.join(path_folder, file)
+        annotations_path = os.path.join(path_folder, str(file)[:-3] + "pts")
+        '''load data'''
+        image_arr.append(self._load_image(images_path))
+        annotation = self._load_annotation(annotations_path)
+        annotation_arr.append(annotation)
+        bbox_arr.append(self._create_bbox(annotation))
+        # except Exception as e:
+        #     print('300W: _load_data-Exception' + str(e))
+
+        # print('300W Loading Done')
+        return image_arr, annotation_arr, bbox_arr
+
     def _load_data(self, path_folder):
         """
         load all images, annotations and boundingBoxes
@@ -230,7 +254,7 @@ class W300WClass:
                     annotation_arr.append(annotation)
                     bbox_arr.append(self._create_bbox(annotation))
                 except Exception as e:
-                    print('300W: _load_data-Exception')
+                    print('300W: _load_data-Exception' + str(e))
                 counter += 1
 
         print('300W Loading Done')
@@ -243,7 +267,7 @@ class W300WClass:
         img_mod = ImageModification()
         ann_xy, an_x, an_y = img_mod.create_landmarks(annotation, 1, 1)
 
-        fix_padd = 2
+        fix_padd = 5
         xmin = int(max(0, min(an_x) - fix_padd))
         ymin = int(max(0, min(an_y) - fix_padd))
         xmax = int(max(an_x) + fix_padd)
@@ -253,19 +277,23 @@ class W300WClass:
         return bbox_me
 
     def _load_annotation(self, file_name):
-        annotation_arr = []
+        try:
+            annotation_arr = []
 
-        with open(file_name) as fp:
-            line = fp.readline()
-            cnt = 1
-            while line:
-                if 3 < cnt < 72:
-                    x_y_pnt = line.strip()
-                    x = float(x_y_pnt.split(" ")[0])
-                    y = float(x_y_pnt.split(" ")[1])
-                    annotation_arr.append(x)
-                    annotation_arr.append(y)
+            with open(file_name) as fp:
                 line = fp.readline()
-                cnt += 1
+                cnt = 1
+                while line:
+                    if 3 < cnt < 72:
+                        x_y_pnt = line.strip()
+                        x = float(x_y_pnt.split(" ")[0])
+                        y = float(x_y_pnt.split(" ")[1])
+                        annotation_arr.append(x)
+                        annotation_arr.append(y)
+                    line = fp.readline()
+                    cnt += 1
 
-        return np.round(annotation_arr, 3)
+            return np.round(annotation_arr, 3)
+        except Exception as e:
+            print(str(e))
+            pass
