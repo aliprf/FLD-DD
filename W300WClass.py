@@ -24,13 +24,20 @@ class W300WClass:
 
     def create_train_set(self, need_pose=False, need_hm=False, accuracy=100):
         # pose_detector = PoseDetector()
-        i = 0
-        for file in tqdm(sorted(os.listdir(W300WConf.orig_300W_train))):
-            if file.endswith(".png") or file.endswith(".jpg"):
-                imgs, annotations, bboxs = self._load_data_train(file, W300WConf.orig_300W_train)
-                self._do_random_augment(index=i, img=imgs[0], annotation=annotations[0], _bbox=bboxs[0]
-                                        , need_hm=need_hm, need_pose=need_pose)
-            i += 1
+        try:
+            i = 0
+            for file in tqdm(sorted(os.listdir(W300WConf.orig_300W_train))):
+                if file.endswith(".png") or file.endswith(".jpg"):
+                    i += 1
+                    if i < 5948:
+                        continue
+                    imgs, annotations, bboxs = self._load_data_train(file, W300WConf.orig_300W_train)
+                    self._do_random_augment(index=i, img=imgs[0], annotation=annotations[0], _bbox=bboxs[0]
+                                            , need_hm=need_hm, need_pose=need_pose)
+                i += 1
+        except Exception as e:
+            print(str(e))
+
         print("create_train_set DONE!!")
 
     def create_test_set(self, need_pose=False, need_tf_ref=False):
@@ -217,16 +224,17 @@ class W300WClass:
         image_arr = []
         annotation_arr = []
         bbox_arr = []
-        # try:
-        images_path = os.path.join(path_folder, file)
-        annotations_path = os.path.join(path_folder, str(file)[:-3] + "pts")
-        '''load data'''
-        image_arr.append(self._load_image(images_path))
-        annotation = self._load_annotation(annotations_path)
-        annotation_arr.append(annotation)
-        bbox_arr.append(self._create_bbox(annotation))
-        # except Exception as e:
-        #     print('300W: _load_data-Exception' + str(e))
+        try:
+            images_path = os.path.join(path_folder, file)
+            annotations_path = os.path.join(path_folder, str(file)[:-3] + "pts")
+            '''load data'''
+            image_arr.append(self._load_image(images_path))
+            annotation = self._load_annotation(annotations_path)
+            annotation_arr.append(annotation)
+            bbox_arr.append(self._create_bbox(annotation))
+        except Exception as e:
+            print('300W: _load_data-Exception' + str(e))
+            pass
 
         # print('300W Loading Done')
         return image_arr, annotation_arr, bbox_arr

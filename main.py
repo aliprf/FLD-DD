@@ -46,7 +46,7 @@ if __name__ == '__main__':
 
     '''wflw'''
     '''for this dataset, for evaluation part we DON'T use the Tf record, just we load the data and images'''
-    # wflw = WflwClass() # todo DON'T FORGET to remove THE LOAD_DATA LINE LIMIT
+    wflw = WflwClass() # todo DON'T FORGET to remove THE LOAD_DATA LINE LIMIT
     # wflw.create_test_set(need_pose=need_pose, need_tf_ref=False)
     # wflw.create_train_set(need_pose=False, need_hm=True, accuracy=pca_accuracy)  #
     # wflw.create_pca_obj(accuracy=pca_accuracy, normalize=True)
