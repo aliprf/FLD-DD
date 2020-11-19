@@ -32,8 +32,9 @@ class W300WClass:
                     if i < 5948:
                         continue
                     imgs, annotations, bboxs = self._load_data_train(file, W300WConf.orig_300W_train)
-                    self._do_random_augment(index=i, img=imgs[0], annotation=annotations[0], _bbox=bboxs[0]
-                                            , need_hm=need_hm, need_pose=need_pose)
+                    if imgs is not None:
+                        self._do_random_augment(index=i, img=imgs[0], annotation=annotations[0], _bbox=bboxs[0]
+                                                , need_hm=need_hm, need_pose=need_pose)
                 i += 1
         except Exception as e:
             print(str(e))
@@ -234,7 +235,7 @@ class W300WClass:
             bbox_arr.append(self._create_bbox(annotation))
         except Exception as e:
             print('300W: _load_data-Exception' + str(e))
-            pass
+            return None, 0,0
 
         # print('300W Loading Done')
         return image_arr, annotation_arr, bbox_arr
