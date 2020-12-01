@@ -2,6 +2,7 @@ import numpy as np
 from tqdm import tqdm
 from PIL import Image
 import math
+import matplotlib.pyplot as plt
 
 from Config import DatasetName, InputDataSize
 from ImageModification import ImageModification

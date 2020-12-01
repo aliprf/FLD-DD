@@ -263,13 +263,13 @@ class WflwClass:
         counter = 0
         with open(annotation_path) as fp:
             line = fp.readline()
-            while line: # and counter < 10:
+            while line:# and counter < 200:
                 sys.stdout.write('\r \r line --> \033[92m' + str(counter))
 
                 total_data = line.strip().split(' ')
                 annotation_arr.append(np.round(list(map(float, total_data[0:WflwConf.num_of_landmarks * 2])), 3))
                 bbox_arr.append(self._create_bbox(
-                    list(map(int, total_data[WflwConf.num_of_landmarks * 2:WflwConf.num_of_landmarks * 2 + 4]))))
+                    list(map(int, total_data[WflwConf.num_of_landmarks * 2:WflwConf.num_of_landmarks * 2 + 4])), annotation_arr[counter]))
                 atr_arr.append(
                     list(map(int, total_data[WflwConf.num_of_landmarks * 2 + 4:WflwConf.num_of_landmarks * 2 + 10])))
                 image_arr.append(self._load_image(WflwConf.orig_WFLW_image + total_data[-1]))
@@ -281,7 +281,7 @@ class WflwClass:
     def _load_image(self, path):
         return np.array(Image.open(path))
 
-    def _create_bbox(self, _bbox):
+    def _create_bbox(self, _bbox, annotation):
         xmin = _bbox[0]
         ymin = _bbox[1]
         xmax = _bbox[2]
@@ -289,6 +289,18 @@ class WflwClass:
         bbox_me = [xmin, ymin, xmin, ymax, xmax, ymin, xmax, ymax]
 
         return bbox_me
+        # img_mod = ImageModification()
+        # ann_xy, an_x, an_y = img_mod.create_landmarks(annotation, 1, 1)
+        #
+        # fix_padd = 5
+        # xmin = int(max(0, min(an_x) - fix_padd))
+        # ymin = int(max(0, min(an_y) - fix_padd))
+        # xmax = int(max(an_x) + fix_padd)
+        # ymax = int(max(an_y) + fix_padd)
+        # bbox_me = [xmin, ymin, xmin, ymax, xmax, ymin, xmax, ymax]
+        #
+        # return bbox_me
+
 
     def _load_annotation(self, path):
         annotation_arr = []

@@ -2,6 +2,8 @@ from Config import InputDataSize, DatasetName
 import random
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.ticker import (AutoMinorLocator, MultipleLocator)
+
 import math
 from skimage.transform import warp, AffineTransform
 from skimage.transform import rotate
@@ -46,11 +48,12 @@ class ImageModification:
             aug_num = 0
             '''if atr is not null'''
             if atr is not None:
-                augmentation_factor += atr[0] * augmentation_factor  # _pose = atr[0]
-                augmentation_factor += atr[1] * augmentation_factor  # _exp = atr[1]
+                # augmentation_factor = 5
+                augmentation_factor += atr[0] * 40  # _pose = atr[0]
+                augmentation_factor += atr[1] * 7  # _exp = atr[1]
                 augmentation_factor += atr[2] * 2  # _illu = atr[2]
                 augmentation_factor += atr[3] * 2  # _mkup = atr[3]
-                augmentation_factor += atr[4] * augmentation_factor  # _occl = atr[4]
+                augmentation_factor += atr[4] * 8  # _occl = atr[4]
                 augmentation_factor += atr[5] * 2  # _blr = atr[5]
 
             while aug_num < augmentation_factor - 1:
@@ -305,8 +308,8 @@ class ImageModification:
 
     def crop_image_train(self, img, bbox, annotation, ds_name):
         if ds_name != DatasetName.dsCofw:
-            rand_padd = 0.005 * img.shape[0] + random.randint(0, 5)
-            # rand_padd = 0.005 * img.shape[0]
+            # rand_padd = 0.005 * img.shape[0] + random.randint(0, 5)
+            rand_padd = 3#0.005 * img.shape[0]
             ann_xy, ann_x, ann_y = self.create_landmarks(annotation, 1, 1)
             xmin = int(max(0, min(ann_x) - rand_padd))
             xmax = int(max(ann_x) + rand_padd)
@@ -499,27 +502,27 @@ class ImageModification:
         return image
 
     def _adjust_gamma(self, image):
-        # do_or_not = random.randint(0, 100)
-        # if do_or_not % 2 == 0 or do_or_not % 3 == 0:
-        try:
-            image = image * 255
-            image = np.int8(image)
+        do_or_not = random.randint(0, 100)
+        if do_or_not % 2 == 0 or do_or_not % 3 == 0:
+            try:
+                image = image * 255
+                image = np.int8(image)
 
-            dark_or_light = random.randint(0, 100)
-            if dark_or_light % 2 == 0 or dark_or_light % 3 == 0:
-                gamma = np.random.uniform(0.3, 0.8)
-            else:
-                gamma = np.random.uniform(1.5, 3.5)
-            invGamma = 1.0 / gamma
-            table = np.array([((i / 255.0) ** invGamma) * 255
-                              for i in np.arange(0, 256)]).astype("uint8")
-            image = cv.LUT(image, table)
-            image = image / 255.0
-            return image
-        except Exception as e:
-            print(str(e))
-            pass
-        # return image
+                dark_or_light = random.randint(0, 100)
+                if dark_or_light % 2 == 0 or dark_or_light % 3 == 0:
+                    gamma = np.random.uniform(0.3, 0.8)
+                else:
+                    gamma = np.random.uniform(1.5, 3.5)
+                invGamma = 1.0 / gamma
+                table = np.array([((i / 255.0) ** invGamma) * 255
+                                  for i in np.arange(0, 256)]).astype("uint8")
+                image = cv.LUT(image, table)
+                image = image / 255.0
+                return image
+            except Exception as e:
+                print(str(e))
+                pass
+        return image
 
     def _modify_color(self, image):
         """noise is alpha*pixel_value + beta"""
@@ -588,3 +591,206 @@ class ImageModification:
             k = num_of_landmarks + i
             out_arr.append(input_arr[k])
         return np.array(out_arr)
+
+    def calc_teacher_weight_loss(self, x_pr, x_gt, x_t, alpha, alpha_mi, beta, beta_mi):
+        weight_loss_t = 0
+        if x_t > x_gt:
+            if x_pr >= x_t:
+                weight_loss_t = alpha
+            elif beta <= x_pr < x_t:
+                weight_loss_t = alpha_mi
+            elif x_gt <= x_pr < beta:
+                weight_loss_t = (alpha_mi / (beta - x_gt)) * (x_pr - x_gt)
+            elif beta_mi < x_pr < x_gt:
+                weight_loss_t = (alpha / (beta_mi - x_gt)) * (x_pr - x_gt)
+            elif x_pr <= beta_mi:
+                weight_loss_t = alpha
+        elif x_t < x_gt:
+            if x_pr <= x_t:
+                weight_loss_t = alpha
+            elif x_t < x_pr <= beta_mi:
+                weight_loss_t = alpha_mi
+            elif beta_mi < x_pr <= x_gt:
+                weight_loss_t = (-alpha_mi / (x_gt - beta_mi)) * (x_pr - x_gt)
+            elif x_gt < x_pr <= beta:
+                weight_loss_t = (alpha / (beta - x_gt)) * (x_pr - x_gt)
+            elif x_pr > beta:
+                weight_loss_t = alpha
+        return weight_loss_t
+
+    def weight_loss_depict(self, x_gt, x_tough, beta_tough, beta_mi_tough, alpha_tough,
+                           x_tol, beta_tol, beta_mi_tol, alpha_tol):
+        x_values = np.linspace(-1.0, 1.0, 1000)
+        weight_loss_tough = np.zeros_like(x_values)
+        weight_loss_tol = np.zeros_like(x_values)
+        loss_Tough = np.zeros_like(x_values)
+        loss_Tol = np.zeros_like(x_values)
+        loss_M = np.zeros_like(x_values)
+        loss_Total = np.zeros_like(x_values)
+
+        '''create tough weight'''
+        for i, x in enumerate(x_values):
+            weight_loss_tough[i] = self.calc_teacher_weight_loss(x_pr=x, x_gt=x_gt, x_t=x_tough, alpha=alpha_tough,
+                                                                 alpha_mi=-0.5 * alpha_tough, beta=beta_tough,
+                                                                 beta_mi=beta_mi_tough)
+            weight_loss_tol[i] = self.calc_teacher_weight_loss(x_pr=x, x_gt=x_gt, x_t=x_tol, alpha=alpha_tol,
+                                                               alpha_mi=-0.5 * alpha_tol, beta=beta_tol,
+                                                               beta_mi=beta_mi_tol)
+
+        '''creating loss'''
+        for i, x in enumerate(x_values):
+            loss_Tough[i] = weight_loss_tough[i] * abs(x_tough - x)
+            loss_Tol[i] = weight_loss_tol[i] * abs(x_tol - x)
+            loss_M[i] = abs(x_gt - x)
+            loss_Total[i] = 2*loss_M[i] + (0.8 * loss_Tough[i] + 0.6 * loss_Tol[i])
+
+        '''depicting'''
+        fig = plt.figure(figsize=(5, 5))
+        ax = fig.add_subplot(1, 1, 1)
+
+        ax.set_xlim(0.2, 0.45)
+        ax.set_ylim(-0.1, 0.2)
+        ax.xaxis.set_minor_locator(AutoMinorLocator(4))
+        ax.yaxis.set_minor_locator(AutoMinorLocator(4))
+        ax.grid(which='major', color='#968c83', linestyle='--', linewidth=0.4)
+        ax.grid(which='minor', color='#9ba4b4', linestyle=':', linewidth=0.3)
+        # sct_wl, = ax.plot(x_values[:], weight_loss_tough[:], '#16697a', linewidth=1.5, label='Weight Loss')
+        sct_wl, = ax.plot(x_values[:], weight_loss_tol[:], '#efa6f0', linewidth=0.5, label='W_L_tol')
+        sct_l, = ax.plot(x_values[:], loss_Tough[:], '#222831', linewidth=1.5, label='Teacher Loss')
+        sct_l, = ax.plot(x_values[:], loss_Tol[:], '#190f2f', linewidth=1.0, label='L_Tol')
+        sct_l, = ax.plot(x_values[:], loss_M[:], '#3f37c9', linewidth=1.0, label='L_m')
+        sct_l, = ax.plot(x_values[:], loss_Total[:], '#fb8b24', linewidth=1.5, label='loss_Total')
+        ax.legend()
+        sct_wl = plt.scatter(x=[x_gt], y=[0], c='#f05454', s=55, label='x')
+        sct_wl = plt.scatter(x=[x_tough], y=[0], c='#ffa62b', s=55, label='x')
+        sct_wl = plt.scatter(x=[beta_tough, beta_mi_tough], y=[0, 0], c='#cad315', s=10, label='x')
+        # sct_wl = plt.scatter(x=[x_gt, x_gt], y=[alpha_tough, -0.5 * alpha_tough], c='#cad315', s=10, label='x')
+        # plt.legend((sct_wl,),
+        #            ('x_gt'))
+
+        # for i in range(len(x_values)):
+        #     plt.annotate(str(i), (x_values[i], weight_loss[i]), fontsize=9, color='#fd8c04')
+
+        # plt.savefig('loss_weight.png')
+        # plt.savefig('loss_teacher.png')
+        # plt.savefig('loss_wight_and_teacher.png')
+        plt.savefig('total.pdf')
+
+    def loss_function_depict(self, x_gt, x_t_tough, x_t_tol):
+        w_max_tough = 0.3
+        Beta_tough = (0.9 * x_gt + 0.1 * x_t_tough)
+
+        w_max_tol = 0.6
+        Beta_tol = (0.7 * x_gt + 0.3 * x_t_tol)
+
+        # w_max_tough = 0.4
+        # Beta = (0.6*x_gt + 0.4*x_t_tough)
+
+        def calc_loss(X_pr):
+            if X_pr > x_t_tough:
+                loss_tou = -abs(x_t_tough - X_pr)
+            elif X_pr >= Beta_tough:
+                w_func_tough = w_max_tough
+                loss_tou = abs(x_t_tough - X_pr) * w_func_tough
+            else:
+                slope_tough = w_max_tough / (Beta_tough - x_gt)
+                w_func_tough = abs(X_pr - x_gt) * slope_tough
+                loss_tou = abs(x_t_tough - X_pr) * w_func_tough
+
+            if X_pr >= Beta_tol:
+                w_func_tol = w_max_tol
+                loss_tol = abs(x_t_tol - X_pr) * w_func_tol
+            else:
+                slope_tol = w_max_tol / (Beta_tol - x_gt)
+                w_func_tol = (X_pr - x_gt) * slope_tol
+                loss_tol = abs(x_t_tol - X_pr) * w_func_tol
+
+            loss_main = abs(x_gt - X_pr)
+            # loss_main = np.sqrt(abs(x_gt - X_pr))
+            # loss_main = np.square(abs(x_gt - X_pr))
+            loss_total = loss_main - 0.5 * (loss_tou + 0.9 * loss_tol)
+
+            # w_func_tough = abs(X_pr - x_gt) * slope_tough
+            # loss_tou = abs(x_t_tough - X_pr) * w_func_tough
+            '''calc loss total'''
+            # loss_main = np.sqrt(abs(x_gt-X_pr))
+            return loss_total, loss_main, loss_tou, loss_tol
+
+        x_values = np.linspace(x_gt, x_t_tol, 100)
+        loss_total = []
+        loss_base = []
+        loss_tough = []
+        loss_tolerant = []
+        for i in range(len(x_values / 2)):
+            l_total, l_base, l_tou, l_tol = calc_loss(X_pr=x_values[i])
+            loss_total.append(l_total)
+            loss_base.append(l_base)
+            loss_tough.append(l_tou)
+            loss_tolerant.append(l_tol)
+
+        '''finally depict'''
+        plt.figure()
+        sct_total = plt.scatter(x=x_values[:], y=loss_total[:], c='#fd3a69', s=10)
+        sct_base = plt.scatter(x=x_values[:], y=loss_base[:], c='#389393', s=10)
+        sct_tough = plt.scatter(x=x_values[:], y=loss_tough[:], c='#fd8c04', s=10)
+        sct_tol = plt.scatter(x=x_values[:], y=loss_tolerant[:], c='#81b29a', s=10)
+        plt.legend((sct_total, sct_base, sct_tough, sct_tol),
+                   ('Total Loss', 'Base Loss', 'Loss Tough', 'Loss Tolerant'))
+
+        # for i in range(len(x_values)):
+        #     plt.annotate(str(i), (x_values[i], loss_tough[i]), fontsize=9, color='#fd8c04')
+        #     plt.annotate(str(i), (x_values[i], loss_base[i]), fontsize=9, color='#389393')
+        #     plt.annotate(str(i), (x_values[i], loss_total[i]), fontsize=9, color='#fd3a69')
+
+        plt.savefig('loss_tough')
+
+    def _loss_function_depict(self, x_gt, x_t_tough, x_t_tol):
+        """we assume that """
+
+        '''working with the tough teacher:'''
+        '''     creating weight function:'''
+        w_max_tough = 0.99
+        slope_tough = w_max_tough / (x_t_tough - x_gt)
+
+        def calc_tough_loss(X_pr):
+            if X_pr >= abs(x_gt + x_t_tough) / 2:
+                w_func_tough = abs(X_pr - x_gt) * slope_tough
+                loss_tou = abs(x_t_tough - X_pr) * w_func_tough
+                loss_main = abs(x_gt - X_pr)
+                loss_total = loss_main - loss_tou
+
+            else:
+                w_func_tough = abs(X_pr - x_gt) * slope_tough
+                loss_tou = abs(x_t_tough - X_pr) * w_func_tough
+                loss_main = abs(x_gt - X_pr)
+                loss_total = max(loss_main, loss_tou)
+
+            # w_func_tough = abs(X_pr - x_gt) * slope_tough
+            # loss_tou = abs(x_t_tough - X_pr) * w_func_tough
+            '''calc loss total'''
+            # loss_main = np.sqrt(abs(x_gt-X_pr))
+            return loss_total, loss_main, loss_tou
+
+        x_values = np.linspace(x_t_tough, x_gt, 200)
+        loss_total = []
+        loss_base = []
+        loss_tough = []
+        for i in range(len(x_values / 2)):
+            l_total, l_base, l_tou = calc_tough_loss(X_pr=x_values[i])
+            loss_total.append(l_total)
+            loss_base.append(l_base)
+            loss_tough.append(l_tou)
+
+        '''finally depict'''
+        plt.figure()
+        sct_total = plt.scatter(x=x_values[:], y=loss_total[:], c='#fd3a69', s=10)
+        sct_base = plt.scatter(x=x_values[:], y=loss_base[:], c='#389393', s=10)
+        sct_tough = plt.scatter(x=x_values[:], y=loss_tough[:], c='#fd8c04', s=10)
+        plt.legend((sct_total, sct_base, sct_tough), ('Total Loss', 'Base Loss', 'Loss Tough'))
+
+        # for i in range(len(x_values)):
+        #     plt.annotate(str(i), (x_values[i], loss_tough[i]), fontsize=9, color='#fd8c04')
+        #     plt.annotate(str(i), (x_values[i], loss_base[i]), fontsize=9, color='#389393')
+        #     plt.annotate(str(i), (x_values[i], loss_total[i]), fontsize=9, color='#fd3a69')
+
+        plt.savefig('loss_tough')
