@@ -1,9 +1,10 @@
-from Config import InputDataSize, DatasetName
+from Config import InputDataSize, DatasetName, W300WConf
 import random
 import numpy as np
+from numpy import load
 import matplotlib.pyplot as plt
 from matplotlib.ticker import (AutoMinorLocator, MultipleLocator)
-
+from pca_utility import PCAUtility
 import math
 from skimage.transform import warp, AffineTransform
 from skimage.transform import rotate
@@ -217,10 +218,9 @@ class ImageModification:
             new_labels[index_dst[i] * 2 + 1] = labels[index_src[i] * 2 + 1]
         return new_labels
 
-    def create_normalized_face_web_distance(self, points, annotation_file_path, img_file_path, ds_name):
+    def create_normalized_face_web_distance(self, inter_points, intera_points, annotation_file_path, img_file_path,
+                                            ds_name):
         """"""
-        evalu = Evaluation(model='', anno_paths='', img_paths='', ds_name=ds_name, ds_number_of_points=0,
-                           fr_threshold=0)
         annotations = []
         images = []
         '''load annotations'''
@@ -229,20 +229,30 @@ class ImageModification:
             if file.endswith(".npy"):
                 annotations.append(np.load(os.path.join(annotation_file_path, str(file))))
                 img_adr = os.path.join(img_file_path, str(file)[:-3] + "jpg")
-                self._print_intra_fb(landmark=annotations[counter], points=points, img=np.array(Image.open(img_adr)),
-                                     title=ds_name + 'inter Face Web', name='z_' + ds_name + 'ia_fb_' + str(counter))
+                # self._print_intra_fb(landmark=annotations[counter], points=intera_points,
+                #                      img=np.array(Image.open(img_adr)),
+                #                      title=ds_name + ' Intra_Face_Web',
+                #                      name='zz_' + ds_name + '_intra_fb_' + str(counter))
+                # self._print_inter_fb(landmark=annotations[counter], points=inter_points,
+                #                      img=np.array(Image.open(img_adr)),
+                #                      title=ds_name + ' Inter_Face_Web',
+                #                      name='zz_' + ds_name + '_inter_fb_' + str(counter))
                 counter += 1
+        '''create inter web face per image'''
         inter_fwd = []
         for item in annotations:
             sum_dis = 0
-            inter_ocular_dist = evalu.calculate_interoccular_distance(anno_GT=item, ds_name=ds_name)
-            for i in range(len(points)):
-                x_1 = points[i][0] * 2
-                y_1 = points[i][0] * 2 + 1
-                x_2 = points[i][1] * 2
-                y_2 = points[i][1] * 2 + 1
+            '''calculate inter ocular distance as a normalizing factor for each face'''
+            inter_ocular_dist = self.calculate_interoccular_distance(anno_GT=item, ds_name=ds_name)
+            for i in range(len(inter_points)):
+                '''now calculate the distance between each pair'''
+                x_1 = inter_points[i][0] * 2
+                y_1 = inter_points[i][0] * 2 + 1
+                x_2 = inter_points[i][1] * 2
+                y_2 = inter_points[i][1] * 2 + 1
                 dis = np.sqrt((x_2 - x_1) ** 2 + (y_2 - y_1) ** 2)
                 sum_dis += dis
+
             n_dist = sum_dis / inter_ocular_dist
             inter_fwd.append(n_dist)
         # self._print_bar(data=inter_fwd, title='Intra-Face Web Distance Distribution on ' + ds_name, name='fwd_'+ds_name)
@@ -250,7 +260,7 @@ class ImageModification:
         '''create distribution'''
         count_data = []
         inter_fwd = np.array(inter_fwd)
-        range_data = np.linspace(np.amin(inter_fwd), np.amax(inter_fwd), 50)
+        range_data = np.linspace(np.amin(inter_fwd), np.amax(inter_fwd), 200)
         for i in range(len(range_data)):
             _count = np.count_nonzero(inter_fwd < range_data[i])
             if i - 1 >= 0:
@@ -259,12 +269,60 @@ class ImageModification:
             count_data.append(_count)
             # count_data.append(np.count_nonzero(inter_fwd<range_data[i]))
 
-        self._print_fwd_histo(data=count_data, title='Intra-Face Web Distance Distribution on ' + ds_name,
+        self._print_fwd_histo(x_data=range_data, y_data=count_data,
+                              title='Intra-Face Web Distance Histogram on ' + ds_name,
                               name='fwd_' + ds_name)
 
         return inter_fwd
 
+    def calculate_interoccular_distance(self, anno_GT, ds_name):
+        if ds_name == DatasetName.ds300W:
+            left_oc_x = anno_GT[72]
+            left_oc_y = anno_GT[73]
+            right_oc_x = anno_GT[90]
+            right_oc_y = anno_GT[91]
+        elif ds_name == DatasetName.dsCofw:
+            left_oc_x = anno_GT[16]
+            left_oc_y = anno_GT[17]
+            right_oc_x = anno_GT[18]
+            right_oc_y = anno_GT[19]
+        elif ds_name == DatasetName.dsWflw:
+            left_oc_x = anno_GT[192]
+            left_oc_y = anno_GT[193]
+            right_oc_x = anno_GT[194]
+            right_oc_y = anno_GT[195]
+
+        distance = math.sqrt(((left_oc_x - right_oc_x) ** 2) + ((left_oc_y - right_oc_y) ** 2))
+        return distance
+
     def _print_intra_fb(self, landmark, points, img, title, name):
+        plt.figure()
+        plt.imshow(img)
+        plt.title(title)
+        for i in range(len(points)):
+            x_1 = points[i][0] * 2
+            y_1 = points[i][0] * 2 + 1
+            x_2 = points[i][1] * 2
+            y_2 = points[i][1] * 2 + 1
+            plt.plot([landmark[x_1], landmark[x_2]], [landmark[y_1], landmark[y_2]], color='#ff5d8f')
+
+        landmarks_x = []
+        landmarks_y = []
+        for i in range(0, len(landmark), 2):
+            landmarks_x.append(landmark[i])
+            landmarks_y.append(landmark[i + 1])
+
+        # for i in range(len(landmarks_x)):
+        #     plt.annotate(str(i), (landmarks_x[i], landmarks_y[i]), fontsize=6, color='red')
+
+        plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#000000', s=15)
+        plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#fddb3a', s=3)
+
+        # plt.ylabel('Histogram Of Normalized Distances')
+        # plt.xlabel('Faces')
+        plt.savefig(name)
+
+    def _print_inter_fb(self, landmark, points, img, title, name):
         plt.figure()
         plt.imshow(img)
         plt.title(title)
@@ -295,21 +353,21 @@ class ImageModification:
         # plt.xlabel('Faces')
         plt.savefig(name)
 
-    def _print_fwd_histo(self, data, title, name):
+    def _print_fwd_histo(self, x_data, y_data, title, name):
         plt.figure()
         plt.title(title)
         # _colors = ['#{:06x}'.format(random.randint(0, 256**3)) for d in data]
         # plt.plot(data, color='#a8dda8')
-        plt.bar(np.arange(len(data)), data, color='#01c5c4')
+        plt.bar(x_data, y_data, color='#d63447')
         # plt.bar(np.arange(len(data)), data, color=_colors)
-        plt.ylabel('Histogram Of Normalized Distances')
-        plt.xlabel('Faces')
+        plt.ylabel('Count')
+        plt.xlabel('Normalized Distance')
         plt.savefig(name)
 
     def crop_image_train(self, img, bbox, annotation, ds_name):
         if ds_name != DatasetName.dsCofw:
             # rand_padd = 0.005 * img.shape[0] + random.randint(0, 5)
-            rand_padd = 3#0.005 * img.shape[0]
+            rand_padd = 3  # 0.005 * img.shape[0]
             ann_xy, ann_x, ann_y = self.create_landmarks(annotation, 1, 1)
             xmin = int(max(0, min(ann_x) - rand_padd))
             xmax = int(max(ann_x) + rand_padd)
@@ -419,7 +477,7 @@ class ImageModification:
             landmarks_y.append(landmarks[i + 1])
 
         for i in range(len(landmarks_x)):
-            plt.annotate(str(i), (landmarks_x[i], landmarks_y[i]), fontsize=6, color='red')
+            plt.annotate(str(i), (landmarks_x[i], landmarks_y[i]), fontsize=9, color='red')
 
         plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#000000', s=15)
         plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#fddb3a', s=8)
@@ -642,7 +700,7 @@ class ImageModification:
             loss_Tough[i] = weight_loss_tough[i] * abs(x_tough - x)
             loss_Tol[i] = weight_loss_tol[i] * abs(x_tol - x)
             loss_M[i] = abs(x_gt - x)
-            loss_Total[i] = 2*loss_M[i] + (0.8 * loss_Tough[i] + 0.6 * loss_Tol[i])
+            loss_Total[i] = 2 * loss_M[i] + (0.8 * loss_Tough[i] + 0.6 * loss_Tol[i])
 
         '''depicting'''
         fig = plt.figure(figsize=(5, 5))
@@ -794,3 +852,120 @@ class ImageModification:
         #     plt.annotate(str(i), (x_values[i], loss_total[i]), fontsize=9, color='#fd3a69')
 
         plt.savefig('loss_tough')
+
+    def depict_face_distribution(self):
+        imgs = []
+        lbls = []
+        lbls_asm = []
+        lbls_asm_prim = []
+        for i, file in enumerate(os.listdir(W300WConf.no_aug_train_image)):
+            if file.endswith(".jpg") or file.endswith(".png"):
+                lbl_file = str(file)[:-3] + "npy"  # just name
+                # img_filenames.append(str(file))
+                lbls.append(self._load_and_normalize(W300WConf.no_aug_train_annotation + lbl_file))
+                lbls_asm.append(
+                    self.get_asm(input=self._load_and_normalize(W300WConf.no_aug_train_annotation + lbl_file),
+                                 dataset_name='ibug', accuracy=90))
+                lbls_asm_prim.append(
+                    list(lbls[i][j] - np.sign(lbls_asm[i][j] - lbls[i][j]) * abs(lbls_asm[i][j] - lbls[i][j])
+                         for j in range(len(lbls[i]))))
+
+        # lbls_asm_prim = np.array(lbls_asm_prim)
+        # self.print_arr(0, type='face', landmarks_arr=lbls)
+        self.print_histogram_plt(0, type='full', landmarks_arr=lbls[:100])
+        # self.print_arr(1, type='face', landmarks_arr=lbls_asm)
+        self.print_histogram_plt(1, type='full', landmarks_arr=lbls_asm[:100])
+        # self.print_arr(2, type='full', landmarks_arr=lbls_asm_prim)
+        self.print_histogram_plt(2, type='full', landmarks_arr=lbls_asm_prim[:100])
+
+    def _load_and_normalize(self, point_path):
+        annotation = load(point_path)
+
+        """for training we dont normalize COFW"""
+
+        '''normalize landmarks based on hyperface method'''
+        width = InputDataSize.image_input_size
+        height = InputDataSize.image_input_size
+        x_center = width / 2
+        y_center = height / 2
+        annotation_norm = []
+        for p in range(0, len(annotation), 2):
+            annotation_norm.append((x_center - annotation[p]) / width)
+            annotation_norm.append((y_center - annotation[p + 1]) / height)
+        return annotation_norm
+
+    def get_asm(self, input, dataset_name, accuracy):
+        pca_utils = PCAUtility()
+
+        eigenvalues = load('pca_obj/' + dataset_name + pca_utils.eigenvalues_prefix + str(accuracy) + ".npy")
+        eigenvectors = load('pca_obj/' + dataset_name + pca_utils.eigenvectors_prefix + str(accuracy) + ".npy")
+        meanvector = load('pca_obj/' + dataset_name + pca_utils.meanvector_prefix + str(accuracy) + ".npy")
+
+        b_vector_p = pca_utils.calculate_b_vector(input, True, eigenvalues, eigenvectors, meanvector)
+        out = meanvector + np.dot(eigenvectors, b_vector_p)
+        return out
+
+    def print_arr(self, k, type, landmarks_arr):
+        import random
+
+        plt.figure()
+        for lndm in landmarks_arr:
+            color = "#" + ''.join([random.choice('0123456789ABCDEF') for j in range(6)])
+
+            landmark_arr_xy, landmark_arr_x, landmark_arr_y = self.create_landmarks(landmarks=lndm,
+                                                                                    scale_factor_x=1,
+                                                                                    scale_factor_y=1)
+            if type == 'full':
+                plt.scatter(x=landmark_arr_x[:], y=landmark_arr_y[:], c=color, s=2)
+            elif type == 'face':
+                plt.scatter(x=landmark_arr_x[0:32], y=landmark_arr_y[0:32], c=color, s=5)
+                plt.plot(landmark_arr_x[0:32], landmark_arr_y[0:32], '-ok', c=color)
+
+            elif type == 'eyes':
+                plt.scatter(x=landmark_arr_x[60:75], y=landmark_arr_y[60:75], c=color, s=5)
+                plt.plot(landmark_arr_x[60:75], landmark_arr_y[60:75], '-ok', c=color)
+
+            elif type == 'nose':
+                plt.scatter(x=landmark_arr_x[51:59], y=landmark_arr_y[51:59], c=color, s=5)
+                plt.plot(landmark_arr_x[51:59], landmark_arr_y[51:59], '-ok', c=color)
+
+            elif type == 'mouth':
+                plt.scatter(x=landmark_arr_x[76:95], y=landmark_arr_y[76:95], c=color, s=5)
+                plt.plot(landmark_arr_x[76:95], landmark_arr_y[76:95], '-ok', c=color)
+
+            elif type == 'eyebrow':
+                plt.scatter(x=landmark_arr_x[33:50], y=landmark_arr_y[33:50], c=color, s=5)
+                plt.plot(landmark_arr_x[33:50], landmark_arr_y[33:50], '-ok', c=color)
+
+        plt.axis('off')
+        plt.savefig('name_' + str(type) + '_' + str(k) + '.png', bbox_inches='tight')
+        # plt.show()
+        plt.clf()
+
+    def print_histogram_plt(self, k, type, landmarks_arr):
+        import matplotlib.ticker as ticker
+        import random
+        # var = np.var(landmarks_arr, axis=0)
+        # mean = np.mean(landmarks_arr, axis=0)
+        #
+        colors = ['#440047', '#158467', '#0f4c75']
+        plt.figure()
+        for lndm in tqdm(landmarks_arr):
+            data = lndm
+            color = colors[k]
+
+            if type == 'face':
+                data = lndm[0:64]
+                color = '#008891'
+
+            # color = "#"+''.join([random.choice('0123456789ABCDEF') for j in range(6)])
+
+            # plt.plot(data, '-ok', c='#799351')
+            plt.hist(data, bins=60, color=color, alpha=0.3, histtype='bar')
+            # plt.hist(data, bins=num_of_bins, color=color, edgecolor='green', alpha=0.2)
+
+            # plt.axis.set_major_formatter(ticker.PercentFormatter(xmax=len(landmark_arr_x)))
+
+        # plt.text(0,15, 'mean: '+str(mean)+', var:' + str(var))
+        plt.savefig('histo_' + str(type) + '_' + str(k) + '.png', bbox_inches='tight')
+        plt.clf()

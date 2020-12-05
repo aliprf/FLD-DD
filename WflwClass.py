@@ -133,6 +133,19 @@ class WflwClass:
             evaluation.predict_annotation()
         '''evaluate with meta data: best to worst'''
 
+    def create_inter_face_web_distance(self, ds_type):
+        img_mod = ImageModification()
+        if ds_type == 0:
+            img_file_path = WflwConf.no_aug_train_image
+            annotation_file_path = WflwConf.no_aug_train_annotation
+        else:
+            img_file_path = WflwConf.test_image_path + 'full'
+            annotation_file_path = WflwConf.test_annotation_path + 'full'
+        wflw_inter_fwd_pnt = [(0, 3)]
+        img_mod.create_normalized_face_web_distance(points=wflw_inter_fwd_pnt,
+                                                    annotation_file_path=annotation_file_path,
+                                                    ds_name=DatasetName.ds300W, img_file_path=img_file_path)
+
     """PRIVATE"""
     def _get_test_set(self, ds_type):
         test_annotation_paths = []

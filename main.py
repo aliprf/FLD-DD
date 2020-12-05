@@ -4,12 +4,14 @@ from W300WClass import W300WClass
 from ImageModification import ImageModification
 
 if __name__ == '__main__':
-    img_mod = ImageModification()
-    x_gt = 0.3
-    x_tough = 0.312
-    beta_tough = x_gt+0.4*abs(x_gt-x_tough)
-    beta_mi_tough = x_gt-0.4*abs(x_gt-x_tough)
-    alpha_tough = 0.9
+    # img_mod = ImageModification()
+    # img_mod.depict_face_distribution()
+    #
+    # x_gt = 0.3
+    # x_tough = 0.312
+    # beta_tough = x_gt+0.4*abs(x_gt-x_tough)
+    # beta_mi_tough = x_gt-0.4*abs(x_gt-x_tough)
+    # alpha_tough = 0.9
     ''''''
     # x_tol = 0.4
     # beta_tol = x_gt + 0.4 * abs(x_gt - x_tol)
@@ -29,7 +31,7 @@ if __name__ == '__main__':
     need_pose = False
     need_hm = True
     '''cofw'''
-    # cofw = CofwClass()
+    cofw = CofwClass()
     # cofw.create_test_set(need_pose=need_pose, need_tf_ref=False)
     # cofw.create_train_set(need_pose=need_pose, need_hm=True, need_tf_ref=False,
     #                       accuracy=pca_accuracy)
@@ -38,7 +40,7 @@ if __name__ == '__main__':
     # cofw.cofw_create_tf_record(ds_type=0, need_pose=need_pose, accuracy=100)
     # cofw.create_point_imgpath_map()
     # cofw.create_inter_face_web_distance(ds_type=0)
-    # cofw.evaluate_on_cofw(model_file='./models/ds_cofw_stu_340.h5')
+    # cofw.evaluate_on_cofw(model_file='./models/cofw/ds_cofw_mn_base.h5')
 
     # mn-stu:       ch->{nme: 0.00, fr: 0.00}
     # mn-base:      ch->{nme: 4.27332, fr: fr: 1.9723}
@@ -57,9 +59,9 @@ if __name__ == '__main__':
 
     # w300w.evaluate_on_300w(model_file='./models/ds_300w_ef_100.h5')
     # w300w.evaluate_on_300w(model_file='./models/300w/ds_300w_ef_100.h5')
-    # w300w.evaluate_on_300w(model_file='./models/stu_model_0_ibug_.h5')
+    # w300w.evaluate_on_300w(model_file='./models/stu_model_32_ibug_.h5')
 
-    # mn-stu:       ch->{nme:5.55 , fr:2.962 }      co->{nme:3.913 , fr:0.0 }        full->{nme:4.235, fr: 0.580 }
+    # mn-stu:       ch->{nme:4.82 , fr: 1.48 }      co->{nme:3.78 , fr:0.0 }        full->{nme:3.98, fr: 0.290 }
     # mn-base:      ch->{nme: 6.88, fr: 8.88}      co->{nme: 3.85, fr: 0.18}        full->{nme:4.44, fr: 1.88}
     # efn-100-base: ch->{nme: 5.933, fr: 3.703}      co->{nme: 3.29, fr: 0.00}        full->{nme:3.81, fr: 0.72}
 
@@ -71,7 +73,8 @@ if __name__ == '__main__':
     # wflw.create_pca_obj(accuracy=pca_accuracy, normalize=True)
     # wflw.wflw_create_tf_record(ds_type=0, need_pose=need_pose, accuracy=pca_accuracy)
     # wflw.wflw_create_tf_record(ds_type=0, need_pose=need_pose, accuracy=100)
+    # wflw.create_inter_face_web_distance(ds_type=1)
     # wflw.create_point_imgpath_map()
-    # wflw.evaluate_on_wflw(model_file='./models/stu_model_2_wflw_.h5')
+    # wflw.evaluate_on_wflw(model_file='./models/stu_model_71_wflw_.h5')
     # #
     #

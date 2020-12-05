@@ -1,5 +1,5 @@
 class DatasetName:
-    ds300W = 'w300'
+    ds300W = '300W'
     dsCofw = 'cofw'
     dsWflw = 'wflw'
 
@@ -31,8 +31,8 @@ class InputDataSize:
 
 
 class WflwConf:
-    Wflw_prefix_path = '/media/data3/ali/FL/new_data/wflw/'  # --> zeus
-    # Wflw_prefix_path = '/media/data2/alip/FL/new_data/wflw/'  # --> atlas
+    # Wflw_prefix_path = '/media/data3/ali/FL/new_data/wflw/'  # --> zeus
+    Wflw_prefix_path = '/media/data2/alip/FL/new_data/wflw/'  # --> atlas
     # Wflw_prefix_path = '/media/ali/data/new_data/wflw/'  # --> local
     '''original ds data'''
     orig_WFLW_test_path = Wflw_prefix_path + 'WFLW_annotations/list_98pt_test/'
@@ -82,9 +82,9 @@ class WflwConf:
 
 
 class CofwConf:
-    Cofw_prefix_path = '/media/data3/ali/FL/new_data/cofw/'  # --> zeus
+    # Cofw_prefix_path = '/media/data3/ali/FL/new_data/cofw/'  # --> zeus
     # Cofw_prefix_path = '/media/data2/alip/FL/new_data/cofw/'  # --> atlas
-    # Cofw_prefix_path = '/media/ali/data/new_data/cofw/'  # --> local
+    Cofw_prefix_path = '/media/ali/data/new_data/cofw/'  # --> local
     #
     orig_COFW_test = Cofw_prefix_path + 'orig_COFW_test/'
     test_annotation_path = Cofw_prefix_path + 'testing_set/annotations/'

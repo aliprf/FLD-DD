@@ -29,8 +29,6 @@ class W300WClass:
             for file in tqdm(sorted(os.listdir(W300WConf.orig_300W_train))):
                 if file.endswith(".png") or file.endswith(".jpg"):
                     i += 1
-                    if i < 5948:
-                        continue
                     imgs, annotations, bboxs = self._load_data_train(file, W300WConf.orig_300W_train)
                     if imgs is not None:
                         self._do_random_augment(index=i, img=imgs[0], annotation=annotations[0], _bbox=bboxs[0]
@@ -112,7 +110,12 @@ class W300WClass:
         w300w_inter_fwd_pnt = [(0, 3), (0, 17), (0, 36), (3, 36), (3, 48), (3, 8), (8, 57), (8, 13), (13, 54), (13, 16),
                                (13, 45), (16, 45), (16, 26), (51, 33), (39, 33), (42, 33), (39, 42), (21, 39), (22, 42),
                                (21, 22), (26, 45), (17, 36)]
-        img_mod.create_normalized_face_web_distance(points=w300w_inter_fwd_pnt,
+        w300w_intra_fwd_pnt = [(37, 41), (38, 40,), (43, 47), (44, 46), (30, 33), (31, 33), (35, 33), (57, 66),
+                               (51, 62), (62, 66),(27,31),(27,35),(36,39),(42,45), (17,21),(22,26), (19,17),(19,21),
+                               (24,22),(24,26),(0,1),(0,2),(4,3),(4,5),(8,6),(8,7),(8,9),(8,10),
+                               (12,11),(12,13),(16,15),(16,14),(48,57),(48,51),(54,51),(54,57)]
+        img_mod.create_normalized_face_web_distance(inter_points=w300w_inter_fwd_pnt,
+                                                    intera_points=w300w_intra_fwd_pnt,
                                                     annotation_file_path=annotation_file_path,
                                                     ds_name=DatasetName.ds300W, img_file_path=img_file_path)
 
@@ -235,7 +238,7 @@ class W300WClass:
             bbox_arr.append(self._create_bbox(annotation))
         except Exception as e:
             print('300W: _load_data-Exception' + str(e))
-            return None, 0,0
+            return None, 0, 0
 
         # print('300W Loading Done')
         return image_arr, annotation_arr, bbox_arr
@@ -253,7 +256,7 @@ class W300WClass:
 
         counter = 0
         for file in tqdm(sorted(os.listdir(path_folder))):
-            if (file.endswith(".png") or file.endswith(".jpg")):# and counter < 10:
+            if (file.endswith(".png") or file.endswith(".jpg")):  # and counter < 10:
                 try:
                     images_path = os.path.join(path_folder, file)
                     annotations_path = os.path.join(path_folder, str(file)[:-3] + "pts")

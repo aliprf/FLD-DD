@@ -13,6 +13,7 @@ import random
 from tensorflow import keras
 import efficientnet.tfkeras
 
+
 class CofwClass:
     """PUBLIC"""
 
@@ -118,6 +119,16 @@ class CofwClass:
                                  need_pose=need_pose, accuracy=accuracy, is_test=is_test, ds_name=DatasetName.dsCofw,
                                  num_train_samples=num_train_samples, num_eval_samples=num_eval_samples)
 
+    def create_intera_face_web_distance(self, ds_type):
+        img_mod = ImageModification()
+        if ds_type == 0:
+            img_file_path = CofwConf.no_aug_train_image
+            annotation_file_path = CofwConf.no_aug_train_annotation
+        else:
+            img_file_path = CofwConf.test_image_path
+            annotation_file_path = CofwConf.test_annotation_path
+        cofw_intera_fwd_pnt = [(0, 8)]
+
     def create_inter_face_web_distance(self, ds_type):
         img_mod = ImageModification()
         if ds_type == 0:
@@ -126,12 +137,20 @@ class CofwClass:
         else:
             img_file_path = CofwConf.test_image_path
             annotation_file_path = CofwConf.test_annotation_path
-        cofw_inter_fwd_pnt = [(0, 8), (1, 9), (2, 10), (3, 11), (2, 3), (10, 11), (10, 21), (11, 21), (21, 24), (27, 28)]
-        img_mod.create_normalized_face_web_distance(points=cofw_inter_fwd_pnt,
+        '''between diiferebt elements of the face (eye and nose)'''
+        cofw_inter_fwd_pnt = [(0, 8), (1, 9), (2, 10), (3, 11), (2, 3), (10, 11), (10, 21), (11, 21), (21, 24),
+                              (27, 28), (8, 22), (9, 23), (22, 28), (23, 28)]
+        '''between every single elements (eye points, ..)'''
+        cofw_intera_fwd_pnt = [(4, 5), (6, 7), (12, 13), (14, 15), (24, 25), (26, 27), (20, 21),
+                               (8,10),(11,9),(18,21),(19,21),(22,24),(25,26),(23,24),(22,27),(23,27),]
+        img_mod.create_normalized_face_web_distance(inter_points=cofw_inter_fwd_pnt,
+                                                    intera_points=cofw_intera_fwd_pnt,
+                                                    img_file_path=img_file_path,
                                                     annotation_file_path=annotation_file_path,
                                                     ds_name=DatasetName.dsCofw)
 
     """PRIVATE"""
+
     def _get_test_set(self):
         test_annotation_paths = []
         test_image_paths = []
@@ -140,7 +159,6 @@ class CofwClass:
                 test_annotation_paths.append(os.path.join(CofwConf.test_annotation_path, str(file)[:-3] + "npy"))
                 test_image_paths.append(os.path.join(CofwConf.test_image_path, str(file)))
         return test_annotation_paths, test_image_paths
-
 
     def _do_random_augment(self, index, img, annotation, _bbox, need_hm, need_pose, pose_detector=None):
         tf_utility = TfUtility()
@@ -203,7 +221,7 @@ class CofwClass:
 
         return img, annotation
 
-    def _save(self, img, annotation, file_name, image_save_path, annotation_save_path, pose_save_path,  pose=None):
+    def _save(self, img, annotation, file_name, image_save_path, annotation_save_path, pose_save_path, pose=None):
         im = Image.fromarray(np.round(img * 255).astype(np.uint8))
         im.save(image_save_path + file_name + '.jpg')
         np.save(annotation_save_path + file_name, annotation)
@@ -247,7 +265,7 @@ class CofwClass:
             while line:
                 annotation_arr = line.strip().split('\t')
                 line = fp.readline()
-        annotation_arr = list(map(float, annotation_arr[0:CofwConf.num_of_landmarks*2]))
+        annotation_arr = list(map(float, annotation_arr[0:CofwConf.num_of_landmarks * 2]))
         annotation_arr_correct = []
 
         for i in range(0, len(annotation_arr) // 2, 1):
