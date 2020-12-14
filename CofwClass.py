@@ -20,7 +20,7 @@ class CofwClass:
     def create_pca_obj(self, accuracy):
         pca_utils = PCAUtility()
         pca_utils.create_pca_from_npy(annotation_path=CofwConf.augmented_train_annotation,
-                                      pca_accuracy=accuracy, pca_file_name=DatasetName.dsCofw, normalize=True)
+                                      pca_accuracy=accuracy, pca_file_name=DatasetName.dsCofw, normalize=False)
 
     def create_train_set(self, need_pose=False, need_hm=False, need_tf_ref=False, accuracy=100):
         # pose_detector = PoseDetector()
