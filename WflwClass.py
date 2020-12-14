@@ -142,9 +142,9 @@ class WflwClass:
             img_file_path = WflwConf.test_image_path + 'full'
             annotation_file_path = WflwConf.test_annotation_path + 'full'
         wflw_inter_fwd_pnt = [(0, 3)]
-        img_mod.create_normalized_face_web_distance(points=wflw_inter_fwd_pnt,
-                                                    annotation_file_path=annotation_file_path,
-                                                    ds_name=DatasetName.ds300W, img_file_path=img_file_path)
+        img_mod.create_normalized_web_facial_distance(points=wflw_inter_fwd_pnt,
+                                                      annotation_file_path=annotation_file_path,
+                                                      ds_name=DatasetName.ds300W, img_file_path=img_file_path)
 
     """PRIVATE"""
     def _get_test_set(self, ds_type):
@@ -235,7 +235,7 @@ class WflwClass:
     def _crop(self, img, annotation, bbox):
         img_mod = ImageModification()
         ann_xy, ann_x, ann_y = img_mod.create_landmarks(annotation, 1, 1)
-        fix_pad = 10
+        fix_pad = 3
         xmin = bbox[0]
         ymin = bbox[1]
         xmax = bbox[6]

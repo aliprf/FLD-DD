@@ -19,13 +19,13 @@ class PCAUtility:
 
     def create_pca_from_npy(self, annotation_path, pca_accuracy, pca_file_name, normalize=False):
         print('PCA calculation started: loading labels')
-        img_mod = ImageModification()
+        # img_mod = ImageModification()
         lbl_arr = []
         for file in tqdm(os.listdir(annotation_path)):
             if file.endswith(".npy"):
                 npy_file = os.path.join(annotation_path, file)
                 if normalize:
-                    lbl_arr.append(img_mod.normalize_annotations(load(npy_file)))
+                    lbl_arr.append(self.normalize_annotations(load(npy_file)))
                 else:
                     lbl_arr.append(load(npy_file))
 
@@ -39,6 +39,20 @@ class PCAUtility:
         save('pca_obj/' + pca_file_name + self.eigenvalues_prefix + str(pca_accuracy), eigenvalues)
         save('pca_obj/' + pca_file_name + self.eigenvectors_prefix + str(pca_accuracy), eigenvectors)
         save('pca_obj/' + pca_file_name + self.meanvector_prefix + str(pca_accuracy), mean_lbl_arr)
+
+    def normalize_annotations(self, annotation):
+        """for training we dont normalize COFW"""
+
+        '''normalize landmarks based on hyperface method'''
+        width = InputDataSize.image_input_size
+        height = InputDataSize.image_input_size
+        x_center = width / 2
+        y_center = height / 2
+        annotation_norm = []
+        for p in range(0, len(annotation), 2):
+            annotation_norm.append((x_center - annotation[p]) / width)
+            annotation_norm.append((y_center - annotation[p + 1]) / height)
+        return annotation_norm
 
     def test_pca_validity(self, dataset_name, pca_postfix):
 

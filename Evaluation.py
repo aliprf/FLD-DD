@@ -29,7 +29,10 @@ class Evaluation:
             img = np.expand_dims(np.array(Image.open(self.img_paths[i])) / 255.0, axis=0)
             anno_Pre = self.model.predict(img)[0]
             if self.is_normalized:
+                # anno_Pre_asm = img_mod.get_asm(input=anno_Pre, dataset_name='ibug', accuracy=99)
+                # anno_Pre = img_mod.de_normalized(annotation_norm=anno_Pre_asm)
                 anno_Pre = img_mod.de_normalized(annotation_norm=anno_Pre)
+
             '''print'''
             # img_mod.test_image_print(img_name='z_'+str(i)+'_pr'+str(i), img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_Pre)
             # img_mod.test_image_print(img_name='z_'+str(i)+'_gt', img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_GT)

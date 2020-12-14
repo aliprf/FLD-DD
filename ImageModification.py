@@ -50,7 +50,7 @@ class ImageModification:
             '''if atr is not null'''
             if atr is not None:
                 # augmentation_factor = 5
-                augmentation_factor += atr[0] * 40  # _pose = atr[0]
+                augmentation_factor += atr[0] * 20  # _pose = atr[0]
                 augmentation_factor += atr[1] * 7  # _exp = atr[1]
                 augmentation_factor += atr[2] * 2  # _illu = atr[2]
                 augmentation_factor += atr[3] * 2  # _mkup = atr[3]
@@ -218,8 +218,8 @@ class ImageModification:
             new_labels[index_dst[i] * 2 + 1] = labels[index_src[i] * 2 + 1]
         return new_labels
 
-    def create_normalized_face_web_distance(self, inter_points, intera_points, annotation_file_path, img_file_path,
-                                            ds_name):
+    def create_normalized_web_facial_distance(self, inter_points, intera_points, annotation_file_path, img_file_path,
+                                              ds_name):
         """"""
         annotations = []
         images = []
@@ -240,37 +240,65 @@ class ImageModification:
                 counter += 1
         '''create inter web face per image'''
         inter_fwd = []
+        intra_fwd = []
+        fwd = []
         for item in annotations:
-            sum_dis = 0
+            sum_inter_dis = 0
+            sum_intra_dis = 0
             '''calculate inter ocular distance as a normalizing factor for each face'''
             inter_ocular_dist = self.calculate_interoccular_distance(anno_GT=item, ds_name=ds_name)
             for i in range(len(inter_points)):
                 '''now calculate the distance between each pair'''
-                x_1 = inter_points[i][0] * 2
-                y_1 = inter_points[i][0] * 2 + 1
-                x_2 = inter_points[i][1] * 2
-                y_2 = inter_points[i][1] * 2 + 1
+                x_1 = item[inter_points[i][0] * 2]
+                y_1 = item[inter_points[i][0] * 2 + 1]
+                x_2 = item[inter_points[i][1] * 2]
+                y_2 = item[inter_points[i][1] * 2 + 1]
                 dis = np.sqrt((x_2 - x_1) ** 2 + (y_2 - y_1) ** 2)
-                sum_dis += dis
+                sum_inter_dis += dis
+            for i in range(len(intera_points)):
+                '''now calculate the distance between each pair'''
+                x_1 = item[intera_points[i][0] * 2]
+                y_1 = item[intera_points[i][0] * 2 + 1]
+                x_2 = item[intera_points[i][1] * 2]
+                y_2 = item[intera_points[i][1] * 2 + 1]
+                dis = np.sqrt((x_2 - x_1) ** 2 + (y_2 - y_1) ** 2)
+                sum_intra_dis += dis
 
-            n_dist = sum_dis / inter_ocular_dist
-            inter_fwd.append(n_dist)
+            norm_intra_dist = sum_intra_dis / inter_ocular_dist
+            norm_inter_dist = sum_inter_dis / inter_ocular_dist
+            norm_total_dist = (sum_inter_dis+sum_intra_dis) / inter_ocular_dist
+
+            inter_fwd.append(norm_inter_dist)
+            intra_fwd.append(norm_intra_dist)
+            fwd.append(norm_total_dist)
+
         # self._print_bar(data=inter_fwd, title='Intra-Face Web Distance Distribution on ' + ds_name, name='fwd_'+ds_name)
 
         '''create distribution'''
         count_data = []
         inter_fwd = np.array(inter_fwd)
-        range_data = np.linspace(np.amin(inter_fwd), np.amax(inter_fwd), 200)
-        for i in range(len(range_data)):
-            _count = np.count_nonzero(inter_fwd < range_data[i])
-            if i - 1 >= 0:
-                yy = np.count_nonzero(inter_fwd < range_data[i - 1])
-                _count -= yy
-            count_data.append(_count)
-            # count_data.append(np.count_nonzero(inter_fwd<range_data[i]))
+        intra_fwd = np.array(intra_fwd)
+        fwd = np.array(fwd)
+        '''create histo'''
 
-        self._print_fwd_histo(x_data=range_data, y_data=count_data,
-                              title='Intra-Face Web Distance Histogram on ' + ds_name,
+        hist_datas = [inter_fwd]
+        # hist_datas = [inter_fwd, intra_fwd, fwd]
+        range_datas = []
+        count_datas = []
+
+        for index, hist_data in enumerate(hist_datas):
+            range_datas.append(np.linspace(np.amin(hist_data), np.amax(hist_data), 500))
+            count_data = []
+            for i in range(len(range_datas[index])):
+                _count = np.count_nonzero(hist_data < range_datas[index][i])
+                if i - 1 >= 0:
+                    yy = np.count_nonzero(hist_data < range_datas[index][i - 1])
+                    _count -= yy
+                count_data.append(_count)
+            count_datas.append(count_data)
+
+        self._print_fwd_histo(x_data=range_datas, y_data=count_datas,
+                              title='Web of Facial Distances Histogram on ' + ds_name,
                               name='fwd_' + ds_name)
 
         return inter_fwd
@@ -304,7 +332,8 @@ class ImageModification:
             y_1 = points[i][0] * 2 + 1
             x_2 = points[i][1] * 2
             y_2 = points[i][1] * 2 + 1
-            plt.plot([landmark[x_1], landmark[x_2]], [landmark[y_1], landmark[y_2]], color='#ff5d8f')
+            plt.plot([landmark[x_1], landmark[x_2]], [landmark[y_1], landmark[y_2]], color='#f7f7f7', linewidth=2.0, alpha=0.7)
+            plt.plot([landmark[x_1], landmark[x_2]], [landmark[y_1], landmark[y_2]], color='#2b580c', linewidth=1.5, alpha=0.9)
 
         landmarks_x = []
         landmarks_y = []
@@ -315,27 +344,24 @@ class ImageModification:
         # for i in range(len(landmarks_x)):
         #     plt.annotate(str(i), (landmarks_x[i], landmarks_y[i]), fontsize=6, color='red')
 
-        plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#000000', s=15)
+        plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#000000', s=20)
         plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#fddb3a', s=3)
 
-        # plt.ylabel('Histogram Of Normalized Distances')
-        # plt.xlabel('Faces')
+        plt.axis('off')
         plt.savefig(name)
 
     def _print_inter_fb(self, landmark, points, img, title, name):
         plt.figure()
         plt.imshow(img)
         plt.title(title)
-        _color = ['#f4a261', '#2a9d8f', '#fca311', '#e63946', '#283618', '#72efdd', '#3d405b', '#72efdd', '#f72585',
-                  '#40916c', '#283618', '#fca311', '#011627', '#ff5d8f', '#ffea00', '#ff9500', '#f72585', '#40916c',
-                  '#f72585', '#72efdd', '#40916c', '#ff5d8f', '#ffbe0b', '#011627', '#f4a261', '#3d405b', '#f72585',
-                  '#e63946', '#011627', '#283618', '#ffbe0b', '#2a9d8f']
+        _color = ['#fddb3a', '#010038']
         for i in range(len(points)):
             x_1 = points[i][0] * 2
             y_1 = points[i][0] * 2 + 1
             x_2 = points[i][1] * 2
             y_2 = points[i][1] * 2 + 1
-            plt.plot([landmark[x_1], landmark[x_2]], [landmark[y_1], landmark[y_2]], color=_color[i])
+            plt.plot([landmark[x_1], landmark[x_2]], [landmark[y_1], landmark[y_2]], color=_color[0], linewidth=3.0, alpha=0.7)
+            plt.plot([landmark[x_1], landmark[x_2]], [landmark[y_1], landmark[y_2]], color=_color[1], linewidth=2.0, alpha=0.9)
 
         landmarks_x = []
         landmarks_y = []
@@ -346,20 +372,19 @@ class ImageModification:
         # for i in range(len(landmarks_x)):
         #     plt.annotate(str(i), (landmarks_x[i], landmarks_y[i]), fontsize=6, color='red')
 
-        plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#000000', s=15)
+        plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#000000', s=20)
         plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#fddb3a', s=3)
-
-        # plt.ylabel('Histogram Of Normalized Distances')
-        # plt.xlabel('Faces')
+        plt.axis('off')
         plt.savefig(name)
 
     def _print_fwd_histo(self, x_data, y_data, title, name):
         plt.figure()
         plt.title(title)
-        # _colors = ['#{:06x}'.format(random.randint(0, 256**3)) for d in data]
-        # plt.plot(data, color='#a8dda8')
-        plt.bar(x_data, y_data, color='#d63447')
-        # plt.bar(np.arange(len(data)), data, color=_colors)
+        _color = ['#0077b6', '#540b0e', '#ff9f1c']
+        _alpha = [0.5, 0.5, 0.8]
+        for i in range(len(x_data)):
+            plt.bar(x_data[i], y_data[i], color=_color[i], alpha=_alpha[i])
+
         plt.ylabel('Count')
         plt.xlabel('Normalized Distance')
         plt.savefig(name)
@@ -867,16 +892,21 @@ class ImageModification:
                     self.get_asm(input=self._load_and_normalize(W300WConf.no_aug_train_annotation + lbl_file),
                                  dataset_name='ibug', accuracy=90))
                 lbls_asm_prim.append(
-                    list(lbls[i][j] - np.sign(lbls_asm[i][j] - lbls[i][j]) * abs(lbls_asm[i][j] - lbls[i][j])
-                         for j in range(len(lbls[i]))))
+                    self.get_asm(input=self._load_and_normalize(W300WConf.no_aug_train_annotation + lbl_file),
+                                 dataset_name='ibug', accuracy=90, alpha=1.5))
+
+                # lbls_asm_prim.append(
+                #     list(lbls[i][j] - np.sign(lbls_asm[i][j] - lbls[i][j]) * abs(lbls_asm[i][j] - lbls[i][j])
+                #          for j in range(len(lbls[i]))))
 
         # lbls_asm_prim = np.array(lbls_asm_prim)
         # self.print_arr(0, type='face', landmarks_arr=lbls)
-        self.print_histogram_plt(0, type='full', landmarks_arr=lbls[:100])
-        # self.print_arr(1, type='face', landmarks_arr=lbls_asm)
-        self.print_histogram_plt(1, type='full', landmarks_arr=lbls_asm[:100])
-        # self.print_arr(2, type='full', landmarks_arr=lbls_asm_prim)
-        self.print_histogram_plt(2, type='full', landmarks_arr=lbls_asm_prim[:100])
+        self.print_histogram_plt(0, type='full', landmarks_arr=lbls[:10])
+        self.print_arr(1, type='face', landmarks_arr=lbls[:10])
+        self.print_histogram_plt(1, type='full', landmarks_arr=lbls_asm[:10])
+        self.print_arr(2, type='face', landmarks_arr=lbls_asm[:10])
+        self.print_histogram_plt(2, type='full', landmarks_arr=lbls_asm_prim[:10])
+        self.print_arr(3, type='face', landmarks_arr=lbls_asm_prim[:10])
 
     def _load_and_normalize(self, point_path):
         annotation = load(point_path)
@@ -894,7 +924,7 @@ class ImageModification:
             annotation_norm.append((y_center - annotation[p + 1]) / height)
         return annotation_norm
 
-    def get_asm(self, input, dataset_name, accuracy):
+    def get_asm(self, input, dataset_name, accuracy, alpha=1.0):
         pca_utils = PCAUtility()
 
         eigenvalues = load('pca_obj/' + dataset_name + pca_utils.eigenvalues_prefix + str(accuracy) + ".npy")
@@ -902,14 +932,14 @@ class ImageModification:
         meanvector = load('pca_obj/' + dataset_name + pca_utils.meanvector_prefix + str(accuracy) + ".npy")
 
         b_vector_p = pca_utils.calculate_b_vector(input, True, eigenvalues, eigenvectors, meanvector)
-        out = meanvector + np.dot(eigenvectors, b_vector_p)
+        out = alpha * meanvector + np.dot(eigenvectors, b_vector_p)
         return out
 
     def print_arr(self, k, type, landmarks_arr):
         import random
 
         plt.figure()
-        for lndm in landmarks_arr:
+        for lndm in tqdm(landmarks_arr):
             color = "#" + ''.join([random.choice('0123456789ABCDEF') for j in range(6)])
 
             landmark_arr_xy, landmark_arr_x, landmark_arr_y = self.create_landmarks(landmarks=lndm,
@@ -918,8 +948,8 @@ class ImageModification:
             if type == 'full':
                 plt.scatter(x=landmark_arr_x[:], y=landmark_arr_y[:], c=color, s=2)
             elif type == 'face':
-                plt.scatter(x=landmark_arr_x[0:32], y=landmark_arr_y[0:32], c=color, s=5)
-                plt.plot(landmark_arr_x[0:32], landmark_arr_y[0:32], '-ok', c=color)
+                plt.scatter(x=landmark_arr_x[0:16], y=landmark_arr_y[0:16], c=color, s=5)
+                plt.plot(landmark_arr_x[0:16], landmark_arr_y[0:16], '-ok', c=color)
 
             elif type == 'eyes':
                 plt.scatter(x=landmark_arr_x[60:75], y=landmark_arr_y[60:75], c=color, s=5)
@@ -937,7 +967,7 @@ class ImageModification:
                 plt.scatter(x=landmark_arr_x[33:50], y=landmark_arr_y[33:50], c=color, s=5)
                 plt.plot(landmark_arr_x[33:50], landmark_arr_y[33:50], '-ok', c=color)
 
-        plt.axis('off')
+        # plt.axis('off')
         plt.savefig('name_' + str(type) + '_' + str(k) + '.png', bbox_inches='tight')
         # plt.show()
         plt.clf()

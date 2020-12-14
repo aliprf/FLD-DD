@@ -114,10 +114,10 @@ class W300WClass:
                                (51, 62), (62, 66),(27,31),(27,35),(36,39),(42,45), (17,21),(22,26), (19,17),(19,21),
                                (24,22),(24,26),(0,1),(0,2),(4,3),(4,5),(8,6),(8,7),(8,9),(8,10),
                                (12,11),(12,13),(16,15),(16,14),(48,57),(48,51),(54,51),(54,57)]
-        img_mod.create_normalized_face_web_distance(inter_points=w300w_inter_fwd_pnt,
-                                                    intera_points=w300w_intra_fwd_pnt,
-                                                    annotation_file_path=annotation_file_path,
-                                                    ds_name=DatasetName.ds300W, img_file_path=img_file_path)
+        img_mod.create_normalized_web_facial_distance(inter_points=w300w_inter_fwd_pnt,
+                                                      intera_points=w300w_intra_fwd_pnt,
+                                                      annotation_file_path=annotation_file_path,
+                                                      ds_name=DatasetName.ds300W, img_file_path=img_file_path)
 
     """PRIVATE"""
 

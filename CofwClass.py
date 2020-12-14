@@ -20,7 +20,7 @@ class CofwClass:
     def create_pca_obj(self, accuracy):
         pca_utils = PCAUtility()
         pca_utils.create_pca_from_npy(annotation_path=CofwConf.augmented_train_annotation,
-                                      pca_accuracy=accuracy, pca_file_name=DatasetName.dsCofw)
+                                      pca_accuracy=accuracy, pca_file_name=DatasetName.dsCofw, normalize=True)
 
     def create_train_set(self, need_pose=False, need_hm=False, need_tf_ref=False, accuracy=100):
         # pose_detector = PoseDetector()
@@ -143,11 +143,11 @@ class CofwClass:
         '''between every single elements (eye points, ..)'''
         cofw_intera_fwd_pnt = [(4, 5), (6, 7), (12, 13), (14, 15), (24, 25), (26, 27), (20, 21),
                                (8,10),(11,9),(18,21),(19,21),(22,24),(25,26),(23,24),(22,27),(23,27),]
-        img_mod.create_normalized_face_web_distance(inter_points=cofw_inter_fwd_pnt,
-                                                    intera_points=cofw_intera_fwd_pnt,
-                                                    img_file_path=img_file_path,
-                                                    annotation_file_path=annotation_file_path,
-                                                    ds_name=DatasetName.dsCofw)
+        img_mod.create_normalized_web_facial_distance(inter_points=cofw_inter_fwd_pnt,
+                                                      intera_points=cofw_intera_fwd_pnt,
+                                                      img_file_path=img_file_path,
+                                                      annotation_file_path=annotation_file_path,
+                                                      ds_name=DatasetName.dsCofw)
 
     """PRIVATE"""
 
