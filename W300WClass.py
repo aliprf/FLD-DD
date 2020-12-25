@@ -12,6 +12,7 @@ from PIL import Image
 import random
 import tensorflow as tf
 import efficientnet.tfkeras
+import matplotlib.pyplot as plt
 
 
 class W300WClass:
@@ -84,7 +85,7 @@ class W300WClass:
         tf_utility.create_point_imgpath_map(img_file_paths=img_file_paths,
                                             annotation_file_paths=annotation_file_paths, map_name=map_name)
 
-    def evaluate_on_300w(self, model_file):
+    def evaluate_on_300w(self, model_name, model_file):
         '''create model using the h.5 model and its wights'''
         model = tf.keras.models.load_model(model_file)
         '''load test files and categories:'''
@@ -95,9 +96,17 @@ class W300WClass:
             """"""
             evaluation = Evaluation(model=model, anno_paths=test_annotation_paths, img_paths=test_image_paths,
                                     ds_name=DatasetName.ds300W, ds_number_of_points=W300WConf.num_of_landmarks,
-                                    fr_threshold=0.1, is_normalized=True)
+                                    fr_threshold=0.1, is_normalized=True, ds_type=ds_type, model_name=model_name)
             '''predict labels:'''
-            evaluation.predict_annotation()
+            '''predict labels:'''
+            nme, fr, AUC = evaluation.predict_annotation()
+            print('Dataset: ' + DatasetName.ds300W
+                  + '{ ds_type: ' + ds_type + '} \n\r'
+                  + '{ nme: ' + str(nme) + '}\n\r'
+                  + '{ fr: ' + str(fr) + '}\n\r'
+                  + '{ AUC: ' + str(AUC) + '}\n\r'
+                  )
+            print('=========================================')
         '''evaluate with meta data: best to worst'''
 
     def create_inter_face_web_distance(self, ds_type):

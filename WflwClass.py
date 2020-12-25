@@ -73,7 +73,6 @@ class WflwClass:
                            pose_save_path=WflwConf.test_pose_path + ds_types[atr_index[kk]],
                            atr_save_path=WflwConf.test_atr_path + ds_types[atr_index[kk]])
 
-
         # imgs, annotations, bboxs, atrs = self._load_data(WflwConf.orig_WFLW_test)
         # for i in tqdm(range(len(imgs))):
         #     img, annotation = self._crop(img=imgs[i], annotation=annotations[i], bbox=bboxs[i])
@@ -116,21 +115,29 @@ class WflwClass:
         tf_utility.create_point_imgpath_map(img_file_paths=img_file_paths,
                                             annotation_file_paths=annotation_file_paths, map_name=map_name)
 
-    def evaluate_on_wflw(self, model_file):
+    def evaluate_on_wflw(self, model_name, model_file):
         """"""
         '''create model using the h.5 model and its wights'''
         model = tf.keras.models.load_model(model_file)
         '''load test files and categories:'''
-        ds_types = ['pose', 'expression', 'illumination', 'makeup', 'occlusion', 'blur', 'full']
+        ds_types = ['full', 'pose', 'expression', 'illumination', 'makeup', 'occlusion', 'blur', 'full']
         for ds_type in ds_types:
             test_annotation_paths, test_image_paths = self._get_test_set(ds_type)
 
             """"""
             evaluation = Evaluation(model=model, anno_paths=test_annotation_paths, img_paths=test_image_paths,
                                     ds_name=DatasetName.dsWflw, ds_number_of_points=WflwConf.num_of_landmarks,
-                                    fr_threshold=0.1, is_normalized=True)
+                                    fr_threshold=0.1, is_normalized=True, ds_type=ds_type, model_name=model_name)
             '''predict labels:'''
-            evaluation.predict_annotation()
+            nme, fr, AUC = evaluation.predict_annotation()
+            print('Dataset: ' + str(DatasetName.dsWflw)
+                  + '{ ds_type: ' + str(ds_type) + '} \n\r'
+                  + '{ nme: ' + str(nme) + '}\n\r'
+                  + '{ fr: ' + str(fr) + '}\n\r'
+                  + '{ AUC: ' + str(AUC) + '}\n\r'
+                  )
+            print('=========================================')
+
         '''evaluate with meta data: best to worst'''
 
     def create_inter_face_web_distance(self, ds_type):
@@ -141,12 +148,20 @@ class WflwClass:
         else:
             img_file_path = WflwConf.test_image_path + 'full'
             annotation_file_path = WflwConf.test_annotation_path + 'full'
-        wflw_inter_fwd_pnt = [(0, 3)]
-        img_mod.create_normalized_web_facial_distance(points=wflw_inter_fwd_pnt,
+        wflw_inter_fwd_pnt = [(6, 7), (0, 1), (32, 31), (7, 8), (0, 2), (32, 30), (25, 24), (25, 26), (16, 15),
+                              (16, 17), (85, 94), (79, 90), (90, 94), (76, 79), (79, 82), (82, 85), (76, 85), (55, 57),
+                              (57, 59), (57, 54), (51, 55), (51, 59), (61, 67), (63, 65), (60, 64), (68, 72), (69, 75),
+                              (71, 73), (35, 40), (44, 48), (37, 38), (42, 50)]
+        wflw_intra_fwd_pnt = [(0, 7), (7, 16), (16, 85), (79, 57), (16, 25), (64, 57), (25, 32), (68, 57), (7, 60),
+                              (25, 72), (0, 33), (32, 46), (64, 68), (64, 38), (68, 50), (38, 50),  (7, 76), (25, 82)]
+
+        img_mod.create_normalized_web_facial_distance(inter_points=wflw_inter_fwd_pnt,
+                                                      intera_points=wflw_intra_fwd_pnt,
                                                       annotation_file_path=annotation_file_path,
-                                                      ds_name=DatasetName.ds300W, img_file_path=img_file_path)
+                                                      ds_name=DatasetName.dsWflw, img_file_path=img_file_path)
 
     """PRIVATE"""
+
     def _get_test_set(self, ds_type):
         test_annotation_paths = []
         test_image_paths = []
@@ -198,7 +213,7 @@ class WflwClass:
         ann_xy, ann_x, ann_y = img_mod.create_landmarks(annotation, 1, 1)
         xmin = max(0, min(min(ann_x) - rand_padd, xmin))
         xmax = max(max(ann_x) + rand_padd, xmax)
-        ymin = max(0,min(min(ann_y) - rand_padd, ymin))
+        ymin = max(0, min(min(ann_y) - rand_padd, ymin))
         ymax = max(max(ann_y) + rand_padd, ymax)
 
         bbox_me = [xmin, ymin, xmin, ymax, xmax, ymin, xmax, ymax]
@@ -276,13 +291,14 @@ class WflwClass:
         counter = 0
         with open(annotation_path) as fp:
             line = fp.readline()
-            while line:# and counter < 200:
+            while line:  # and counter < 200:
                 sys.stdout.write('\r \r line --> \033[92m' + str(counter))
 
                 total_data = line.strip().split(' ')
                 annotation_arr.append(np.round(list(map(float, total_data[0:WflwConf.num_of_landmarks * 2])), 3))
                 bbox_arr.append(self._create_bbox(
-                    list(map(int, total_data[WflwConf.num_of_landmarks * 2:WflwConf.num_of_landmarks * 2 + 4])), annotation_arr[counter]))
+                    list(map(int, total_data[WflwConf.num_of_landmarks * 2:WflwConf.num_of_landmarks * 2 + 4])),
+                    annotation_arr[counter]))
                 atr_arr.append(
                     list(map(int, total_data[WflwConf.num_of_landmarks * 2 + 4:WflwConf.num_of_landmarks * 2 + 10])))
                 image_arr.append(self._load_image(WflwConf.orig_WFLW_image + total_data[-1]))
@@ -313,7 +329,6 @@ class WflwClass:
         # bbox_me = [xmin, ymin, xmin, ymax, xmax, ymin, xmax, ymax]
         #
         # return bbox_me
-
 
     def _load_annotation(self, path):
         annotation_arr = []

@@ -68,18 +68,24 @@ class CofwClass:
         #     self.cofw_create_tf_record(ds_type=1, need_pose=need_pose)  # we don't need hm for test
         print("COFW: create_test_set DONE!!")
 
-    def evaluate_on_cofw(self, model_file):
+    def evaluate_on_cofw(self, model_name, model_file):
         '''create model using the h.5 model and its wights'''
         model = keras.models.load_model(model_file)
         '''load test files and categories:'''
         test_annotation_paths, test_image_paths = self._get_test_set()
 
         """"""
-        evaluation = Evaluation(model=model, anno_paths=test_annotation_paths, img_paths=test_image_paths,
+        evaluation = Evaluation(model_name=model_name, model=model, anno_paths=test_annotation_paths, img_paths=test_image_paths,
                                 ds_name=DatasetName.dsCofw, ds_number_of_points=CofwConf.num_of_landmarks,
-                                fr_threshold=0.1, is_normalized=False)
+                                fr_threshold=0.1, is_normalized=False, ds_type='full')
         '''predict labels:'''
-        evaluation.predict_annotation()
+        nme, fr, AUC = evaluation.predict_annotation()
+        print('Dataset: ' + DatasetName.dsCofw
+              + '{ nme: ' + str(nme) + '}\n\r'
+              + '{ fr: ' + str(fr) + '}\n\r'
+              + '{ AUC: ' + str(AUC) + '}\n\r'
+              )
+        print('=========================================')
         '''evaluate with meta data: best to worst'''
 
     def create_point_imgpath_map(self):
