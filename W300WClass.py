@@ -21,8 +21,21 @@ class W300WClass:
     def create_pca_obj(self, accuracy, normalize):
         pca_utils = PCAUtility()
         pca_utils.create_pca_from_npy(annotation_path=W300WConf.augmented_train_annotation,
-                                      pca_accuracy=accuracy, pca_file_name='ibug', #pca_file_name=DatasetName.ds300W,
+                                      pca_accuracy=accuracy, pca_file_name='ibug',  # pca_file_name=DatasetName.ds300W,
                                       normalize=normalize)
+
+    def create_mean_face(self):
+        img_mod = ImageModification()
+        anno_arr = []
+        for file in tqdm(sorted(os.listdir(W300WConf.no_aug_train_annotation))):
+            if file.endswith(".npy"):
+                anno_path = os.path.join(W300WConf.no_aug_train_annotation, file)
+                annotation = load(anno_path)
+                anno_arr.append(annotation)
+
+        mean_lbl_arr = np.mean(anno_arr, axis=0)
+        landmark_arr_xy, landmark_arr_x, landmark_arr_y = img_mod.create_landmarks(mean_lbl_arr, 1, 1)
+        img_mod.test_image_print('mean_300w', np.ones([224, 224, 3]), landmark_arr_xy)
 
     def create_train_set(self, need_pose=False, need_hm=False, accuracy=100):
         # pose_detector = PoseDetector()
@@ -40,6 +53,17 @@ class W300WClass:
             print(str(e))
 
         print("create_train_set DONE!!")
+
+    def create_heatmap(self):
+        img_mod = ImageModification()
+        for i, anno_file in tqdm(enumerate(os.listdir(W300WConf.augmented_train_annotation))):
+            hm = img_mod.generate_hm(width=InputDataSize.hm_size, height=InputDataSize.hm_size,
+                                     landmark_path=W300WConf.augmented_train_annotation, landmark_filename=anno_file,
+                                     s=W300WConf.hm_sigma, de_normalize=False)
+            np.save(W300WConf.augmented_train_hm+anno_file, hm)
+            # img_mod.print_image_arr_heat(k=i, image=hm, print_single=False)
+            # img_mod.print_heatmap_distribution(k=i, image=hm)
+
 
     def create_test_set(self, need_pose=False, need_tf_ref=False):
         """
@@ -121,9 +145,10 @@ class W300WClass:
                                (13, 45), (16, 45), (16, 26), (51, 33), (39, 33), (42, 33), (39, 42), (21, 39), (22, 42),
                                (21, 22), (26, 45), (17, 36)]
         w300w_intra_fwd_pnt = [(37, 41), (38, 40,), (43, 47), (44, 46), (30, 33), (31, 33), (35, 33), (57, 66),
-                               (51, 62), (62, 66),(27,31),(27,35),(36,39),(42,45), (17,21),(22,26), (19,17),(19,21),
-                               (24,22),(24,26),(0,1),(0,2),(4,3),(4,5),(8,6),(8,7),(8,9),(8,10),
-                               (12,11),(12,13),(16,15),(16,14),(48,57),(48,51),(54,51),(54,57)]
+                               (51, 62), (62, 66), (27, 31), (27, 35), (36, 39), (42, 45), (17, 21), (22, 26), (19, 17),
+                               (19, 21),
+                               (24, 22), (24, 26), (0, 1), (0, 2), (4, 3), (4, 5), (8, 6), (8, 7), (8, 9), (8, 10),
+                               (12, 11), (12, 13), (16, 15), (16, 14), (48, 57), (48, 51), (54, 51), (54, 57)]
         img_mod.create_normalized_web_facial_distance(inter_points=w300w_inter_fwd_pnt,
                                                       intera_points=w300w_intra_fwd_pnt,
                                                       annotation_file_path=annotation_file_path,

@@ -2,8 +2,6 @@ from Config import InputDataSize, DatasetName, W300WConf
 import random
 import numpy as np
 from numpy import load
-import matplotlib.pyplot as plt
-from matplotlib.ticker import (AutoMinorLocator, MultipleLocator)
 from pca_utility import PCAUtility
 import math
 from skimage.transform import warp, AffineTransform
@@ -16,6 +14,10 @@ from skimage.transform import SimilarityTransform, AffineTransform
 from tqdm import tqdm
 import os
 import cv2 as cv
+import matplotlib.pyplot as plt
+from matplotlib.ticker import (AutoMinorLocator, MultipleLocator)
+from matplotlib import cm
+from matplotlib.ticker import LinearLocator, FormatStrFormatter
 
 
 # from Evaluation import Evaluation
@@ -23,24 +25,137 @@ import cv2 as cv
 
 class ImageModification:
 
+    def generate_hm(self, height, width, landmark_filename, landmark_path, s, de_normalize):
+        lnd_xy, lnd_x, lnd_y = self.create_landmarks(np.load(landmark_path+landmark_filename), 1, 1)
+        self.test_image_print('1', np.zeros([224,224,3]), lnd_xy)
+
+        hm = np.zeros((height, width, len(lnd_xy) // 2), dtype=np.float32)
+        j = 0
+        for i in range(0, len(lnd_xy), 2):
+
+            if de_normalize:
+                x = float(lnd_xy[i]) * InputDataSize.image_input_size + InputDataSize.img_center
+                y = float(lnd_xy[i + 1]) * InputDataSize.image_input_size + InputDataSize.img_center
+            else:
+                x = lnd_xy[i]
+                y = lnd_xy[i + 1]
+
+            x = int(x // 4)
+            y = int(y // 4)
+
+            hm[:, :, j] = self._gaussian_k(x, y, s, height, width)
+            j += 1
+        return hm
+
+    def _gaussian_k(self, x0, y0, sigma, width, height):
+        """ Make a square gaussian kernel centered at (x0, y0) with sigma as SD.
+        """
+        x = np.arange(0, width, 1, float)
+        y = np.arange(0, height, 1, float)[:, np.newaxis]
+        gaus = np.exp(-((x - x0) ** 2 + (y - y0) ** 2) / (2 * sigma ** 2))
+        # gaus[gaus <= 0.1] = 0
+        return gaus
+
+    def print_heatmap_distribution(self, k, image):
+        for i in range(image.shape[2]):
+            s_hm = image[:, :, i]
+            bg = np.copy(s_hm)
+            fg_2 = np.copy(s_hm)
+            fg_1 = np.copy(s_hm)
+
+            bg[bg > 0.2] = 0
+
+            fg_2[0.2 >= fg_2] = 0
+            fg_2[fg_2 >= 0.8] = 0
+
+            fg_1[fg_1 < 0.8] = 0
+
+            '''print'''
+            dpi = 80
+            width = 300 * 4
+            height = 300 * 4
+            figsize = width / float(dpi), height / float(dpi)
+            fig, axs = plt.subplots(1, 3,
+                                    # gridspec_kw={'width_ratios': [3, 1]},
+                                    figsize=figsize)
+
+            axs[0].title.set_text("bg: [0, 0.2)")
+            axs[0].imshow(bg, vmin=np.amin(s_hm), vmax=np.amax(s_hm), cmap=cm.coolwarm)
+
+            axs[1].title.set_text("fg 2 : [0.2, 0.8)")
+            axs[1].imshow(fg_2, vmin=np.amin(s_hm), vmax=np.amax(s_hm), cmap=cm.coolwarm)
+
+            axs[2].title.set_text("fg 1 : [0.8, 1]")
+            axs[2].imshow(fg_1, vmin=np.amin(s_hm), vmax=np.amax(s_hm), cmap=cm.coolwarm)
+
+            plt.tight_layout()
+            # plt.colorbar(im, ax=ax[i, j])
+            plt.savefig('./out_imgs/single/dist_heat_' + str(i) + '_' + str(k) + '.png', bbox_inches='tight')
+
+            '''surface'''
+            # Plot the surface.
+            fig_1 = plt.figure(figsize=figsize)
+            ax = fig_1.gca(projection='3d')
+            x = np.linspace(0, 56, 56)
+            y = np.linspace(0, 56, 56)
+            X, Y = np.meshgrid(x, y)
+            surf = ax.plot_surface(X, Y, fg_1, alpha=1, color='#f6416c', linewidth=0.5, antialiased=False, zorder=0.1)
+                                   # ,vmin=np.amin(s_hm), vmax=np.amax(s_hm))
+            ax.plot_surface(X, Y, fg_2, alpha=0.99, color='#a7ff83', linewidth=0.5, antialiased=False, zorder=0.2)
+                            # ,vmin=np.amin(s_hm), vmax=np.amax(s_hm))
+            ax.plot_surface(X, Y, bg, alpha=0.90, color='#574b90', linewidth=0.5, antialiased=False, zorder=0.3)
+                            # ,vmin=np.amin(s_hm), vmax=np.amax(s_hm))
+
+            # surf = ax.plot_surface(X, Y, fg_1, alpha=1, cmap=cm.coolwarm, linewidth=0.5, antialiased=False, zorder=0.1,
+            #                        vmin=np.amin(s_hm), vmax=np.amax(s_hm))
+            # ax.plot_surface(X, Y, fg_2, alpha=0.5,cmap=cm.coolwarm, linewidth=0.1, antialiased=False, zorder=0.1,
+            #                 vmin=np.amin(s_hm), vmax=np.amax(s_hm))
+            # ax.plot_surface(X, Y, bg, alpha=0.5, cmap=cm.coolwarm, linewidth=0.1, antialiased=False, zorder=0.1,
+            #                 vmin=np.amin(s_hm), vmax=np.amax(s_hm))
+
+            ax.set_zlim(0, 0.99)
+            ax.grid(True)
+            ax.zaxis.set_major_locator(LinearLocator(20))
+            ax.zaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+            fig_1.colorbar(surf, shrink=1, aspect=25)
+            plt.savefig('./out_imgs/single/dist_3d_heat_' + str(i) + '_' + str(k) + '.png', bbox_inches='tight')
+
+    def print_image_arr_heat(self, k, image, print_single=False):
+        for i in range(image.shape[2]):
+            img = np.sum(image, axis=2)
+            if print_single:
+                plt.figure()
+                plt.imshow(image[:, :, i])
+                # implot = plt.imshow(image[:, :, i])
+                plt.axis('off')
+                plt.savefig('./out_imgs/single/single_heat_' + str(i) + '_' + str(k) + '.png', bbox_inches='tight')
+                plt.clf()
+
+        plt.figure()
+        plt.imshow(img, vmin=0, vmax=1)
+        plt.axis('off')
+        plt.savefig('./out_imgs/heat_' + str(k) + '.png', bbox_inches='tight')
+        plt.clf()
+
     def depict_AUC_CURVE(self):
         datasets = [DatasetName.dsCofw, DatasetName.ds300W, DatasetName.dsWflw]
-        models = ['Teacher', 'Student', 'mnV2']
+        models_kd = ['Teacher', 'Student', 'mnV2']
+        models_asm = ['ASM', 'mnV2']
         colors = ['#0e49b5', '#ec0101', '#79d70f']
         for i, dataset in enumerate(datasets):
             '''mn'''
-            x_mn = np.load('./auc_data/' + dataset + '_' + models[2] + '_x.npy')
-            y_mn = np.load('./auc_data/' + dataset + '_' + models[2] + '_y.npy')
+            x_mn = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_kd[2] + '_x.npy')
+            y_mn = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_kd[2] + '_y.npy')
             sct_mn = plt.scatter(x=x_mn, y=y_mn, c=colors[2])
             plt.plot(x_mn, y_mn, '-o', c=colors[2])
             '''teacher'''
-            x_te = np.load('./auc_data/'+dataset + '_' + models[0]+'_x.npy')
-            y_te = np.load('./auc_data/'+dataset + '_' + models[0]+'_y.npy')
+            x_te = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_kd[0] + '_x.npy')
+            y_te = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_kd[0] + '_y.npy')
             sct_te = plt.scatter(x=x_te, y=y_te, c=colors[0])
             plt.plot(x_te, y_te, '-o', c=colors[0])
             '''stu'''
-            x_stu = np.load('./auc_data/' + dataset + '_' + models[1] + '_x.npy')
-            y_stu = np.load('./auc_data/' + dataset + '_' + models[1] + '_y.npy')
+            x_stu = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_kd[1] + '_x.npy')
+            y_stu = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_kd[1] + '_y.npy')
             sct_stu = plt.scatter(x=x_stu, y=y_stu, c=colors[1])
             plt.plot(x_stu, y_stu, '-o', c=colors[1])
 
@@ -49,9 +164,31 @@ class ImageModification:
                        ('Teacher', 'Student', 'mnV2'))
             plt.xlabel('Normalized Error')
             plt.ylabel('Image Proportion')
-            plt.savefig('./auc_data/CED_'+ dataset+'.png', bbox_inches='tight')
-            plt.savefig('./auc_data/CED_'+dataset+'.pdf', bbox_inches='tight')
+            plt.savefig('./auc_data/KD_CED_' + dataset + '.png', bbox_inches='tight')
+            plt.savefig('./auc_data/KD_CED_' + dataset + '.pdf', bbox_inches='tight')
             plt.clf()
+
+            '''=====ASM======='''
+            for i, dataset in enumerate(datasets):
+                '''mn'''
+                x_mn = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_asm[1] + '_x.npy')
+                y_mn = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_asm[1] + '_y.npy')
+                sct_mn = plt.scatter(x=x_mn, y=y_mn, c=colors[2])
+                plt.plot(x_mn, y_mn, '-o', c=colors[2])
+                '''ASM'''
+                x_stu = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_asm[0] + '_x.npy')
+                y_stu = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_asm[0] + '_y.npy')
+                sct_asm = plt.scatter(x=x_stu, y=y_stu, c=colors[1])
+                plt.plot(x_stu, y_stu, '-o', c=colors[1])
+
+                ''''''
+                plt.legend((sct_asm, sct_mn),
+                           ('mnV2_aug', 'mnV2'))
+                plt.xlabel('Normalized Error')
+                plt.ylabel('Image Proportion')
+                plt.savefig('./auc_data/ASM_CED_' + dataset + '.png', bbox_inches='tight')
+                plt.savefig('./auc_data/ASM_CED_' + dataset + '.pdf', bbox_inches='tight')
+                plt.clf()
 
     def random_augment(self, index, img_orig, landmark_orig, num_of_landmarks, augmentation_factor, ymin, ymax, xmin,
                        xmax, ds_name, bbox_me_orig, atr=None):
@@ -296,7 +433,7 @@ class ImageModification:
 
             norm_intra_dist = sum_intra_dis / inter_ocular_dist
             norm_inter_dist = sum_inter_dis / inter_ocular_dist
-            norm_total_dist = (sum_inter_dis+sum_intra_dis) / inter_ocular_dist
+            norm_total_dist = (sum_inter_dis + sum_intra_dis) / inter_ocular_dist
 
             inter_fwd.append(norm_inter_dist)
             intra_fwd.append(norm_intra_dist)
@@ -362,8 +499,10 @@ class ImageModification:
             y_1 = points[i][0] * 2 + 1
             x_2 = points[i][1] * 2
             y_2 = points[i][1] * 2 + 1
-            plt.plot([landmark[x_1], landmark[x_2]], [landmark[y_1], landmark[y_2]], color='#f1f1f1', linewidth=3.0, alpha=0.7)
-            plt.plot([landmark[x_1], landmark[x_2]], [landmark[y_1], landmark[y_2]], color='#ff4646', linewidth=2.5, alpha=0.9)
+            plt.plot([landmark[x_1], landmark[x_2]], [landmark[y_1], landmark[y_2]], color='#d62828', linewidth=3.5,
+                     alpha=0.7)
+            plt.plot([landmark[x_1], landmark[x_2]], [landmark[y_1], landmark[y_2]], color='#003049', linewidth=1.5,
+                     alpha=0.5)
 
         landmarks_x = []
         landmarks_y = []
@@ -384,14 +523,16 @@ class ImageModification:
         plt.figure()
         plt.imshow(img)
         plt.title(title)
-        _color = ['#23120b', '#fdb827']
+        _color = ['#fca311', '#03071e']
         for i in range(len(points)):
             x_1 = points[i][0] * 2
             y_1 = points[i][0] * 2 + 1
             x_2 = points[i][1] * 2
             y_2 = points[i][1] * 2 + 1
-            plt.plot([landmark[x_1], landmark[x_2]], [landmark[y_1], landmark[y_2]], color=_color[0], linewidth=3.0, alpha=0.7)
-            plt.plot([landmark[x_1], landmark[x_2]], [landmark[y_1], landmark[y_2]], color=_color[1], linewidth=2.5, alpha=0.9)
+            plt.plot([landmark[x_1], landmark[x_2]], [landmark[y_1], landmark[y_2]], color=_color[0], linewidth=3.5,
+                     alpha=0.7)
+            plt.plot([landmark[x_1], landmark[x_2]], [landmark[y_1], landmark[y_2]], color=_color[1], linewidth=1.5,
+                     alpha=0.5)
 
         landmarks_x = []
         landmarks_y = []
@@ -534,8 +675,8 @@ class ImageModification:
         # for i in range(len(landmarks_x)):
         #     plt.annotate(str(i), (landmarks_x[i], landmarks_y[i]), fontsize=9, color='red')
 
-        plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#000000', s=45)
-        plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#54e346', s=15)
+        plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#2c061f', s=25)
+        plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#ff577f', s=15)
         # plt.tight_layout(True)
         plt.axis('off')
         plt.savefig(img_name + '.png', bbox_inches='tight', pad_inches=0)
@@ -710,7 +851,7 @@ class ImageModification:
     def calc_teacher_weight_loss(self, x_pr, x_gt, x_t, alpha, alpha_mi, beta, beta_mi):
         weight_loss_t = 0
         # x_pr -- -x_pr + x_gt
-        x_t_sym = x_gt - abs(x_t-x_gt)
+        x_t_sym = x_gt - abs(x_t - x_gt)
         if x_pr >= x_t or x_pr < x_t_sym:
             weight_loss_t = alpha
         elif beta <= x_pr < x_t or x_t_sym < x_pr < beta_mi:
@@ -771,8 +912,8 @@ class ImageModification:
         loss_M = np.zeros_like(x_values)
         loss_Total = np.zeros_like(x_values)
 
-        x_tough = x_gt + abs(x_gt-x_tough)
-        x_tol = x_gt + abs(x_tol-x_gt)
+        x_tough = x_gt + abs(x_gt - x_tough)
+        x_tol = x_gt + abs(x_tol - x_gt)
 
         '''create tough weight'''
         for i, x in enumerate(x_values):
@@ -788,7 +929,7 @@ class ImageModification:
             if x > x_gt:
                 loss_Tough[i] = weight_loss_tough[i] * abs(x_tough - x)
             else:
-                x_t_sym = x_gt - abs(x_tough-x_gt)
+                x_t_sym = x_gt - abs(x_tough - x_gt)
                 loss_Tough[i] = weight_loss_tough[i] * abs(x_t_sym - x)
 
             if x > x_gt:
@@ -814,28 +955,33 @@ class ImageModification:
         ax.yaxis.set_minor_locator(AutoMinorLocator(4))
         ax.grid(which='major', color='#968c83', linestyle='--', linewidth=0.4)
         ax.grid(which='minor', color='#9ba4b4', linestyle=':', linewidth=0.3)
-        sct_wl, = ax.plot(x_values[:], weight_loss_tough[:], '#cd4dcc', linewidth=1.0, label='Tough-Weight Loss', alpha=0.5)
-        sct_wl, = ax.plot(x_values[:], weight_loss_tol[:], '#400082', linewidth=1.0, label='Tolerant-Weight Loss',  alpha=0.5)
-        sct_l, = ax.plot(x_values[:], loss_Tough[:], '#0c9463', linewidth=2.0, label='Tough-Teacher Loss')
-        sct_l, = ax.plot(x_values[:], loss_Tol[:], '#91bd3a', linewidth=2.0, label='Tolerant-Teacher Loss')
+        sct_wl, = ax.plot(x_values[:], weight_loss_tough[:], '#cd4dcc', linewidth=1.0, label='Tough-Weight Loss',
+                          alpha=0.5)
+        sct_wl, = ax.plot(x_values[:], weight_loss_tol[:], '#400082', linewidth=1.0, label='Tolerant-Weight Loss',
+                          alpha=0.5)
+        sct_l, = ax.plot(x_values[:], loss_Tough[:], '#0c9463', linewidth=1.5, label='Tough-Teacher Loss')
+        sct_l, = ax.plot(x_values[:], loss_Tol[:], '#91bd3a', linewidth=1.5, label='Tolerant-Teacher Loss')
         sct_l, = ax.plot(x_values[:], loss_M[:], '#ffd800', linewidth=2.0, label='L2')
-        sct_l, = ax.plot(x_values[:], loss_Total[:], '#ff4646', linewidth=2.5, label='KD Loss',  alpha=0.9)
+        sct_l, = ax.plot(x_values[:], loss_Total[:], '#ff4646', linewidth=2.5, label='KD Loss', alpha=0.9)
 
-        sct_wl_x_gt = plt.scatter(x=[x_gt], y=[0], c='#ffa62b', s=55, label='x_gt')
-        sct_wl_x_tough = plt.scatter(x=[x_tough], y=[0], c='#cd4dcc', s=55, label='x_tough')
-        sct_wl_x_tol = plt.scatter(x=[x_tol], y=[0], c='#400082', s=55, label='x_tol')
-        sct_wl = plt.scatter(x=[beta_tough, beta_mi_tough], y=[0, 0], c='#0c9463', s=10, label='beta_tough')
-        sct_wl = plt.scatter(x=[beta_tol, beta_mi_tol], y=[0, 0], c='#91bd3a', s=10, label='beta_tolerant')
+        sct_wl_x_gt = plt.scatter(x=[x_gt], y=[0], c='#1c2b2d', s=55, label='Gx_i')
+        sct_wl_x_tough = plt.scatter(x=[-x_tough], y=[0], c='#cd4dcc', s=35, label='Ax_i')
+        sct_wl_x_tough = plt.scatter(x=[x_tough], y=[0], c='#cd4dcc', s=35, label='Ax_i`', marker=',')
+        sct_wl_x_tol = plt.scatter(x=[x_tol], y=[0], c='#400082', s=35, label='Sx_i')
+        sct_wl_x_tol = plt.scatter(x=[-x_tol], y=[0], c='#400082', s=35, label='Sx_i`', marker=',')
+        sct_wl = plt.scatter(x=[beta_tough, beta_mi_tough], y=[0, 0], c='#0c9463', s=20, label='\u03B2_tou', marker='x')
+        sct_wl = plt.scatter(x=[beta_tol, beta_mi_tol], y=[0, 0], c='#91bd3a', s=20, label='\u03B2_tol', marker='x')
+        sct_wl = plt.scatter(x=[x_tough], y=[alpha_tough], c='#682c0e', s=20, label='\u03B1_tou', marker='x')
+        sct_wl = plt.scatter(x=[x_tol], y=[alpha_tol], c='#fdb827', s=20, label='\u03B1_tol', marker='x')
 
         # Shrink current axis's height by 10% on the bottom
         box = ax.get_position()
-        ax.set_position([box.x0, box.y0 + box.height * 0.2,
-                         box.width, box.height * 0.9])
+        ax.set_position([box.x0, box.y0 + box.height * 0.22,
+                         box.width, box.height * 0.88])
 
         # Put a legend below current axis
         ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
                   fancybox=True, shadow=True, ncol=3)
-
 
         # sct_wl = plt.scatter(x=[x_gt, x_gt], y=[alpha_tough, -0.5 * alpha_tough], c='#cad315', s=10, label='x')
         # plt.legend((sct_wl_x_gt,sct_wl_x_tough, sct_wl_x_tol), ('sct_wl_x_gt', 'sct_wl_x_tough', 'sct_wl_x_tol'))
@@ -850,124 +996,124 @@ class ImageModification:
         # plt.savefig('loss_wight_and_teacher.png')
         # plt.savefig('total.pdf')
 
-    def loss_function_depict(self, x_gt, x_t_tough, x_t_tol):
-        w_max_tough = 0.3
-        Beta_tough = (0.9 * x_gt + 0.1 * x_t_tough)
-
-        w_max_tol = 0.6
-        Beta_tol = (0.7 * x_gt + 0.3 * x_t_tol)
-
-        # w_max_tough = 0.4
-        # Beta = (0.6*x_gt + 0.4*x_t_tough)
-
-        def calc_loss(X_pr):
-            if X_pr > x_t_tough:
-                loss_tou = -abs(x_t_tough - X_pr)
-            elif X_pr >= Beta_tough:
-                w_func_tough = w_max_tough
-                loss_tou = abs(x_t_tough - X_pr) * w_func_tough
-            else:
-                slope_tough = w_max_tough / (Beta_tough - x_gt)
-                w_func_tough = abs(X_pr - x_gt) * slope_tough
-                loss_tou = abs(x_t_tough - X_pr) * w_func_tough
-
-            if X_pr >= Beta_tol:
-                w_func_tol = w_max_tol
-                loss_tol = abs(x_t_tol - X_pr) * w_func_tol
-            else:
-                slope_tol = w_max_tol / (Beta_tol - x_gt)
-                w_func_tol = (X_pr - x_gt) * slope_tol
-                loss_tol = abs(x_t_tol - X_pr) * w_func_tol
-
-            loss_main = abs(x_gt - X_pr)
-            # loss_main = np.sqrt(abs(x_gt - X_pr))
-            # loss_main = np.square(abs(x_gt - X_pr))
-            loss_total = loss_main - 0.5 * (loss_tou + 0.9 * loss_tol)
-
-            # w_func_tough = abs(X_pr - x_gt) * slope_tough
-            # loss_tou = abs(x_t_tough - X_pr) * w_func_tough
-            '''calc loss total'''
-            # loss_main = np.sqrt(abs(x_gt-X_pr))
-            return loss_total, loss_main, loss_tou, loss_tol
-
-        x_values = np.linspace(x_gt, x_t_tol, 100)
-        loss_total = []
-        loss_base = []
-        loss_tough = []
-        loss_tolerant = []
-        for i in range(len(x_values / 2)):
-            l_total, l_base, l_tou, l_tol = calc_loss(X_pr=x_values[i])
-            loss_total.append(l_total)
-            loss_base.append(l_base)
-            loss_tough.append(l_tou)
-            loss_tolerant.append(l_tol)
-
-        '''finally depict'''
-        plt.figure()
-        sct_total = plt.scatter(x=x_values[:], y=loss_total[:], c='#fd3a69', s=10)
-        sct_base = plt.scatter(x=x_values[:], y=loss_base[:], c='#389393', s=10)
-        sct_tough = plt.scatter(x=x_values[:], y=loss_tough[:], c='#fd8c04', s=10)
-        sct_tol = plt.scatter(x=x_values[:], y=loss_tolerant[:], c='#81b29a', s=10)
-        plt.legend((sct_total, sct_base, sct_tough, sct_tol),
-                   ('Total Loss', 'Base Loss', 'Loss Tough', 'Loss Tolerant'))
-
-        # for i in range(len(x_values)):
-        #     plt.annotate(str(i), (x_values[i], loss_tough[i]), fontsize=9, color='#fd8c04')
-        #     plt.annotate(str(i), (x_values[i], loss_base[i]), fontsize=9, color='#389393')
-        #     plt.annotate(str(i), (x_values[i], loss_total[i]), fontsize=9, color='#fd3a69')
-
-        plt.savefig('loss_tough')
-
-    def _loss_function_depict(self, x_gt, x_t_tough, x_t_tol):
-        """we assume that """
-
-        '''working with the tough teacher:'''
-        '''     creating weight function:'''
-        w_max_tough = 0.99
-        slope_tough = w_max_tough / (x_t_tough - x_gt)
-
-        def calc_tough_loss(X_pr):
-            if X_pr >= abs(x_gt + x_t_tough) / 2:
-                w_func_tough = abs(X_pr - x_gt) * slope_tough
-                loss_tou = abs(x_t_tough - X_pr) * w_func_tough
-                loss_main = abs(x_gt - X_pr)
-                loss_total = loss_main - loss_tou
-
-            else:
-                w_func_tough = abs(X_pr - x_gt) * slope_tough
-                loss_tou = abs(x_t_tough - X_pr) * w_func_tough
-                loss_main = abs(x_gt - X_pr)
-                loss_total = max(loss_main, loss_tou)
-
-            # w_func_tough = abs(X_pr - x_gt) * slope_tough
-            # loss_tou = abs(x_t_tough - X_pr) * w_func_tough
-            '''calc loss total'''
-            # loss_main = np.sqrt(abs(x_gt-X_pr))
-            return loss_total, loss_main, loss_tou
-
-        x_values = np.linspace(x_t_tough, x_gt, 200)
-        loss_total = []
-        loss_base = []
-        loss_tough = []
-        for i in range(len(x_values / 2)):
-            l_total, l_base, l_tou = calc_tough_loss(X_pr=x_values[i])
-            loss_total.append(l_total)
-            loss_base.append(l_base)
-            loss_tough.append(l_tou)
-
-        '''finally depict'''
-        plt.figure()
-        sct_total = plt.scatter(x=x_values[:], y=loss_total[:], c='#fd3a69', s=10)
-        sct_base = plt.scatter(x=x_values[:], y=loss_base[:], c='#389393', s=10)
-        sct_tough = plt.scatter(x=x_values[:], y=loss_tough[:], c='#fd8c04', s=10)
-        plt.legend((sct_total, sct_base, sct_tough), ('Total Loss', 'Base Loss', 'Loss Tough'))
-
-        # for i in range(len(x_values)):
-        #     plt.annotate(str(i), (x_values[i], loss_tough[i]), fontsize=9, color='#fd8c04')
-        #     plt.annotate(str(i), (x_values[i], loss_base[i]), fontsize=9, color='#389393')
-        #     plt.annotate(str(i), (x_values[i], loss_total[i]), fontsize=9, color='#fd3a69')
-
-        plt.savefig('loss_tough')
+    # def loss_function_depict(self, x_gt, x_t_tough, x_t_tol):
+    #     w_max_tough = 0.3
+    #     Beta_tough = (0.9 * x_gt + 0.1 * x_t_tough)
+    #
+    #     w_max_tol = 0.6
+    #     Beta_tol = (0.7 * x_gt + 0.3 * x_t_tol)
+    #
+    #     # w_max_tough = 0.4
+    #     # Beta = (0.6*x_gt + 0.4*x_t_tough)
+    #
+    #     def calc_loss(X_pr):
+    #         if X_pr > x_t_tough:
+    #             loss_tou = -abs(x_t_tough - X_pr)
+    #         elif X_pr >= Beta_tough:
+    #             w_func_tough = w_max_tough
+    #             loss_tou = abs(x_t_tough - X_pr) * w_func_tough
+    #         else:
+    #             slope_tough = w_max_tough / (Beta_tough - x_gt)
+    #             w_func_tough = abs(X_pr - x_gt) * slope_tough
+    #             loss_tou = abs(x_t_tough - X_pr) * w_func_tough
+    #
+    #         if X_pr >= Beta_tol:
+    #             w_func_tol = w_max_tol
+    #             loss_tol = abs(x_t_tol - X_pr) * w_func_tol
+    #         else:
+    #             slope_tol = w_max_tol / (Beta_tol - x_gt)
+    #             w_func_tol = (X_pr - x_gt) * slope_tol
+    #             loss_tol = abs(x_t_tol - X_pr) * w_func_tol
+    #
+    #         loss_main = abs(x_gt - X_pr)
+    #         # loss_main = np.sqrt(abs(x_gt - X_pr))
+    #         # loss_main = np.square(abs(x_gt - X_pr))
+    #         loss_total = loss_main - 0.5 * (loss_tou + 0.9 * loss_tol)
+    #
+    #         # w_func_tough = abs(X_pr - x_gt) * slope_tough
+    #         # loss_tou = abs(x_t_tough - X_pr) * w_func_tough
+    #         '''calc loss total'''
+    #         # loss_main = np.sqrt(abs(x_gt-X_pr))
+    #         return loss_total, loss_main, loss_tou, loss_tol
+    #
+    #     x_values = np.linspace(x_gt, x_t_tol, 100)
+    #     loss_total = []
+    #     loss_base = []
+    #     loss_tough = []
+    #     loss_tolerant = []
+    #     for i in range(len(x_values / 2)):
+    #         l_total, l_base, l_tou, l_tol = calc_loss(X_pr=x_values[i])
+    #         loss_total.append(l_total)
+    #         loss_base.append(l_base)
+    #         loss_tough.append(l_tou)
+    #         loss_tolerant.append(l_tol)
+    #
+    #     '''finally depict'''
+    #     plt.figure()
+    #     sct_total = plt.scatter(x=x_values[:], y=loss_total[:], c='#fd3a69', s=10)
+    #     sct_base = plt.scatter(x=x_values[:], y=loss_base[:], c='#389393', s=10)
+    #     sct_tough = plt.scatter(x=x_values[:], y=loss_tough[:], c='#fd8c04', s=10)
+    #     sct_tol = plt.scatter(x=x_values[:], y=loss_tolerant[:], c='#81b29a', s=10)
+    #     plt.legend((sct_total, sct_base, sct_tough, sct_tol),
+    #                ('Total Loss', 'Base Loss', 'Loss Tough', 'Loss Tolerant'))
+    #
+    #     # for i in range(len(x_values)):
+    #     #     plt.annotate(str(i), (x_values[i], loss_tough[i]), fontsize=9, color='#fd8c04')
+    #     #     plt.annotate(str(i), (x_values[i], loss_base[i]), fontsize=9, color='#389393')
+    #     #     plt.annotate(str(i), (x_values[i], loss_total[i]), fontsize=9, color='#fd3a69')
+    #
+    #     plt.savefig('loss_tough')
+    #
+    # def _loss_function_depict(self, x_gt, x_t_tough, x_t_tol):
+    #     """we assume that """
+    #
+    #     '''working with the tough teacher:'''
+    #     '''     creating weight function:'''
+    #     w_max_tough = 0.99
+    #     slope_tough = w_max_tough / (x_t_tough - x_gt)
+    #
+    #     def calc_tough_loss(X_pr):
+    #         if X_pr >= abs(x_gt + x_t_tough) / 2:
+    #             w_func_tough = abs(X_pr - x_gt) * slope_tough
+    #             loss_tou = abs(x_t_tough - X_pr) * w_func_tough
+    #             loss_main = abs(x_gt - X_pr)
+    #             loss_total = loss_main - loss_tou
+    #
+    #         else:
+    #             w_func_tough = abs(X_pr - x_gt) * slope_tough
+    #             loss_tou = abs(x_t_tough - X_pr) * w_func_tough
+    #             loss_main = abs(x_gt - X_pr)
+    #             loss_total = max(loss_main, loss_tou)
+    #
+    #         # w_func_tough = abs(X_pr - x_gt) * slope_tough
+    #         # loss_tou = abs(x_t_tough - X_pr) * w_func_tough
+    #         '''calc loss total'''
+    #         # loss_main = np.sqrt(abs(x_gt-X_pr))
+    #         return loss_total, loss_main, loss_tou
+    #
+    #     x_values = np.linspace(x_t_tough, x_gt, 200)
+    #     loss_total = []
+    #     loss_base = []
+    #     loss_tough = []
+    #     for i in range(len(x_values / 2)):
+    #         l_total, l_base, l_tou = calc_tough_loss(X_pr=x_values[i])
+    #         loss_total.append(l_total)
+    #         loss_base.append(l_base)
+    #         loss_tough.append(l_tou)
+    #
+    #     '''finally depict'''
+    #     plt.figure()
+    #     sct_total = plt.scatter(x=x_values[:], y=loss_total[:], c='#fd3a69', s=10)
+    #     sct_base = plt.scatter(x=x_values[:], y=loss_base[:], c='#389393', s=10)
+    #     sct_tough = plt.scatter(x=x_values[:], y=loss_tough[:], c='#fd8c04', s=10)
+    #     plt.legend((sct_total, sct_base, sct_tough), ('Total Loss', 'Base Loss', 'Loss Tough'))
+    #
+    #     # for i in range(len(x_values)):
+    #     #     plt.annotate(str(i), (x_values[i], loss_tough[i]), fontsize=9, color='#fd8c04')
+    #     #     plt.annotate(str(i), (x_values[i], loss_base[i]), fontsize=9, color='#389393')
+    #     #     plt.annotate(str(i), (x_values[i], loss_total[i]), fontsize=9, color='#fd3a69')
+    #
+    #     plt.savefig('loss_tough')
 
     def depict_face_distribution(self):
         imgs = []

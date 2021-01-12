@@ -155,6 +155,14 @@ class CofwClass:
                                                       annotation_file_path=annotation_file_path,
                                                       ds_name=DatasetName.dsCofw)
 
+    def create_heatmap(self):
+        img_mod = ImageModification()
+        for i, anno_file in tqdm(enumerate(os.listdir(CofwConf.augmented_train_annotation))):
+            hm = img_mod.generate_hm(width=InputDataSize.hm_size, height=InputDataSize.hm_size,
+                                     landmark_path=CofwConf.augmented_train_annotation, landmark_filename=anno_file,
+                                     s=CofwConf.hm_sigma, de_normalize=False)
+            np.save(CofwConf.augmented_train_hm + anno_file, hm)
+
     """PRIVATE"""
 
     def _get_test_set(self):

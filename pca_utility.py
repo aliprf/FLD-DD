@@ -34,6 +34,7 @@ class PCAUtility:
         ''' no normalization is needed, since we want to generate hm'''
         reduced_lbl_arr, eigenvalues, eigenvectors = self._func_PCA(lbl_arr, pca_accuracy)
         mean_lbl_arr = np.mean(lbl_arr, axis=0)
+
         eigenvectors = eigenvectors.T
 
         save('pca_obj/' + pca_file_name + self.eigenvalues_prefix + str(pca_accuracy), eigenvalues)

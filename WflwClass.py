@@ -120,7 +120,7 @@ class WflwClass:
         '''create model using the h.5 model and its wights'''
         model = tf.keras.models.load_model(model_file)
         '''load test files and categories:'''
-        ds_types = ['full', 'pose', 'expression', 'illumination', 'makeup', 'occlusion', 'blur', 'full']
+        ds_types = [ 'full', 'pose', 'expression', 'illumination', 'makeup', 'occlusion', 'blur', 'full']
         for ds_type in ds_types:
             test_annotation_paths, test_image_paths = self._get_test_set(ds_type)
 
@@ -160,6 +160,13 @@ class WflwClass:
                                                       annotation_file_path=annotation_file_path,
                                                       ds_name=DatasetName.dsWflw, img_file_path=img_file_path)
 
+    def create_heatmap(self):
+        img_mod = ImageModification()
+        for i, anno_file in tqdm(enumerate(os.listdir(WflwConf.augmented_train_annotation))):
+            hm = img_mod.generate_hm(width=InputDataSize.hm_size, height=InputDataSize.hm_size,
+                                     landmark_path=WflwConf.augmented_train_annotation, landmark_filename=anno_file,
+                                     s=WflwConf.hm_sigma, de_normalize=False)
+            np.save(WflwConf.augmented_train_hm + anno_file, hm)
     """PRIVATE"""
 
     def _get_test_set(self, ds_type):

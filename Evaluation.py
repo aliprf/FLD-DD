@@ -1,7 +1,7 @@
 import numpy as np
 from tqdm import tqdm
 from PIL import Image
-import math
+import math, os
 import matplotlib.pyplot as plt
 from scipy.integrate import trapz
 

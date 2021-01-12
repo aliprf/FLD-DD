@@ -1,6 +1,8 @@
 # Byte-compiled / optimized / DLL files
+auc_data/
 __pycache__/
 *.csv
+*.pdf
 *.mat
 *.npy
 *.pyc
