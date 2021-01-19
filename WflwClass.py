@@ -115,6 +115,30 @@ class WflwClass:
         tf_utility.create_point_imgpath_map(img_file_paths=img_file_paths,
                                             annotation_file_paths=annotation_file_paths, map_name=map_name)
 
+    def hm_evaluate_on_wflw(self, model_name, model_file):
+        '''create model using the h.5 model and its wights'''
+        model = tf.keras.models.load_model(model_file)
+        '''load test files and categories:'''
+        ds_types = ['pose', 'expression', 'illumination', 'makeup', 'occlusion', 'blur', 'full']
+        for ds_type in ds_types:
+            test_annotation_paths, test_image_paths = self._get_test_set(ds_type)
+
+            """"""
+            evaluation = Evaluation(model=model, anno_paths=test_annotation_paths, img_paths=test_image_paths,
+                                    ds_name=DatasetName.dsWflw, ds_number_of_points=WflwConf.num_of_landmarks,
+                                    fr_threshold=0.1, is_normalized=True, ds_type=ds_type, model_name=model_name)
+            '''predict labels:'''
+            nme, fr, AUC = evaluation.predict_annotation_hm()
+            print('Dataset: ' + str(DatasetName.dsWflw)
+                  + '{ ds_type: ' + str(ds_type) + '} \n\r'
+                  + '{ nme: ' + str(nme) + '}\n\r'
+                  + '{ fr: ' + str(fr) + '}\n\r'
+                  + '{ AUC: ' + str(AUC) + '}\n\r'
+                  )
+            print('=========================================')
+
+        '''evaluate with meta data: best to worst'''
+
     def evaluate_on_wflw(self, model_name, model_file):
         """"""
         '''create model using the h.5 model and its wights'''
@@ -148,12 +172,13 @@ class WflwClass:
         else:
             img_file_path = WflwConf.test_image_path + 'full'
             annotation_file_path = WflwConf.test_annotation_path + 'full'
-        wflw_inter_fwd_pnt = [(6, 7), (0, 1), (32, 31), (7, 8), (0, 2), (32, 30), (25, 24), (25, 26), (16, 15),
+        wflw_intra_fwd_pnt = [(6, 7), (0, 1), (32, 31), (7, 8), (0, 2), (32, 30), (25, 24), (25, 26), (16, 15),
                               (16, 17), (85, 94), (79, 90), (90, 94), (76, 79), (79, 82), (82, 85), (76, 85), (55, 57),
                               (57, 59), (57, 54), (51, 55), (51, 59), (61, 67), (63, 65), (60, 64), (68, 72), (69, 75),
-                              (71, 73), (35, 40), (44, 48), (37, 38), (42, 50)]
-        wflw_intra_fwd_pnt = [(0, 7), (7, 16), (16, 85), (79, 57), (16, 25), (64, 57), (25, 32), (68, 57), (7, 60),
-                              (25, 72), (0, 33), (32, 46), (64, 68), (64, 38), (68, 50), (38, 50),  (7, 76), (25, 82)]
+                              (71, 73), (35, 40), (44, 48), (37, 38), (42, 50), (10, 9), (10, 11), (22, 21), (22, 23)]
+
+        wflw_inter_fwd_pnt = [(0, 7), (7, 16), (16, 85), (79, 57), (16, 25), (64, 57), (25, 32), (68, 57), (7, 60), (72, 32), (72, 46),
+                              (25, 72), (0, 33), (0, 60), (33, 60), (32, 46), (64, 68), (64, 38), (68, 50), (38, 50),  (7, 76), (25, 82)]
 
         img_mod.create_normalized_web_facial_distance(inter_points=wflw_inter_fwd_pnt,
                                                       intera_points=wflw_intra_fwd_pnt,

@@ -25,6 +25,25 @@ from matplotlib.ticker import LinearLocator, FormatStrFormatter
 
 class ImageModification:
 
+    def generate_hm_from_points(self, height, width, lnd_xy, s, de_normalize=True):
+        hm = np.zeros((height, width, len(lnd_xy) // 2), dtype=np.float32)
+        j = 0
+        for i in range(0, len(lnd_xy), 2):
+
+            if de_normalize:
+                x = float(lnd_xy[i]) * InputDataSize.image_input_size + InputDataSize.img_center
+                y = float(lnd_xy[i + 1]) * InputDataSize.image_input_size + InputDataSize.img_center
+            else:
+                x = lnd_xy[i]
+                y = lnd_xy[i + 1]
+
+            x = x / 4.0
+            y = y / 4.0
+
+            hm[:, :, j] = self._gaussian_k(x, y, s, height, width)
+            j += 1
+        return hm
+
     def generate_hm(self, height, width, landmark_filename, landmark_path, s, de_normalize):
         lnd_xy, lnd_x, lnd_y = self.create_landmarks(np.load(landmark_path+landmark_filename), 1, 1)
         # self.test_image_print('1', np.zeros([224,224,3]), lnd_xy)
@@ -40,8 +59,8 @@ class ImageModification:
                 x = lnd_xy[i]
                 y = lnd_xy[i + 1]
 
-            x = int(x // 4)
-            y = int(y // 4)
+            x = x / 4.0
+            y = y / 4.0
 
             hm[:, :, j] = self._gaussian_k(x, y, s, height, width)
             j += 1
@@ -53,7 +72,7 @@ class ImageModification:
         x = np.arange(0, width, 1, float)
         y = np.arange(0, height, 1, float)[:, np.newaxis]
         gaus = np.exp(-((x - x0) ** 2 + (y - y0) ** 2) / (2 * sigma ** 2))
-        gaus[gaus <= 0.1] = 0
+        gaus[gaus <= 0.15] = 0
         return gaus
 
     def print_heatmap_distribution(self, k, image):
@@ -120,7 +139,7 @@ class ImageModification:
             fig_1.colorbar(surf, shrink=1, aspect=25)
             plt.savefig('./out_imgs/single/dist_3d_heat_' + str(i) + '_' + str(k) + '.png', bbox_inches='tight')
 
-    def print_image_arr_heat(self, k, image, print_single=False):
+    def print_image_arr_heat(self, k, image, print_single=True):
         for i in range(image.shape[2]):
             img = np.sum(image, axis=2)
             if print_single:
@@ -128,7 +147,7 @@ class ImageModification:
                 plt.imshow(image[:, :, i])
                 # implot = plt.imshow(image[:, :, i])
                 plt.axis('off')
-                plt.savefig('./out_imgs/single/single_heat_' + str(i) + '_' + str(k) + '.png', bbox_inches='tight')
+                plt.savefig('./out_imgs/single/single_heat_' + str(k) + '_' + str(i) + '.png', bbox_inches='tight')
                 plt.clf()
 
         plt.figure()
@@ -392,16 +411,16 @@ class ImageModification:
         images = []
         '''load annotations'''
         counter = 0
-        for file in tqdm(os.listdir(annotation_file_path)):
+        for file in tqdm(sorted(os.listdir(annotation_file_path))):
             if file.endswith(".npy"):
                 annotations.append(np.load(os.path.join(annotation_file_path, str(file))))
                 img_adr = os.path.join(img_file_path, str(file)[:-3] + "jpg")
                 self._print_intra_fb(landmark=annotations[counter], points=intera_points,
-                                     img=np.array(Image.open(img_adr)),
+                                     img=np.ones([224,224,3]),#np.array(Image.open(img_adr)),
                                      title=ds_name + ' Intra_Face_Web',
                                      name='zz_' + ds_name + '_intra_fb_' + str(counter))
                 self._print_inter_fb(landmark=annotations[counter], points=inter_points,
-                                     img=np.array(Image.open(img_adr)),
+                                     img=np.ones([224,224,3]),#np.array(Image.open(img_adr)),
                                      title=ds_name + ' Inter_Face_Web',
                                      name='zz_' + ds_name + '_inter_fb_' + str(counter))
                 counter += 1
@@ -499,9 +518,9 @@ class ImageModification:
             y_1 = points[i][0] * 2 + 1
             x_2 = points[i][1] * 2
             y_2 = points[i][1] * 2 + 1
-            plt.plot([landmark[x_1], landmark[x_2]], [landmark[y_1], landmark[y_2]], color='#d62828', linewidth=3.5,
+            plt.plot([landmark[x_1], landmark[x_2]], [landmark[y_1], landmark[y_2]], color='#d62828', linewidth=1.5,
                      alpha=0.7)
-            plt.plot([landmark[x_1], landmark[x_2]], [landmark[y_1], landmark[y_2]], color='#003049', linewidth=1.5,
+            plt.plot([landmark[x_1], landmark[x_2]], [landmark[y_1], landmark[y_2]], color='#003049', linewidth=0.5,
                      alpha=0.5)
 
         landmarks_x = []
@@ -517,21 +536,21 @@ class ImageModification:
         plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#fddb3a', s=3)
 
         plt.axis('off')
-        plt.savefig(name)
+        plt.savefig(name, bbox_inches='tight', pad_inches=0)
 
     def _print_inter_fb(self, landmark, points, img, title, name):
         plt.figure()
         plt.imshow(img)
         plt.title(title)
-        _color = ['#fca311', '#03071e']
+        _color = ['#11698e', '#eb596e']
         for i in range(len(points)):
             x_1 = points[i][0] * 2
             y_1 = points[i][0] * 2 + 1
             x_2 = points[i][1] * 2
             y_2 = points[i][1] * 2 + 1
-            plt.plot([landmark[x_1], landmark[x_2]], [landmark[y_1], landmark[y_2]], color=_color[0], linewidth=3.5,
+            plt.plot([landmark[x_1], landmark[x_2]], [landmark[y_1], landmark[y_2]], color=_color[0], linewidth=1.5,
                      alpha=0.7)
-            plt.plot([landmark[x_1], landmark[x_2]], [landmark[y_1], landmark[y_2]], color=_color[1], linewidth=1.5,
+            plt.plot([landmark[x_1], landmark[x_2]], [landmark[y_1], landmark[y_2]], color=_color[1], linewidth=0.5,
                      alpha=0.5)
 
         landmarks_x = []
@@ -675,8 +694,9 @@ class ImageModification:
         # for i in range(len(landmarks_x)):
         #     plt.annotate(str(i), (landmarks_x[i], landmarks_y[i]), fontsize=9, color='red')
 
-        plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#2c061f', s=25)
-        plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#ff577f', s=15)
+        # plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#ffcc00', s=35)
+        plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#c0e218', s=40)
+        plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#2c061f', s=20)
         # plt.tight_layout(True)
         plt.axis('off')
         plt.savefig(img_name + '.png', bbox_inches='tight', pad_inches=0)

@@ -53,6 +53,9 @@ if __name__ == '__main__':
     # cofw.evaluate_on_cofw(model_name=models[2], model_file='./models/cofw/cofwmn_base_model_5.04.h5')
 
     # cofw.evaluate_on_cofw(model_name=models[3], model_file='./models/cofw/asm/ds_cofw_asm.h5')
+    # cofw.evaluate_on_cofw(model_name='', model_file='./models/asm_fw_model_215_cofw_0.h5')
+
+    # cofw.hm_evaluate_on_cofw(model_name='', model_file='./models/asm_fw_model_242_cofw_0.h5')
     #
     # mn-base:      ch->{nme: 5.04, fr: fr: 3.74}
     # mn-stu:       ch->{nme: 4.11, fr: 2.366}
@@ -64,7 +67,7 @@ if __name__ == '__main__':
     # '''  for this dataset, for evaluation part we DON'T use the Tf record, just we load the data and images'''
     w300w = W300WClass()  # todo DON'T FORGET to remove counter in load data
     # w300w.create_test_set(need_pose=need_pose, need_tf_ref=False)
-    # w300w.create_train_set(need_pose=False, need_hm=True, accuracy=pca_accuracy)  #
+    w300w.create_train_set(need_pose=False, need_hm=True, accuracy=pca_accuracy)  #
     # w300w.create_mean_face()  #
     w300w.create_heatmap() #
     # w300w.create_pca_obj(accuracy=80, normalize=True)
@@ -76,11 +79,15 @@ if __name__ == '__main__':
     # w300w.w300w_create_tf_record(ds_type=0, need_pose=need_pose, accuracy=100)
     # w300w.create_point_imgpath_map()
     # w300w.create_inter_face_web_distance(ds_type=1)
+    # w300w.create_sample(ds_type=1)
+
     #
     # w300w.evaluate_on_300w(model_name=models[0], model_file='./models/300w/ds_300w_ef_100_better.h5')
     # w300w.evaluate_on_300w(model_name=models[1], model_file='./models/300w/KD_main/kd_300W_stu.h5')
     # w300w.evaluate_on_300w(model_name=models[2], model_file='./models/300w/KD_main/ds_300w_mn_base.h5')
     # w300w.evaluate_on_300w(model_name=models[3], model_file='./models/300w/ASM/ds_300w_asm.h5')
+    # w300w.evaluate_on_300w(model_name='--', model_file='./models/asm_fw_model_6_300W_0.h5')
+    # w300w.hm_evaluate_on_300w(model_name='--', model_file='./models/asm_fw_model_130_300W_0.h5')
 
     # mn-base:      ch->{nme: 4.73 , fr: 0.74}      co->{nme: 4.09, fr: 0.18}        full->{nme:4.21, fr: 0.29}
 
@@ -114,5 +121,6 @@ if __name__ == '__main__':
     # wflw.evaluate_on_wflw(model_name=models[2], model_file='./models/wflw/asm/ds_wflw_mn.h5') #ch:22.16
 
     # wflw.evaluate_on_wflw(model_name=models[3], model_file='./models/wflw/asm/ds_wflw_ASM.h5') #ch:
+    # wflw.hm_evaluate_on_wflw(model_name=models[3], model_file='./models/asm_fw_model_23_wflw_0.h5') #ch:
     # #
     #

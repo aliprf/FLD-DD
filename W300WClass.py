@@ -109,6 +109,33 @@ class W300WClass:
         tf_utility.create_point_imgpath_map(img_file_paths=img_file_paths,
                                             annotation_file_paths=annotation_file_paths, map_name=map_name)
 
+    def hm_evaluate_on_300w(self, model_name, model_file):
+        '''create model using the h.5 model and its wights'''
+        model = tf.keras.models.load_model(model_file)
+        '''load test files and categories:'''
+        ds_types = ['common/', 'challenging/', 'full/']
+        for ds_type in ds_types:
+            test_annotation_paths, test_image_paths = self._get_test_set(ds_type)
+
+            """"""
+            evaluation = Evaluation(model=model, anno_paths=test_annotation_paths, img_paths=test_image_paths,
+                                    ds_name=DatasetName.ds300W, ds_number_of_points=W300WConf.num_of_landmarks,
+                                    fr_threshold=0.1, is_normalized=True, ds_type=ds_type, model_name=model_name)
+            '''predict labels:'''
+            '''predict labels:'''
+            # nme, fr, AUC = evaluation.predict_hm()
+            # nme, fr, AUC = evaluation.predict_hm()
+
+            nme, fr, AUC = evaluation.predict_annotation_hm()
+            print('Dataset: ' + DatasetName.ds300W
+                  + '{ ds_type: ' + ds_type + '} \n\r'
+                  + '{ nme: ' + str(nme) + '}\n\r'
+                  + '{ fr: ' + str(fr) + '}\n\r'
+                  + '{ AUC: ' + str(AUC) + '}\n\r'
+                  )
+            print('=========================================')
+        '''evaluate with meta data: best to worst'''
+
     def evaluate_on_300w(self, model_name, model_file):
         '''create model using the h.5 model and its wights'''
         model = tf.keras.models.load_model(model_file)
@@ -123,6 +150,8 @@ class W300WClass:
                                     fr_threshold=0.1, is_normalized=True, ds_type=ds_type, model_name=model_name)
             '''predict labels:'''
             '''predict labels:'''
+            # nme, fr, AUC = evaluation.predict_hm()
+
             nme, fr, AUC = evaluation.predict_annotation()
             print('Dataset: ' + DatasetName.ds300W
                   + '{ ds_type: ' + ds_type + '} \n\r'
@@ -132,6 +161,36 @@ class W300WClass:
                   )
             print('=========================================')
         '''evaluate with meta data: best to worst'''
+
+    def create_sample(self, ds_type):
+        img_mod = ImageModification()
+        model = tf.keras.models.load_model('./models/300w/KD_main/ds_300w_mn_base.h5')
+        if ds_type == 0:
+            img_file_path = W300WConf.no_aug_train_image
+            annotation_file_path = W300WConf.no_aug_train_annotation
+        else:
+            img_file_path = W300WConf.test_image_path + 'full'
+            annotation_file_path = W300WConf.test_annotation_path + 'full'
+
+        for i, file in tqdm(enumerate(sorted(os.listdir(annotation_file_path)))):
+            if file.endswith(".npy"):
+                anno_GT = np.load(os.path.join(annotation_file_path, str(file)))
+                img_adrs = os.path.join(img_file_path, str(file)[:-3] + "jpg")
+                img = np.expand_dims(np.array(Image.open(img_adrs)) / 255.0, axis=0)
+                anno_Pre = model.predict(img)[0]
+                anno_Pre_asm = img_mod.get_asm(input=anno_Pre, dataset_name='300W', accuracy=80)
+                anno_Pre = img_mod.de_normalized(annotation_norm=anno_Pre)
+                anno_Pre_asm = img_mod.de_normalized(annotation_norm=anno_Pre_asm)
+
+                img_mod.test_image_print(img_name='z_' + str(i) + '_pr' + str(i) + '__', img=np.ones([224, 224, 3]),
+                                         landmarks=anno_Pre)
+                img_mod.test_image_print(img_name='z_' + str(i) + '_gt' + str(i) + '__', img=np.array(Image.open(img_adrs)) / 255.0,
+                                         landmarks=anno_GT)
+                img_mod.test_image_print(img_name='z_' + str(i) + '_gt' + str(i) + '_',
+                                         img=np.ones([224,224,3]),
+                                         landmarks=anno_GT)
+                img_mod.test_image_print(img_name='z_' + str(i) + '_pr_asm' + str(i) + '__', img=np.ones([224, 224, 3]),
+                                         landmarks=anno_Pre_asm)
 
     def create_inter_face_web_distance(self, ds_type):
         img_mod = ImageModification()
