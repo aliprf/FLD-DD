@@ -23,11 +23,11 @@ class DatasetType:
 
 
 class InputDataSize:
-    image_input_size = 224.0
-    img_center = image_input_size / 2.0  # 128
+    image_input_size = 224
+    img_center = image_input_size // 2  # 128
 
-    hm_size = image_input_size / 4.0  # 64
-    hm_center = hm_size / 2.0  # 64
+    hm_size = image_input_size // 4  # 64
+    hm_center = hm_size // 2  # 64
 
 
 class WflwConf:
