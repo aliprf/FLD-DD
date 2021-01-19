@@ -49,6 +49,7 @@ class ImageModification:
         # self.test_image_print('1', np.zeros([224,224,3]), lnd_xy)
 
         hm_len = int(len(lnd_xy) // 2)
+        print(hm_len)
         hm = np.zeros((height, width, hm_len), dtype=np.float32)
         j = 0
         for i in range(0, hm_len*2, 2):
