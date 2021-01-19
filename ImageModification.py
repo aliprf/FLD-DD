@@ -48,9 +48,10 @@ class ImageModification:
         lnd_xy, lnd_x, lnd_y = self.create_landmarks(np.load(landmark_path+landmark_filename), 1, 1)
         # self.test_image_print('1', np.zeros([224,224,3]), lnd_xy)
 
-        hm = np.zeros((height, width, len(lnd_xy) // 2), dtype=np.float32)
+        hm_len = int(len(lnd_xy) // 2)
+        hm = np.zeros((height, width, hm_len), dtype=np.float32)
         j = 0
-        for i in range(0, len(lnd_xy), 2):
+        for i in range(0, hm_len*2, 2):
 
             if de_normalize:
                 x = float(lnd_xy[i]) * InputDataSize.image_input_size + InputDataSize.img_center
