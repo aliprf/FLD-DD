@@ -13,7 +13,7 @@ from PIL import Image
 import random
 import tensorflow as tf
 import efficientnet.tfkeras
-
+import csv
 
 class WflwClass:
     """PUBLIC"""
@@ -33,6 +33,22 @@ class WflwClass:
                                     atr=atrs[i], need_hm=need_hm, need_pose=need_pose)
         print("create_train_set DONE!!")
 
+    def batch_test(self, weight_files_path, csv_file_path):
+        with open(csv_file_path, "w") as csv_file:
+
+            header = ['wight_file_name'] + ['full', 'pose', 'expression', 'illumination', 'makeup', 'occlusion', 'blur']
+            writer = csv.writer(csv_file, delimiter=',')
+            writer.writerow(header)
+
+            for file in tqdm(os.listdir(weight_files_path)):
+                if file.endswith(".h5"):
+                    nme_arr, fr_arr, AUC_arr = self.evaluate_on_wflw(model_name='---',
+                                                                     model_file=os.path.join(weight_files_path, file),
+                                                                     print_result=False)
+                    line = [str(file)] + nme_arr + fr_arr + AUC_arr
+                    writer.writerow(line)
+
+
     def create_test_set(self, need_pose=False, need_tf_ref=False):
         """
         create test set from original test data
@@ -46,7 +62,7 @@ class WflwClass:
         #            'list_98pt_test_expression.txt', 'list_98pt_test_illumination.txt',
         #            'list_98pt_test_makeup.txt', 'list_98pt_test_occlusion.txt']
 
-        ds_types = ['pose/', 'expression/', 'illumination/', 'makeup/', 'occlusion/', 'blur/', 'full/']
+        ds_types = ['full/', 'pose/', 'expression/', 'illumination/', 'makeup/', 'occlusion/', 'blur/']
 
         imgs, annotations, bboxs, atrs = self._load_data(WflwConf.orig_WFLW_test)
         for i in tqdm(range(len(imgs))):
@@ -129,6 +145,7 @@ class WflwClass:
                                     fr_threshold=0.1, is_normalized=True, ds_type=ds_type, model_name=model_name)
             '''predict labels:'''
             nme, fr, AUC = evaluation.predict_annotation_hm()
+
             print('Dataset: ' + str(DatasetName.dsWflw)
                   + '{ ds_type: ' + str(ds_type) + '} \n\r'
                   + '{ nme: ' + str(nme) + '}\n\r'
@@ -139,12 +156,15 @@ class WflwClass:
 
         '''evaluate with meta data: best to worst'''
 
-    def evaluate_on_wflw(self, model_name, model_file):
+    def evaluate_on_wflw(self, model_name, model_file, print_result=True):
         """"""
         '''create model using the h.5 model and its wights'''
         model = tf.keras.models.load_model(model_file)
         '''load test files and categories:'''
-        ds_types = [ 'pose', 'expression', 'illumination', 'makeup', 'occlusion', 'blur', 'full']
+        ds_types = ['full', 'pose', 'expression', 'illumination', 'makeup', 'occlusion', 'blur']
+        nme_arr = []
+        fr_arr = []
+        AUC_arr = []
         for ds_type in ds_types:
             test_annotation_paths, test_image_paths = self._get_test_set(ds_type)
 
@@ -154,15 +174,19 @@ class WflwClass:
                                     fr_threshold=0.1, is_normalized=True, ds_type=ds_type, model_name=model_name)
             '''predict labels:'''
             nme, fr, AUC = evaluation.predict_annotation()
-            print('Dataset: ' + str(DatasetName.dsWflw)
-                  + '{ ds_type: ' + str(ds_type) + '} \n\r'
-                  + '{ nme: ' + str(nme) + '}\n\r'
-                  + '{ fr: ' + str(fr) + '}\n\r'
-                  + '{ AUC: ' + str(AUC) + '}\n\r'
-                  )
-            print('=========================================')
+            nme_arr.append(nme)
+            fr_arr.append(fr_arr)
+            AUC_arr.append(AUC_arr)
 
-        '''evaluate with meta data: best to worst'''
+            if print_result:
+                print('Dataset: ' + str(DatasetName.dsWflw)
+                      + '{ ds_type: ' + str(ds_type) + '} \n\r'
+                      + '{ nme: ' + str(nme) + '}\n\r'
+                      + '{ fr: ' + str(fr) + '}\n\r'
+                      + '{ AUC: ' + str(AUC) + '}\n\r'
+                      )
+                print('=========================================')
+        return nme_arr, fr_arr, AUC_arr
 
     def create_inter_face_web_distance(self, ds_type):
         img_mod = ImageModification()
