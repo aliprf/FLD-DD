@@ -13,9 +13,27 @@ import random
 from tensorflow import keras
 import efficientnet.tfkeras
 import tensorflow as tf
+import csv
+
 
 class CofwClass:
     """PUBLIC"""
+
+    def batch_test(self, weight_files_path, csv_file_path):
+        with open(csv_file_path, "wb") as csv_file:
+            header = 'wight_file_name nme fr AUC'
+            writer = csv.writer(csv_file, delimiter=',')
+            writer.writerow(header)
+
+            for file in tqdm(os.listdir(weight_files_path)):
+                if file.endswith(".h5"):
+                    nme, fr, AUC = self.evaluate_on_cofw(model_name='---', model_file=os.path.join(weight_files_path, file),
+                                                         print_result=False)
+                    line = str(file) + ' ' + str(nme) + ' ' + str(fr) + ' ' + str(AUC)
+                    writer.writerow(header)
+
+
+
 
     def create_pca_obj(self, accuracy):
         pca_utils = PCAUtility()
@@ -76,11 +94,11 @@ class CofwClass:
 
         """"""
         evaluation = Evaluation(model=model, anno_paths=test_annotation_paths, img_paths=test_image_paths,
-                                    ds_name=DatasetName.dsCofw, ds_number_of_points=CofwConf.num_of_landmarks,
-                                    fr_threshold=0.1, is_normalized=True, ds_type='full', model_name=model_name)
+                                ds_name=DatasetName.dsCofw, ds_number_of_points=CofwConf.num_of_landmarks,
+                                fr_threshold=0.1, is_normalized=True, ds_type='full', model_name=model_name)
         '''predict labels:'''
         '''predict labels:'''
-        # nme, fr, AUC = evaluation.predict_hm()
+        nme, fr, AUC = evaluation.predict_hm()
         # nme, fr, AUC = evaluation.predict_hm()
 
         nme, fr, AUC = evaluation.predict_annotation_hm()
@@ -90,30 +108,31 @@ class CofwClass:
               + '{ AUC: ' + str(AUC) + '}\n\r'
               )
         print('=========================================')
+
     '''evaluate with meta data: best to worst'''
 
-    def evaluate_on_cofw(self, model_name, model_file):
+    def evaluate_on_cofw(self, model_name, model_file, print_result=True):
         '''create model using the h.5 model and its wights'''
         model = keras.models.load_model(model_file)
         '''load test files and categories:'''
         test_annotation_paths, test_image_paths = self._get_test_set()
 
         """"""
-        evaluation = Evaluation(model_name=model_name, model=model, anno_paths=test_annotation_paths, img_paths=test_image_paths,
+        evaluation = Evaluation(model_name=model_name, model=model, anno_paths=test_annotation_paths,
+                                img_paths=test_image_paths,
                                 ds_name=DatasetName.dsCofw, ds_number_of_points=CofwConf.num_of_landmarks,
                                 fr_threshold=0.1, is_normalized=False, ds_type='full')
         '''predict labels:'''
-        nme, fr, AUC = evaluation.predict_hm()
-
-
         nme, fr, AUC = evaluation.predict_annotation()
-        print('Dataset: ' + DatasetName.dsCofw
-              + '{ nme: ' + str(nme) + '}\n\r'
-              + '{ fr: ' + str(fr) + '}\n\r'
-              + '{ AUC: ' + str(AUC) + '}\n\r'
-              )
-        print('=========================================')
-        '''evaluate with meta data: best to worst'''
+        if print_result:
+            print('Dataset: ' + DatasetName.dsCofw
+                  + '{ nme: ' + str(nme) + '}\n\r'
+                  + '{ fr: ' + str(fr) + '}\n\r'
+                  + '{ AUC: ' + str(AUC) + '}\n\r'
+                  )
+            print('=========================================')
+            '''evaluate with meta data: best to worst'''
+        return nme, fr, AUC
 
     def create_point_imgpath_map(self):
         """
@@ -175,7 +194,7 @@ class CofwClass:
                               (27, 28), (8, 22), (9, 23), (22, 28), (23, 28)]
         '''between every single elements (eye points, ..)'''
         cofw_intera_fwd_pnt = [(4, 5), (6, 7), (12, 13), (14, 15), (24, 25), (26, 27), (20, 21),
-                               (8,10),(11,9),(18,21),(19,21),(22,24),(25,26),(23,24),(22,27),(23,27),]
+                               (8, 10), (11, 9), (18, 21), (19, 21), (22, 24), (25, 26), (23, 24), (22, 27), (23, 27), ]
         img_mod.create_normalized_web_facial_distance(inter_points=cofw_inter_fwd_pnt,
                                                       intera_points=cofw_intera_fwd_pnt,
                                                       img_file_path=img_file_path,

@@ -46,16 +46,16 @@ class Evaluation:
         sum_loss = 0
         for i in tqdm(range(len(sorted(self.anno_paths)))):
             anno_GT = np.load(self.anno_paths[i])  # the GT are not normalized.
-            anno_GT_hm = img_mod.generate_hm_from_points(height=56, width=56, lnd_xy=anno_GT, s=3.5, de_normalize=False)
+            # anno_GT_hm = img_mod.generate_hm_from_points(height=56, width=56, lnd_xy=anno_GT, s=3.5, de_normalize=False)
             img = np.expand_dims(np.array(Image.open(self.img_paths[i])) / 255.0, axis=0)
             anno_Pre_hm = self.model.predict(img)
             anno_Pre_hm = anno_Pre_hm[3][0]
             _, _, anno_Pre = self._hm_to_points(heatmaps=anno_Pre_hm)
             '''print'''
-            # img_mod.test_image_print(img_name='z_' + str(i) + '_pr' + str(i) + '__',
-            #                          img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_Pre)
-            # img_mod.test_image_print(img_name='z_' + str(i) + '_gt' + str(i) + '__',
-            #                          img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_GT)
+            img_mod.test_image_print(img_name='z_' + str(i) + '_pr' + str(i) + '__',
+                                     img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_Pre)
+            img_mod.test_image_print(img_name='z_' + str(i) + '_gt' + str(i) + '__',
+                                     img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_GT)
 
             # img_mod.test_image_print(img_name='z_' + str(i) + '_pr' + str(i) + '__', img=np.ones([224, 224, 3]),
             #                          landmarks=anno_Pre)
@@ -91,6 +91,7 @@ class Evaluation:
             #     break
             anno_GT = np.load(self.anno_paths[i])  # the GT are not normalized.
             img = np.expand_dims(np.array(Image.open(self.img_paths[i])) / 255.0, axis=0)
+            # anno_Pre = self.model.predict(img)[0][0]
             anno_Pre = self.model.predict(img)[0]
             if self.is_normalized:
                 # anno_Pre_asm = img_mod.get_asm(input=anno_Pre, dataset_name='ibug', accuracy=90)
@@ -102,7 +103,7 @@ class Evaluation:
             #                          img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_Pre)
             # img_mod.test_image_print(img_name='z_' + str(i) + '_gt' + str(i) + '__',
             #                          img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_GT)
-            #
+
             # img_mod.test_image_print(img_name='z_'+str(i)+'_pr'+str(i)+'__', img=np.ones([224,224,3]), landmarks=anno_Pre)
             # img_mod.test_image_print(img_name='z_'+str(i)+'_gt'+str(i)+'__', img=np.ones([224,224,3]), landmarks=anno_GT)
             # img_mod.test_image_print(img_name='z_'+str(i)+'_pr_asm'+str(i)+'__', img=np.ones([224,224,3]), landmarks=anno_Pre_asm)
@@ -195,8 +196,10 @@ class Evaluation:
         # sorted_error_arr = np.sort(error_arr)
         data_range = np.linspace(start=0, stop=threshold, num=point_to_use)
         error_arr = np.array(error_arr)
+        sum_errors =0
         for thre in data_range:
-            sum_errors = len(error_arr[error_arr <= thre]) / len(error_arr)
+            sum_errors += len(error_arr[error_arr <= thre]) / len(error_arr)
+            # sum_errors = len(error_arr[error_arr <= thre]) / len(error_arr)
             ce.append(sum_errors)
         return data_range, ce
 
@@ -257,8 +260,8 @@ class Evaluation:
         xy_points = []
         # print(heatmaps.shape) 56,56,68
         for i in range(heatmaps.shape[2]):
-            x, y = self._find_nth_biggest_avg(heatmaps[:, :, i], number_of_selected_points=2,
-                                              scalar=InputDataSize.image_input_size // InputDataSize.hm_size)
+            x, y = self._find_nth_biggest_avg(heatmaps[:, :, i], number_of_selected_points=3,
+                                              scalar=4.0)
             x_points.append(x)
             y_points.append(y)
             xy_points.append(x)
@@ -270,17 +273,28 @@ class Evaluation:
 
         x_arr = []
         y_arr = []
-        w_s = 0
-        x_s = 0
-        y_s = 0
+        w_arr = []
+        x_s = 0.0
+        y_s = 0.0
+        w_s = 0.0
 
         for index in indices:
             x_arr.append(index[0])
             y_arr.append(index[1])
-            w_i = heatmap[index[0], index[1]]
+            w_arr.append(heatmap[index[0], index[1]])
 
-        x = ((3.0 * x_arr[1] + x_arr[0]) / 4.0) * scalar
-        y = ((3.0 * y_arr[1] + y_arr[0]) / 4.0) * scalar
+        # for i in range(len(x_arr)):
+        #     x_s += w_arr[i]*x_arr[i]
+        #     y_s += w_arr[i]*y_arr[i]
+        #     w_s += w_arr[i]
+        # x = (x_s * scalar)/w_s
+        # y = (y_s * scalar)/w_s
+
+        # x = np.mean(x_arr) * scalar
+        # y = np.mean(y_arr) * scalar
+
+        x = ((5.0 * x_arr[1] + 2*x_arr[0]) / 7.0) * scalar
+        y = ((5.0 * y_arr[1] + 2*y_arr[0]) / 7.0) * scalar
 
         return y, x
 

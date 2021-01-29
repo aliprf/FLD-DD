@@ -41,7 +41,7 @@ class W300WClass:
         # pose_detector = PoseDetector()
         try:
             i = 0
-            for file in tqdm(sorted(os.listdir(W300WConf.orig_300W_train))):
+            for file in tqdm(os.listdir(W300WConf.orig_300W_train)):
                 if file.endswith(".png") or file.endswith(".jpg"):
                     i += 1
                     imgs, annotations, bboxs = self._load_data_train(file, W300WConf.orig_300W_train)

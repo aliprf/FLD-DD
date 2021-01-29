@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import (AutoMinorLocator, MultipleLocator)
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
+from numpy import log as ln
 
 
 # from Evaluation import Evaluation
@@ -110,7 +111,7 @@ class ImageModification:
 
             plt.tight_layout()
             # plt.colorbar(im, ax=ax[i, j])
-            plt.savefig('./out_imgs/single/dist_heat_' + str(i) + '_' + str(k) + '.png', bbox_inches='tight')
+            plt.savefig('./out_imgs/single/dist_heat_' + str(i) + '_' + str(k) + '.png', bbox_inches='tight', dpi=400)
 
             '''surface'''
             # Plot the surface.
@@ -138,7 +139,7 @@ class ImageModification:
             ax.zaxis.set_major_locator(LinearLocator(20))
             ax.zaxis.set_major_formatter(FormatStrFormatter('%.1f'))
             fig_1.colorbar(surf, shrink=1, aspect=25)
-            plt.savefig('./out_imgs/single/dist_3d_heat_' + str(i) + '_' + str(k) + '.png', bbox_inches='tight')
+            plt.savefig('./out_imgs/single/dist_3d_heat_' + str(i) + '_' + str(k) + '.png', bbox_inches='tight', dpi=400)
 
     def print_image_arr_heat(self, k, image, print_single=True):
         for i in range(image.shape[2]):
@@ -148,13 +149,13 @@ class ImageModification:
                 plt.imshow(image[:, :, i])
                 # implot = plt.imshow(image[:, :, i])
                 plt.axis('off')
-                plt.savefig('./out_imgs/single/single_heat_' + str(k) + '_' + str(i) + '.png', bbox_inches='tight')
+                plt.savefig('./out_imgs/single/single_heat_' + str(k) + '_' + str(i) + '.png', bbox_inches='tight', dpi=400)
                 plt.clf()
 
         plt.figure()
         plt.imshow(img, vmin=0, vmax=1)
         plt.axis('off')
-        plt.savefig('./out_imgs/heat_' + str(k) + '.png', bbox_inches='tight')
+        plt.savefig('./out_imgs/heat_' + str(k) + '.png', bbox_inches='tight', dpi=400)
         plt.clf()
 
     def depict_AUC_CURVE(self):
@@ -184,8 +185,8 @@ class ImageModification:
                        ('Teacher', 'Student', 'mnV2'))
             plt.xlabel('Normalized Error')
             plt.ylabel('Image Proportion')
-            plt.savefig('./auc_data/KD_CED_' + dataset + '.png', bbox_inches='tight')
-            plt.savefig('./auc_data/KD_CED_' + dataset + '.pdf', bbox_inches='tight')
+            plt.savefig('./auc_data/KD_CED_' + dataset + '.png', bbox_inches='tight', dpi=400)
+            plt.savefig('./auc_data/KD_CED_' + dataset + '.pdf', bbox_inches='tight', dpi=400)
             plt.clf()
 
             '''=====ASM======='''
@@ -206,8 +207,8 @@ class ImageModification:
                            ('mnV2_aug', 'mnV2'))
                 plt.xlabel('Normalized Error')
                 plt.ylabel('Image Proportion')
-                plt.savefig('./auc_data/ASM_CED_' + dataset + '.png', bbox_inches='tight')
-                plt.savefig('./auc_data/ASM_CED_' + dataset + '.pdf', bbox_inches='tight')
+                plt.savefig('./auc_data/ASM_CED_' + dataset + '.png', bbox_inches='tight', dpi=400)
+                plt.savefig('./auc_data/ASM_CED_' + dataset + '.pdf', bbox_inches='tight', dpi=400)
                 plt.clf()
 
     def random_augment(self, index, img_orig, landmark_orig, num_of_landmarks, augmentation_factor, ymin, ymax, xmin,
@@ -537,7 +538,7 @@ class ImageModification:
         plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#fddb3a', s=3)
 
         plt.axis('off')
-        plt.savefig(name, bbox_inches='tight', pad_inches=0)
+        plt.savefig(name, pad_inches=0, bbox_inches='tight', dpi=400)
 
     def _print_inter_fb(self, landmark, points, img, title, name):
         plt.figure()
@@ -566,7 +567,7 @@ class ImageModification:
         plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#000000', s=20)
         plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#fddb3a', s=3)
         plt.axis('off')
-        plt.savefig(name)
+        plt.savefig(name, bbox_inches='tight', dpi=400)
 
     def _print_fwd_histo(self, x_data, y_data, title, name):
         plt.figure()
@@ -578,7 +579,7 @@ class ImageModification:
 
         plt.ylabel('Count')
         plt.xlabel('Normalized Distance')
-        plt.savefig(name)
+        plt.savefig(name, bbox_inches='tight', dpi=400)
 
     def crop_image_train(self, img, bbox, annotation, ds_name):
         if ds_name != DatasetName.dsCofw:
@@ -700,7 +701,7 @@ class ImageModification:
         plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#2c061f', s=20)
         # plt.tight_layout(True)
         plt.axis('off')
-        plt.savefig(img_name + '.png', bbox_inches='tight', pad_inches=0)
+        plt.savefig(img_name + '.png',bbox_inches='tight', dpi=100, pad_inches=0)
         # plt.show()
         plt.clf()
 
@@ -925,7 +926,7 @@ class ImageModification:
 
     def weight_loss_depict(self, x_gt, x_tough, beta_tough, beta_mi_tough, alpha_tough,
                            x_tol, beta_tol, beta_mi_tol, alpha_tol):
-        x_values = np.linspace(-1.0, 1.0, 1000)
+        x_values = np.linspace(-10.0, 10.0, 1000)
         weight_loss_tough = np.zeros_like(x_values)
         weight_loss_tol = np.zeros_like(x_values)
         loss_Tough = np.zeros_like(x_values)
@@ -946,21 +947,29 @@ class ImageModification:
                                                                beta_mi=beta_mi_tol)
 
         '''creating loss'''
+        x_tou_sym = x_gt - abs(x_tough - x_gt)
+        x_tol_sym = x_gt - abs(x_tol - x_gt)
         for i, x in enumerate(x_values):
             if x > x_gt:
-                loss_Tough[i] = weight_loss_tough[i] * abs(x_tough - x)
+                loss_Tough[i] = weight_loss_tough[i] * np.abs(x_tough - x)
+                loss_Tol[i] = weight_loss_tol[i] * np.abs(x_tol - x)
             else:
-                x_t_sym = x_gt - abs(x_tough - x_gt)
-                loss_Tough[i] = weight_loss_tough[i] * abs(x_t_sym - x)
+                loss_Tough[i] = weight_loss_tough[i] * np.abs(x_tou_sym - x)
+                loss_Tol[i] = weight_loss_tol[i] * np.abs(x_tol_sym - x)
 
-            if x > x_gt:
-                loss_Tol[i] = weight_loss_tol[i] * abs(x_tol - x)
+            if x >= abs(x_gt-x_tol):
+                loss_M[i] = 1*np.square(x_gt - x) + 3 * abs(x_gt - x_tol) - 1*np.square(x_gt - x_tol)
+            elif -x >= abs(x_gt-x_tol_sym):
+                loss_M[i] = 1 * np.square(x_gt - x) + 3 * abs(x_gt - x_tol_sym) - 1 * np.square(x_gt - x_tol_sym)
             else:
-                x_t_sym = x_gt - abs(x_tol - x_gt)
-                loss_Tol[i] = weight_loss_tol[i] * abs(x_t_sym - x)
+                loss_M[i] = 3 * abs(x_gt - x)
+            # if x_tol_sym < x < x_tol:
+            #     loss_M[i] = 2*abs(x_gt - x)
+            # else:
+            #     loss_M[i] = np.square(x_gt - x) +
 
-            loss_M[i] = abs(x_gt - x)
-            loss_Total[i] = 2 * loss_M[i] + (loss_Tough[i] + loss_Tol[i])
+            # loss_M[i] = np.square(x_gt - x)
+            loss_Total[i] = 1 * loss_M[i] + (loss_Tough[i] + loss_Tol[i])
             # loss_Total[i] = 2 * loss_M[i] + ( loss_Tol[i])
             # loss_Total[i] = 2 * loss_M[i] + (loss_Tough[i] )
 
@@ -968,11 +977,11 @@ class ImageModification:
         fig = plt.figure(figsize=(5, 5))
         ax = fig.add_subplot(1, 1, 1)
 
-        # ax.set_xlim(-0.3, 0.3)
-        # ax.set_ylim(-0.3, 0.3)
-        ax.set_xlim(-0.75, 0.75)
-        ax.set_ylim(-0.5, 1.0)
-        ax.xaxis.set_minor_locator(AutoMinorLocator(4))
+        ax.set_xlim(-0.8, 0.8)
+        ax.set_ylim(-0.6, 2.2)
+        # ax.set_xlim(-0.75, 0.75)
+        # ax.set_ylim(-0.5, 1.0)
+        # ax.xaxis.set_minor_locator(AutoMinorLocator(4))
         ax.yaxis.set_minor_locator(AutoMinorLocator(4))
         ax.grid(which='major', color='#968c83', linestyle='--', linewidth=0.4)
         ax.grid(which='minor', color='#9ba4b4', linestyle=':', linewidth=0.3)
@@ -1011,11 +1020,11 @@ class ImageModification:
         # for i in range(len(x_values)):
         #     plt.annotate(str(i), (x_values[i], weight_loss[i]), fontsize=9, color='#fd8c04')
 
-        plt.savefig('loss_weight.png')
-        # plt.savefig('loss_weight.pdf')
-        # plt.savefig('loss_teacher.png')
-        # plt.savefig('loss_wight_and_teacher.png')
-        # plt.savefig('total.pdf')
+        plt.savefig('loss_weight.png', bbox_inches='tight', dpi=400)
+        # plt.savefig('loss_weight.pdf', bbox_inches='tight', dpi=400)
+        # plt.savefig('loss_teacher.png', bbox_inches='tight', dpi=400)
+        # plt.savefig('loss_wight_and_teacher.png', bbox_inches='tight', dpi=400)
+        # plt.savefig('total.pdf', bbox_inches='tight', dpi=400)
 
     # def loss_function_depict(self, x_gt, x_t_tough, x_t_tol):
     #     w_max_tough = 0.3
@@ -1226,7 +1235,7 @@ class ImageModification:
                 plt.plot(landmark_arr_x[33:50], landmark_arr_y[33:50], '-ok', c=color)
 
         # plt.axis('off')
-        plt.savefig('name_' + str(type) + '_' + str(k) + '.png', bbox_inches='tight')
+        plt.savefig('name_' + str(type) + '_' + str(k) + '.png', bbox_inches='tight', dpi=400)
         # plt.show()
         plt.clf()
 
@@ -1255,5 +1264,5 @@ class ImageModification:
             # plt.axis.set_major_formatter(ticker.PercentFormatter(xmax=len(landmark_arr_x)))
 
         # plt.text(0,15, 'mean: '+str(mean)+', var:' + str(var))
-        plt.savefig('histo_' + str(type) + '_' + str(k) + '.png', bbox_inches='tight')
+        plt.savefig('histo_' + str(type) + '_' + str(k) + '.png', bbox_inches='tight', dpi=400)
         plt.clf()
