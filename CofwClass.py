@@ -21,7 +21,7 @@ class CofwClass:
 
     def batch_test(self, weight_files_path, csv_file_path):
         with open(csv_file_path, "w") as csv_file:
-            header = 'wight_file_name nme fr AUC'
+            header = ['wight_file_name', 'nme', 'fr',  'AUC']
             writer = csv.writer(csv_file, delimiter=',')
             writer.writerow(header)
 
@@ -29,11 +29,8 @@ class CofwClass:
                 if file.endswith(".h5"):
                     nme, fr, AUC = self.evaluate_on_cofw(model_name='---', model_file=os.path.join(weight_files_path, file),
                                                          print_result=False)
-                    line = str(file) + ' ' + str(nme) + ' ' + str(fr) + ' ' + str(AUC)
+                    line = [str(file), str(nme), str(fr), str(AUC)]
                     writer.writerow(line)
-
-
-
 
     def create_pca_obj(self, accuracy):
         pca_utils = PCAUtility()
