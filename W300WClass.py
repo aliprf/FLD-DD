@@ -13,6 +13,7 @@ import random
 import tensorflow as tf
 import efficientnet.tfkeras
 import matplotlib.pyplot as plt
+import csv
 
 
 class W300WClass:
@@ -60,10 +61,24 @@ class W300WClass:
             hm = img_mod.generate_hm(width=InputDataSize.hm_size, height=InputDataSize.hm_size,
                                      landmark_path=W300WConf.augmented_train_annotation, landmark_filename=anno_file,
                                      s=W300WConf.hm_sigma, de_normalize=False)
-            np.save(W300WConf.augmented_train_hm+anno_file, hm)
+            np.save(W300WConf.augmented_train_hm + anno_file, hm)
             # img_mod.print_image_arr_heat(k=i, image=hm, print_single=False)
             # img_mod.print_heatmap_distribution(k=i, image=hm)
 
+    def batch_test(self, weight_files_path, csv_file_path):
+        with open(csv_file_path, "w") as csv_file:
+            header = ['wight_file_name', 'nme_f', 'nme_ch', 'nme_co', 'fr_f', 'fr_ch', 'fr_co', 'AUC_f', 'AUC_ch',
+                      'AUC_co']
+            writer = csv.writer(csv_file, delimiter=',')
+            writer.writerow(header)
+
+            for file in tqdm(os.listdir(weight_files_path)):
+                if file.endswith(".h5"):
+                    nme_arr, fr_arr, AUC_arr = self.evaluate_on_300w(model_name='---',
+                                                                     model_file=os.path.join(weight_files_path, file),
+                                                                     print_result=False)
+                    line = [str(file)] + nme_arr + fr_arr + AUC_arr
+                    writer.writerow(line)
 
     def create_test_set(self, need_pose=False, need_tf_ref=False):
         """
@@ -136,11 +151,15 @@ class W300WClass:
             print('=========================================')
         '''evaluate with meta data: best to worst'''
 
-    def evaluate_on_300w(self, model_name, model_file):
+    def evaluate_on_300w(self, model_name, model_file, print_result=True):
         '''create model using the h.5 model and its wights'''
         model = tf.keras.models.load_model(model_file)
         '''load test files and categories:'''
-        ds_types = ['challenging/', 'common/', 'full/']
+        ds_types = ['full/', 'challenging/', 'common/']
+
+        nme_arr = []
+        fr_arr = []
+        AUC_arr = []
         for ds_type in ds_types:
             test_annotation_paths, test_image_paths = self._get_test_set(ds_type)
 
@@ -153,14 +172,19 @@ class W300WClass:
             # nme, fr, AUC = evaluation.predict_hm()
 
             nme, fr, AUC = evaluation.predict_annotation()
-            print('Dataset: ' + DatasetName.ds300W
-                  + '{ ds_type: ' + ds_type + '} \n\r'
-                  + '{ nme: ' + str(nme) + '}\n\r'
-                  + '{ fr: ' + str(fr) + '}\n\r'
-                  + '{ AUC: ' + str(AUC) + '}\n\r'
-                  )
-            print('=========================================')
+            nme_arr.append(nme)
+            fr_arr.append(fr)
+            AUC_arr.append(AUC)
+            if print_result:
+                print('Dataset: ' + DatasetName.ds300W
+                      + '{ ds_type: ' + ds_type + '} \n\r'
+                      + '{ nme: ' + str(nme) + '}\n\r'
+                      + '{ fr: ' + str(fr) + '}\n\r'
+                      + '{ AUC: ' + str(AUC) + '}\n\r'
+                      )
+                print('=========================================')
         '''evaluate with meta data: best to worst'''
+        return nme_arr, fr_arr, AUC_arr
 
     def create_sample(self, ds_type):
         img_mod = ImageModification()
@@ -184,10 +208,11 @@ class W300WClass:
 
                 img_mod.test_image_print(img_name='z_' + str(i) + '_pr' + str(i) + '__', img=np.ones([224, 224, 3]),
                                          landmarks=anno_Pre)
-                img_mod.test_image_print(img_name='z_' + str(i) + '_gt' + str(i) + '__', img=np.array(Image.open(img_adrs)) / 255.0,
+                img_mod.test_image_print(img_name='z_' + str(i) + '_gt' + str(i) + '__',
+                                         img=np.array(Image.open(img_adrs)) / 255.0,
                                          landmarks=anno_GT)
                 img_mod.test_image_print(img_name='z_' + str(i) + '_gt' + str(i) + '_',
-                                         img=np.ones([224,224,3]),
+                                         img=np.ones([224, 224, 3]),
                                          landmarks=anno_GT)
                 img_mod.test_image_print(img_name='z_' + str(i) + '_pr_asm' + str(i) + '__', img=np.ones([224, 224, 3]),
                                          landmarks=anno_Pre_asm)
