@@ -36,7 +36,7 @@ class WflwClass:
     def batch_test(self, weight_files_path, csv_file_path):
         with open(csv_file_path, "w") as csv_file:
 
-            header = ['wight_file_name'] + ['full', 'pose', 'expression', 'illumination', 'makeup', 'occlusion', 'blur']
+            header = ['wight_file_name'] + ['pose', 'expression', 'illumination', 'makeup', 'occlusion', 'blur', 'full']
             writer = csv.writer(csv_file, delimiter=',')
             writer.writerow(header)
 
@@ -62,7 +62,7 @@ class WflwClass:
         #            'list_98pt_test_expression.txt', 'list_98pt_test_illumination.txt',
         #            'list_98pt_test_makeup.txt', 'list_98pt_test_occlusion.txt']
 
-        ds_types = ['full/', 'pose/', 'expression/', 'illumination/', 'makeup/', 'occlusion/', 'blur/']
+        ds_types = ['pose/', 'expression/', 'illumination/', 'makeup/', 'occlusion/', 'blur/', 'full/']
 
         imgs, annotations, bboxs, atrs = self._load_data(WflwConf.orig_WFLW_test)
         for i in tqdm(range(len(imgs))):
