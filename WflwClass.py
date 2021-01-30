@@ -326,6 +326,8 @@ class WflwClass:
 
     def _save(self, img, annotation, atr, file_name, image_save_path, annotation_save_path, pose_save_path,
               atr_save_path, pose=None):
+        print('save:' + str(file_name) + str(image_save_path) + str(annotation_save_path))
+
         im = Image.fromarray(np.round(img * 255).astype(np.uint8))
         im.save(image_save_path + file_name + '.jpg')
         np.save(annotation_save_path + file_name, annotation)

@@ -32,8 +32,8 @@ class InputDataSize:
 
 class WflwConf:
     # Wflw_prefix_path = '/media/data3/ali/FL/new_data/wflw/'  # --> zeus
-    Wflw_prefix_path = '/media/data2/alip/FL/new_data/wflw/'  # --> atlas
-    # Wflw_prefix_path = '/media/ali/data/new_data/wflw/'  # --> local
+    # Wflw_prefix_path = '/media/data2/alip/FL/new_data/wflw/'  # --> atlas
+    Wflw_prefix_path = '/media/ali/data/new_data/wflw/'  # --> local
     '''original ds data'''
     orig_WFLW_test_path = Wflw_prefix_path + 'WFLW_annotations/list_98pt_test/'
 
