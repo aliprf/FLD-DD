@@ -36,7 +36,10 @@ class WflwClass:
     def batch_test(self, weight_files_path, csv_file_path):
         with open(csv_file_path, "w") as csv_file:
 
-            header = ['wight_file_name'] + ['pose', 'expression', 'illumination', 'makeup', 'occlusion', 'blur', 'full']
+            header = ['wight_file_name'] + ['full_n', 'pose_n', 'expression_n', 'illumination_n', 'makeup_n', 'occlusion_n', 'blur_n'] +\
+                     ['full_fr', 'pose_fr', 'expression_fr', 'illumination_fr', 'makeup_fr', 'occlusion_fr', 'blur_fr'] +\
+                     ['full_AUC', 'pose_AUC', 'expression_AUC', 'illumination_AUC', 'makeup_AUC', 'occlusion_AUC', 'blur_AUC']
+
             writer = csv.writer(csv_file, delimiter=',')
             writer.writerow(header)
 
@@ -326,7 +329,7 @@ class WflwClass:
 
     def _save(self, img, annotation, atr, file_name, image_save_path, annotation_save_path, pose_save_path,
               atr_save_path, pose=None):
-        print('save:' + str(file_name) + str(image_save_path) + str(annotation_save_path))
+        # print('save:' + str(file_name) + str(image_save_path) + str(annotation_save_path))
 
         im = Image.fromarray(np.round(img * 255).astype(np.uint8))
         im.save(image_save_path + file_name + '.jpg')
