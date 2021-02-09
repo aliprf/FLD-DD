@@ -22,7 +22,7 @@ from sklearn import linear_model
 class W300WClass:
     """PUBLIC"""
 
-    def point_wise_diff_evaluation(self, student_w_path):
+    def point_wise_diff_evaluation(self, student_w_path, use_save):
         # dif_model = keras.models.load_model(diff_net_w_path)
         student_model = keras.models.load_model(student_w_path)
         # teacher_model = keras.models.load_model(teacher_w_path)
@@ -39,7 +39,20 @@ class W300WClass:
                                 ds_number_of_points=W300WConf.num_of_landmarks,
                                 fr_threshold=0.1, is_normalized=True, ds_type='full')
         # st_err_all, te_err_all = evaluation.calculate_pw_diff_error(dif_model=dif_model,
-        st_err_all, pr_matrix, gt_matrix = evaluation.calculate_pw_diff_error(student_model=student_model)
+        if not use_save:
+            st_err_all, pr_matrix, gt_matrix = evaluation.calculate_pw_diff_error(student_model=student_model)
+        else:
+            st_err_all=[]
+            pr_matrix=[]
+            gt_matrix=[]
+            for i, file in enumerate(os.listdir('./reg_data/')):
+                pr_file = './reg_data/'+str(i) + "_pr.npy"
+                gt_file = './reg_data/'+str(i) + "_gt.npy"
+                dif_file = './reg_data/'+str(i) + "_dif.npy"
+                pr_matrix.append(np.load(pr_file))
+                gt_matrix.append(np.load(gt_file))
+                st_err_all.append(np.load(dif_file))
+
 
         '''pivot to create pointset, so we can create '''
         img_mod = ImageModification()
@@ -75,18 +88,15 @@ class W300WClass:
 
         intercept_arr = []
         coef_arr = []
-        # regressor = LinearRegression()
-        reg = linear_model.BayesianRidge()#linear_model.LassoLars(alpha=.1)
+        regressor = LinearRegression()
+        # regressor = linear_model.BayesianRidge()#linear_model.LassoLars(alpha=.1)
 
         for i in range(W300WConf.num_of_landmarks * 2):
             d_X = np.array(data_X[i])
             d_y = np.array(data_y[i])
-            # regressor.fit(d_X, d_y)
-            # intercept_arr.append(regressor.intercept_)
-            # coef_arr.append(regressor.coef_)
-            reg.fit(d_X, d_y)
-            coef_arr.append(reg.coef_)
-            intercept_arr.append(reg.intercept_)
+            regressor.fit(d_X, d_y)
+            intercept_arr.append(regressor.intercept_)
+            coef_arr.append(regressor.coef_)
 
         # confidence_vector = (9*avg_err_st + np.sign(avg_err_st) * sd_err_st)/10.0
         confidence_vector_old = avg_err_st + 0.5 * avg_err_st

@@ -78,8 +78,9 @@ if __name__ == '__main__':
 
     confidence_vector, avg_err_st, var_err_st, sd_err_st, intercept_vector = w300w.point_wise_diff_evaluation(
         # diff_net_w_path='./models/z_diff/300w/dif_model_ibug.h5',
-        # student_w_path='./models/300w/KD_main_correct/ds_300w_mn_stu.h5')
-        student_w_path='./models/ds_300w_mn_stu.h5')
+        # student_w_path='./models/300w/KD_main_correct/ds_300w_mn_stu.h5',
+        student_w_path='./models/ds_300w_mn_stu.h5',
+        use_save=False)
         # teacher_w_path='./models/300w/KD_main_correct/ds_300w_ef_100.h5')
 
     nme, fr, AUC, pointwise_nme_ar = w300w.evaluate_on_300w(model_name=models[0],
