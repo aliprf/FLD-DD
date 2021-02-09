@@ -95,7 +95,7 @@ class Evaluation:
         pr_matrix = []
 
         for i in tqdm(range(len(sorted(self.anno_paths)))):
-            if i > 100: break
+            # if i > 100: break
             anno_GT = np.load(self.anno_paths[i])  # the GT are not normalized.
             img = np.expand_dims(np.array(Image.open(self.img_paths[i])) / 255.0, axis=0)
 

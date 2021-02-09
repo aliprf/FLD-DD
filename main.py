@@ -76,24 +76,24 @@ if __name__ == '__main__':
     # '''  for this dataset, for evaluation part we DON'T use the Tf record, just we load the data and images'''
     w300w = W300WClass()  # todo DON'T FORGET to remove counter in load data
 
-    # confidence_vector, avg_err_st, var_err_st, sd_err_st, intercept_vector = w300w.point_wise_diff_evaluation(
-    #     # diff_net_w_path='./models/z_diff/300w/dif_model_ibug.h5',
-    #     student_w_path='./models/300w/KD_main_correct/ds_300w_mn_stu.h5')
-    #     # teacher_w_path='./models/300w/KD_main_correct/ds_300w_ef_100.h5')
-    #
-    # nme, fr, AUC, pointwise_nme_ar = w300w.evaluate_on_300w(model_name=models[0],
-    #                                                         model_file='./models/300w/KD_main_correct/ds_300w_mn_stu.h5',
-    #                                                         # )
-    #                                                         confidence_vector=confidence_vector,
-    #                                                         intercept_vec=intercept_vector,
-    #                                                         reg_data = [avg_err_st, sd_err_st])
+    confidence_vector, avg_err_st, var_err_st, sd_err_st, intercept_vector = w300w.point_wise_diff_evaluation(
+        # diff_net_w_path='./models/z_diff/300w/dif_model_ibug.h5',
+        student_w_path='./models/300w/KD_main_correct/ds_300w_mn_stu.h5')
+        # teacher_w_path='./models/300w/KD_main_correct/ds_300w_ef_100.h5')
+
+    nme, fr, AUC, pointwise_nme_ar = w300w.evaluate_on_300w(model_name=models[0],
+                                                            model_file='./models/300w/KD_main_correct/ds_300w_mn_stu.h5',
+                                                            # )
+                                                            confidence_vector=confidence_vector,
+                                                            intercept_vec=intercept_vector,
+                                                            reg_data = [avg_err_st, sd_err_st])
     # mn-stu:           ch->{nme:6.13, fr:3.70: ,AUC:0.6029}    co->{nme:3.56, fr:0.180 ,AUC: 0.8356}    full->{nme:4.067, fr: 0.870, AUC:0.790}
     # coef->mn-stu:     ch->{nme:, fr: ,AUC:}    co->{nme:, fr: ,AUC: 0}    full->{nme:, fr: , AUC:}
 
 
     # print('6')
     # w300w.create_test_set(need_pose=need_pose, need_tf_ref=False)
-    w300w.batch_test(weight_files_path='/media/data3/ali/kd_weights/300w/24_jan_2021/', csv_file_path='./300w_CSV_BATCH_RESULT.csv')
+    # w300w.batch_test(weight_files_path='/media/data3/ali/kd_weights/300w/24_jan_2021/', csv_file_path='./300w_CSV_BATCH_RESULT.csv')
 
     # w300w.create_train_set(need_pose=False, need_hm=True, accur
     # acy=pca_accuracy)  #

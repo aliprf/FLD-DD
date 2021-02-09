@@ -63,6 +63,7 @@ class W300WClass:
 
         '''regression'''
         for i in range(W300WConf.num_of_landmarks * 2):
+            pr_matrix[:, i] = pr_matrix[:, i]
             point_avg = pr_matrix[:, i] - avg_err_st[i] * np.ones(np.array(st_err_all).shape[0])
             point_sd = pr_matrix[:, i] - sd_err_st[i] * np.ones(np.array(st_err_all).shape[0])
             point_avg_sd = avg_err_st[i] * np.ones(np.array(st_err_all).shape[0]) - sd_err_st[i] * np.ones(np.array(st_err_all).shape[0])
@@ -74,18 +75,18 @@ class W300WClass:
 
         intercept_arr = []
         coef_arr = []
-        regressor = LinearRegression()
-        # reg = linear_model.BayesianRidge()#linear_model.LassoLars(alpha=.1)
+        # regressor = LinearRegression()
+        reg = linear_model.BayesianRidge()#linear_model.LassoLars(alpha=.1)
 
         for i in range(W300WConf.num_of_landmarks * 2):
             d_X = np.array(data_X[i])
             d_y = np.array(data_y[i])
-            regressor.fit(d_X, d_y)
-            intercept_arr.append(regressor.intercept_)
-            coef_arr.append(regressor.coef_)
-            # reg.fit(d_X, d_y)
-            # coef_arr.append(reg.coef_)
-            # intercept_arr.append(reg.intercept_)
+            # regressor.fit(d_X, d_y)
+            # intercept_arr.append(regressor.intercept_)
+            # coef_arr.append(regressor.coef_)
+            reg.fit(d_X, d_y)
+            coef_arr.append(reg.coef_)
+            intercept_arr.append(reg.intercept_)
 
         # confidence_vector = (9*avg_err_st + np.sign(avg_err_st) * sd_err_st)/10.0
         confidence_vector_old = avg_err_st + 0.5 * avg_err_st
