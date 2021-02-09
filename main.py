@@ -8,15 +8,15 @@ if __name__ == '__main__':
     # img_mod.depict_face_distribution()
 
     # x_gt = -0.0
-    # x_tough = 0.3
+    # x_tough = 0.1
     # beta_tough = x_gt+0.4*abs(x_gt-x_tough)
     # beta_mi_tough = x_gt-0.4*abs(x_gt-x_tough)
-    # alpha_tough = 0.99
+    # alpha_tough = 0.9
     # ''''''
-    # x_tol = -0.5
-    # beta_tol = x_gt + 0.2 * abs(x_gt - x_tol)
-    # beta_mi_tol = x_gt - 0.2 * abs(x_gt - x_tol)
-    # alpha_tol = 0.6
+    # x_tol = -0.2
+    # beta_tol = x_gt + 0.4 * abs(x_gt - x_tol)
+    # beta_mi_tol = x_gt - 0.4 * abs(x_gt - x_tol)
+    # alpha_tol = 0.9
     # # ''''''
     # img_mod.weight_loss_depict(x_gt=x_gt, x_tough=x_tough, beta_tough=beta_tough, beta_mi_tough=beta_mi_tough,
     #                            alpha_tough=alpha_tough,
@@ -33,6 +33,10 @@ if __name__ == '__main__':
     # img_mod.depict_AUC_CURVE()
     '''cofw'''
     cofw = CofwClass()
+    # cofw.depict_prediction_error_distribution(diff_net_w_path='./models/cofw/kd/ds_cofw_stu.h5',
+    #                                           student_w_path='./models/cofw/kd/ds_cofw_stu.h5',
+    #                                           teacher_w_path='./models/cofw/kd/ds_cofw_efn_100.h5')
+
     # cofw.create_test_set(need_pose=need_pose, need_tf_ref=False)
     # cofw.batch_test(weight_files_path='/media/data2/alip/kd_weights/cofw/24_jan_2021/', csv_file_path='./cofw_CSV_BATCH_RESULT.csv')
 
@@ -71,8 +75,25 @@ if __name__ == '__main__':
     # '''300W'''
     # '''  for this dataset, for evaluation part we DON'T use the Tf record, just we load the data and images'''
     w300w = W300WClass()  # todo DON'T FORGET to remove counter in load data
+
+    # confidence_vector, avg_err_st, var_err_st, sd_err_st, intercept_vector = w300w.point_wise_diff_evaluation(
+    #     # diff_net_w_path='./models/z_diff/300w/dif_model_ibug.h5',
+    #     student_w_path='./models/300w/KD_main_correct/ds_300w_mn_stu.h5')
+    #     # teacher_w_path='./models/300w/KD_main_correct/ds_300w_ef_100.h5')
+    #
+    # nme, fr, AUC, pointwise_nme_ar = w300w.evaluate_on_300w(model_name=models[0],
+    #                                                         model_file='./models/300w/KD_main_correct/ds_300w_mn_stu.h5',
+    #                                                         # )
+    #                                                         confidence_vector=confidence_vector,
+    #                                                         intercept_vec=intercept_vector,
+    #                                                         reg_data = [avg_err_st, sd_err_st])
+    # mn-stu:           ch->{nme:6.13, fr:3.70: ,AUC:0.6029}    co->{nme:3.56, fr:0.180 ,AUC: 0.8356}    full->{nme:4.067, fr: 0.870, AUC:0.790}
+    # coef->mn-stu:     ch->{nme:, fr: ,AUC:}    co->{nme:, fr: ,AUC: 0}    full->{nme:, fr: , AUC:}
+
+
+    # print('6')
     # w300w.create_test_set(need_pose=need_pose, need_tf_ref=False)
-    # w300w.batch_test(weight_files_path='/media/data3/ali/kd_weights/300w/24_jan_2021/', csv_file_path='./300w_CSV_BATCH_RESULT.csv')
+    w300w.batch_test(weight_files_path='/media/data3/ali/kd_weights/300w/24_jan_2021/', csv_file_path='./300w_CSV_BATCH_RESULT.csv')
 
     # w300w.create_train_set(need_pose=False, need_hm=True, accur
     # acy=pca_accuracy)  #
@@ -90,6 +111,10 @@ if __name__ == '__main__':
     # w300w.create_sample(ds_type=1)
 
     #
+    # w300w.evaluate_on_300w(model_name=models[0], model_file='./models/asm_0_300W_.h5')
+    #
+    # w300w.evaluate_on_300w(model_name=models[0], model_file='./models/300w/stu_model_4_ibug.h5')
+
     # w300w.evaluate_on_300w(model_name=models[0], model_file='./models/300w/KD_main_correct/ds_300w_mn_base.h5')
     # w300w.evaluate_on_300w(model_name=models[0], model_file='./models/300w/KD_main_correct/ds_300w_ef_100.h5')
     # w300w.evaluate_on_300w(model_name=models[0], model_file='./models/300w/KD_main_correct/ds_300w_mn_stu.h5')
@@ -107,7 +132,8 @@ if __name__ == '__main__':
 
     # mn-base:      ch->{nme: 6.88 , fr: 8.88, AUC:0.057}      co->{nme: 3.85, fr: 0.18, AUC:0.038}    full->{nme:4.44, fr: 1.88, AUC:0.041}
 
-    # mn-stu:     ch->{nme:6.44, fr: 6.66: ,AUC:0.055}    co->{nme:3.57, fr:0.180 ,AUC: 0.035}        full->{nme:4.14, fr: 1.45, AUC:0.039}
+    # mn-stu:     ch->{nme:6.13, fr:3.70: ,AUC:0.6029}    co->{nme:3.56, fr:0.180 ,AUC: 0.8356}    full->{nme:4.067, fr: 0.870, AUC:0.790}
+
     # mn-tough:   ch->{nme:, fr:  ,AUC:}      co->{nme:, fr: ,AUC: }        full->{nme: , fr: ,AUC:}
     # mn-tol:     ch->{nme:, fr:  ,AUC:}      co->{nme:, fr: ,AUC: }        full->{nme: , fr: ,AUC:}
     # efn-100:    ch->{nme: 5.93 , fr:3.70 ,AUC:0.054}   co->{nme: 3.29 , fr: 0.0, AUC: 0.0329}    full->{nme: 3.81, fr: 0.72, AUC:0.037}
@@ -118,9 +144,9 @@ if __name__ == '__main__':
 
     '''wflw'''
     '''for this dataset, for evaluation part we DON'T use the Tf record, just we load the data and images'''
-    wflw = WflwClass() # todo DON'T FORGET to remove THE LOAD_DATA LINE LIMIT
+    wflw = WflwClass()  # todo DON'T FORGET to remove THE LOAD_DATA LINE LIMIT
     # wflw.create_test_set(need_pose=need_pose, need_tf_ref=False)
-    wflw.batch_test(weight_files_path='/media/data2/alip/kd_weights/wflw/24_jan_2021/', csv_file_path='./wflw_CSV_BATCH_RESULT.csv')
+    # wflw.batch_test(weight_files_path='/media/data2/alip/kd_weights/wflw/24_jan_2021/', csv_file_path='./wflw_CSV_BATCH_RESULT.csv')
 
     # wflw.create_train_set(need_pose=False, need_hm=True, accuracy=pca_accuracy)  #
     # wflw.create_heatmap()
@@ -134,7 +160,7 @@ if __name__ == '__main__':
     # wflw.wflw_create_tf_record(ds_type=0, need_pose=need_pose, accuracy=100)
     # wflw.create_inter_face_web_distance(ds_type=0)
     # wflw.create_point_imgpath_map()
-    # wflw.evaluate_on_wflw(model_name=models[0], model_file='./models/stu_model_56_wflw_.h5') #ch:
+    # wflw.evaluate_on_wflw(model_name=models[0], model_file='./models/asm_0_wflw_.h5') #ch:
 
     # wflw.evaluate_on_wflw(model_name=models[0], model_file='./models/wflw/ds_wflw_ef100.h5') #ch: 12.96
     # wflw.evaluate_on_wflw(model_name=models[1], model_file='./models/wflw/kd/ds_wflw_stu.h5') #ch:17.74

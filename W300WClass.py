@@ -14,10 +14,86 @@ import tensorflow as tf
 import efficientnet.tfkeras
 import matplotlib.pyplot as plt
 import csv
+from tensorflow import keras
+from sklearn.linear_model import LinearRegression
+from sklearn import linear_model
 
 
 class W300WClass:
     """PUBLIC"""
+
+    def point_wise_diff_evaluation(self, student_w_path):
+        # dif_model = keras.models.load_model(diff_net_w_path)
+        student_model = keras.models.load_model(student_w_path)
+        # teacher_model = keras.models.load_model(teacher_w_path)
+
+        pw_st_d_all = []
+        pw_gt_all = []
+        pw_pr_all = []
+        pw_te_all = []
+        '''load test files and categories:'''
+        t_annotation_paths, t_image_paths = self._get_train_set()
+        '''define pointwise error for all faces'''
+        evaluation = Evaluation(model_name='-', model=student_model, anno_paths=t_annotation_paths,
+                                img_paths=t_image_paths, ds_name=DatasetName.ds300W,
+                                ds_number_of_points=W300WConf.num_of_landmarks,
+                                fr_threshold=0.1, is_normalized=True, ds_type='full')
+        # st_err_all, te_err_all = evaluation.calculate_pw_diff_error(dif_model=dif_model,
+        st_err_all, pr_matrix, gt_matrix = evaluation.calculate_pw_diff_error(student_model=student_model)
+
+        '''pivot to create pointset, so we can create '''
+        img_mod = ImageModification()
+        data_X = []
+        data_y = []
+        for i in range(W300WConf.num_of_landmarks * 2):
+            # pw_te_all.append(te_err_all[:,i])
+            pw_st_d_all.append(st_err_all[:, i])
+            pw_gt_all.append(gt_matrix[:, i])
+            pw_pr_all.append(pr_matrix[:, i])
+        '''the following contains all the errors for each points'''
+        pw_st_all = np.array(pw_st_d_all)  # 136 * num_of_samples
+        # pw_te_all = np.array(pw_te_all)  # 136 * num_of_samples
+        #
+        # print('--------')
+        # img_mod.print_histogram(k=1, data=pw_st_all[1,:])
+        avg_err_st = np.mean(pw_st_all, axis=1)
+        var_err_st = np.var(pw_st_all, axis=1)
+        sd_err_st = np.sqrt(var_err_st)
+        # img_mod.print_histogram(k=0, data=avg_err_st)
+
+        '''regression'''
+        for i in range(W300WConf.num_of_landmarks * 2):
+            point_avg = pr_matrix[:, i] - avg_err_st[i] * np.ones(np.array(st_err_all).shape[0])
+            point_sd = pr_matrix[:, i] - sd_err_st[i] * np.ones(np.array(st_err_all).shape[0])
+            point_avg_sd = avg_err_st[i] * np.ones(np.array(st_err_all).shape[0]) - sd_err_st[i] * np.ones(np.array(st_err_all).shape[0])
+
+            data = np.array([pr_matrix[:, i], point_avg, point_sd, point_avg_sd])
+            data_X.append(data.transpose())
+            # data_X.append(pr_matrix[:, i])
+            data_y.append(gt_matrix[:, i])
+
+        intercept_arr = []
+        coef_arr = []
+        regressor = LinearRegression()
+        # reg = linear_model.BayesianRidge()#linear_model.LassoLars(alpha=.1)
+
+        for i in range(W300WConf.num_of_landmarks * 2):
+            d_X = np.array(data_X[i])
+            d_y = np.array(data_y[i])
+            regressor.fit(d_X, d_y)
+            intercept_arr.append(regressor.intercept_)
+            coef_arr.append(regressor.coef_)
+            # reg.fit(d_X, d_y)
+            # coef_arr.append(reg.coef_)
+            # intercept_arr.append(reg.intercept_)
+
+        # confidence_vector = (9*avg_err_st + np.sign(avg_err_st) * sd_err_st)/10.0
+        confidence_vector_old = avg_err_st + 0.5 * avg_err_st
+        confidence_vector = np.array(coef_arr)
+        intercept_arr = np.array(intercept_arr)
+        return confidence_vector, avg_err_st, var_err_st, sd_err_st, intercept_arr
+
+    # calcuate diff errors for each point of a face
 
     def create_pca_obj(self, accuracy, normalize):
         pca_utils = PCAUtility()
@@ -151,13 +227,14 @@ class W300WClass:
             print('=========================================')
         '''evaluate with meta data: best to worst'''
 
-    def evaluate_on_300w(self, model_name, model_file, print_result=True):
+    def evaluate_on_300w(self, model_name, model_file, print_result=True, confidence_vector=None, intercept_vec=None, reg_data = None):
         '''create model using the h.5 model and its wights'''
         model = tf.keras.models.load_model(model_file)
         '''load test files and categories:'''
-        ds_types = ['full/', 'challenging/', 'common/']
+        ds_types = ['challenging/', 'common/', 'full/']
 
         nme_arr = []
+        pw_nme_arr = []
         fr_arr = []
         AUC_arr = []
         for ds_type in ds_types:
@@ -171,10 +248,13 @@ class W300WClass:
             '''predict labels:'''
             # nme, fr, AUC = evaluation.predict_hm()
 
-            nme, fr, AUC = evaluation.predict_annotation()
+            nme, fr, AUC, pointwise_nme = evaluation.predict_annotation(confidence_vector=confidence_vector,
+                                                                        intercept_vec=intercept_vec,
+                                                                        reg_data=reg_data)
             nme_arr.append(nme)
             fr_arr.append(fr)
             AUC_arr.append(AUC)
+            pw_nme_arr.append(pointwise_nme)
             if print_result:
                 print('Dataset: ' + DatasetName.ds300W
                       + '{ ds_type: ' + ds_type + '} \n\r'
@@ -184,7 +264,7 @@ class W300WClass:
                       )
                 print('=========================================')
         '''evaluate with meta data: best to worst'''
-        return nme_arr, fr_arr, AUC_arr
+        return nme_arr, fr_arr, AUC_arr, pw_nme_arr
 
     def create_sample(self, ds_type):
         img_mod = ImageModification()
@@ -239,6 +319,16 @@ class W300WClass:
                                                       ds_name=DatasetName.ds300W, img_file_path=img_file_path)
 
     """PRIVATE"""
+
+    def _get_train_set(self):
+        t_annotation_paths = []
+        t_image_paths = []
+        for file in tqdm(os.listdir(W300WConf.no_aug_train_image)):
+            if file.endswith(".png") or file.endswith(".jpg"):
+                t_annotation_paths.append(
+                    os.path.join(W300WConf.no_aug_train_annotation, str(file)[:-3] + "npy"))
+                t_image_paths.append(os.path.join(W300WConf.no_aug_train_image, str(file)))
+        return t_annotation_paths, t_image_paths
 
     def _get_test_set(self, ds_type):
         test_annotation_paths = []
@@ -318,7 +408,7 @@ class W300WClass:
     def _crop(self, img, annotation, bbox):
         img_mod = ImageModification()
         ann_xy, ann_x, ann_y = img_mod.create_landmarks(annotation, 1, 1)
-        fix_pad = 10
+        # fix_pad = 10
         xmin = bbox[0]
         ymin = bbox[1]
         xmax = bbox[6]
@@ -394,11 +484,11 @@ class W300WClass:
     def _load_image(self, path):
         return np.array(Image.open(path))
 
-    def _create_bbox(self, annotation):
+    def _create_bbox(self, annotation, fix_padd=5):
         img_mod = ImageModification()
         ann_xy, an_x, an_y = img_mod.create_landmarks(annotation, 1, 1)
 
-        fix_padd = 5
+        fix_padd = fix_padd
         xmin = int(max(0, min(an_x) - fix_padd))
         ymin = int(max(0, min(an_y) - fix_padd))
         xmax = int(max(an_x) + fix_padd)

@@ -874,13 +874,13 @@ class ImageModification:
         weight_loss_t = 0
         # x_pr -- -x_pr + x_gt
         x_t_sym = x_gt - abs(x_t - x_gt)
-        if x_pr >= x_t or x_pr < x_t_sym:
+        if x_pr >= x_t or x_pr <= x_t_sym:
             weight_loss_t = alpha
-        elif beta <= x_pr < x_t or x_t_sym < x_pr < beta_mi:
+        elif beta <= x_pr <= x_t or x_t_sym <= x_pr <= beta_mi:
             weight_loss_t = alpha_mi
-        elif x_gt <= x_pr < beta:
+        elif x_gt <= x_pr <= beta:
             weight_loss_t = (alpha_mi / (beta - x_gt)) * (x_pr - x_gt)
-        elif beta_mi < x_pr < x_gt:
+        elif beta_mi <= x_pr <= x_gt:
             weight_loss_t = (alpha_mi / (beta_mi - x_gt)) * (x_pr - x_gt)
             # elif -x_t < x_pr < beta_mi:
             #     weight_loss_t = alpha_mi
@@ -926,12 +926,13 @@ class ImageModification:
 
     def weight_loss_depict(self, x_gt, x_tough, beta_tough, beta_mi_tough, alpha_tough,
                            x_tol, beta_tol, beta_mi_tol, alpha_tol):
-        x_values = np.linspace(-10.0, 10.0, 1000)
+        x_values = np.linspace(-2.0, 2.0, 10000)
         weight_loss_tough = np.zeros_like(x_values)
         weight_loss_tol = np.zeros_like(x_values)
         loss_Tough = np.zeros_like(x_values)
         loss_Tol = np.zeros_like(x_values)
         loss_M = np.zeros_like(x_values)
+        der_loss_M = np.zeros_like(x_values)
         loss_Total = np.zeros_like(x_values)
 
         x_tough = x_gt + abs(x_gt - x_tough)
@@ -950,26 +951,42 @@ class ImageModification:
         x_tou_sym = x_gt - abs(x_tough - x_gt)
         x_tol_sym = x_gt - abs(x_tol - x_gt)
         for i, x in enumerate(x_values):
-            if x > x_gt:
+            gamma = abs(x_gt-x)
+            if x >= x_gt:
                 loss_Tough[i] = weight_loss_tough[i] * np.abs(x_tough - x)
                 loss_Tol[i] = weight_loss_tol[i] * np.abs(x_tol - x)
             else:
                 loss_Tough[i] = weight_loss_tough[i] * np.abs(x_tou_sym - x)
                 loss_Tol[i] = weight_loss_tol[i] * np.abs(x_tol_sym - x)
 
-            if x >= abs(x_gt-x_tol):
-                loss_M[i] = 1*np.square(x_gt - x) + 3 * abs(x_gt - x_tol) - 1*np.square(x_gt - x_tol)
-            elif -x >= abs(x_gt-x_tol_sym):
-                loss_M[i] = 1 * np.square(x_gt - x) + 3 * abs(x_gt - x_tol_sym) - 1 * np.square(x_gt - x_tol_sym)
+            if gamma <= 0.5:
+                loss_M[i] = abs(x_gt - x)
+                der_loss_M[i] = 1
+            # if x >= gamma: #abs(x_gt-0.5):
+            # elif x > gamma:
             else:
-                loss_M[i] = 3 * abs(x_gt - x)
+                loss_M[i] = np.square(x_gt - x) + 0.25
+                # loss_M[i] = np.square(x_gt - x) + abs(x_gt - abs(x_gt-0.5)) - np.square(x_gt - abs(x_gt-0.5))
+                der_loss_M[i] = 2 * abs(x)
+            # elif x < gamma:
+            #     loss_M[i] = np.square(x_gt - x) + 0.25
+            #     # loss_M[i] = np.square(x_gt - x) + abs(x_gt - abs(x_gt-0.5)) - np.square(x_gt - abs(x_gt-0.5))
+            #     der_loss_M[i] = 2 * abs(x)
+
+                # loss_M[i] = 1*np.square(x_gt - x) + abs(x_gt - x_tol) - np.square(x_gt - x_tol)
+            # elif -0.5 < gamma:#abs(x_gt+0.5):
+            #     loss_M[i] = np.square(x_gt - x) #+ abs(x_gt - gamma) - np.square(x_gt - gamma)
+            #     # loss_M[i] = 1 * np.square(x_gt - x) + abs(x_gt + abs(x_gt-0.5)) - np.square(x_gt + abs(x_gt-0.5))
+            #     der_loss_M[i] = -2 * x
+            #     # loss_M[i] = 1 * np.square(x_gt - x) + abs(x_gt - x_tol_sym) - np.square(x_gt - x_tol_sym)
+            #
             # if x_tol_sym < x < x_tol:
             #     loss_M[i] = 2*abs(x_gt - x)
             # else:
             #     loss_M[i] = np.square(x_gt - x) +
 
             # loss_M[i] = np.square(x_gt - x)
-            loss_Total[i] = 1 * loss_M[i] + (loss_Tough[i] + loss_Tol[i])
+            loss_Total[i] = 2.5 * loss_M[i] + (loss_Tough[i] + loss_Tol[i])
             # loss_Total[i] = 2 * loss_M[i] + ( loss_Tol[i])
             # loss_Total[i] = 2 * loss_M[i] + (loss_Tough[i] )
 
@@ -977,32 +994,36 @@ class ImageModification:
         fig = plt.figure(figsize=(5, 5))
         ax = fig.add_subplot(1, 1, 1)
 
-        ax.set_xlim(-0.8, 0.8)
-        ax.set_ylim(-0.6, 2.2)
-        # ax.set_xlim(-0.75, 0.75)
-        # ax.set_ylim(-0.5, 1.0)
+        # ax.set_xlim(-0.8, 0.8)
+        # ax.set_ylim(-0.6, 2.2)
+        # ax.set_xlim(-1.5, 1.5)
+        # ax.set_ylim(-0.1, 2.4)
+        ax.set_xlim(-0.5, 0.5)
+        ax.set_ylim(-0.2, 0.8)
+
         # ax.xaxis.set_minor_locator(AutoMinorLocator(4))
-        ax.yaxis.set_minor_locator(AutoMinorLocator(4))
+        ax.yaxis.set_minor_locator(AutoMinorLocator(5))
+        ax.xaxis.set_minor_locator(AutoMinorLocator(5))
         ax.grid(which='major', color='#968c83', linestyle='--', linewidth=0.4)
         ax.grid(which='minor', color='#9ba4b4', linestyle=':', linewidth=0.3)
-        sct_wl, = ax.plot(x_values[:], weight_loss_tough[:], '#cd4dcc', linewidth=1.0, label='Tough-Weight Loss',
-                          alpha=0.5)
-        sct_wl, = ax.plot(x_values[:], weight_loss_tol[:], '#400082', linewidth=1.0, label='Tolerant-Weight Loss',
-                          alpha=0.5)
-        sct_l, = ax.plot(x_values[:], loss_Tough[:], '#0c9463', linewidth=1.5, label='Tough-Teacher Loss')
-        sct_l, = ax.plot(x_values[:], loss_Tol[:], '#91bd3a', linewidth=1.5, label='Tolerant-Teacher Loss')
-        sct_l, = ax.plot(x_values[:], loss_M[:], '#ffd800', linewidth=2.0, label='L2')
-        sct_l, = ax.plot(x_values[:], loss_Total[:], '#ff4646', linewidth=2.5, label='KD Loss', alpha=0.9)
+        # sct_wl, = ax.plot(x_values[:], weight_loss_tough[:], '#2d00f7', linewidth=1.5, label='$\omega_{Te}$',
+        #                   alpha=0.5)
+        # sct_wl, = ax.plot(x_values[:], weight_loss_tol[:], '#400082', linewidth=1.0, label='Tolerant-Weight Loss',
+        #                   alpha=0.5)
+        sct_l, = ax.plot(x_values[:], loss_Tough[:], '#0c9463', linewidth=2.0, label='$MDAL_{Tou}$')
+        sct_l, = ax.plot(x_values[:], loss_Tol[:], '#91bd3a', linewidth=1.5, label='$MDAL_{Tol}$')
+        sct_l, = ax.plot(x_values[:], loss_M[:], '#1a508b', linewidth=2.0, label='$Loss_{Main}$')
+        # sct_lder, = ax.plot(x_values[:], der_loss_M[:], '#eb5e0b', linewidth=1.5, label='Derivative of $Loss_{Main}$')
+        sct_l, = ax.plot(x_values[:], loss_Total[:], '#ff4646', linewidth=2.5, label='KDLoss', alpha=1.0)
 
-        sct_wl_x_gt = plt.scatter(x=[x_gt], y=[0], c='#1c2b2d', s=55, label='Gx_i')
-        sct_wl_x_tough = plt.scatter(x=[-x_tough], y=[0], c='#cd4dcc', s=35, label='Ax_i')
-        sct_wl_x_tough = plt.scatter(x=[x_tough], y=[0], c='#cd4dcc', s=35, label='Ax_i`', marker=',')
-        sct_wl_x_tol = plt.scatter(x=[x_tol], y=[0], c='#400082', s=35, label='Sx_i')
-        sct_wl_x_tol = plt.scatter(x=[-x_tol], y=[0], c='#400082', s=35, label='Sx_i`', marker=',')
-        sct_wl = plt.scatter(x=[beta_tough, beta_mi_tough], y=[0, 0], c='#0c9463', s=20, label='\u03B2_tou', marker='x')
-        sct_wl = plt.scatter(x=[beta_tol, beta_mi_tol], y=[0, 0], c='#91bd3a', s=20, label='\u03B2_tol', marker='x')
-        sct_wl = plt.scatter(x=[x_tough], y=[alpha_tough], c='#682c0e', s=20, label='\u03B1_tou', marker='x')
-        sct_wl = plt.scatter(x=[x_tol], y=[alpha_tol], c='#fdb827', s=20, label='\u03B1_tol', marker='x')
+        sct_wl_x_gt = plt.scatter(x=[x_gt], y=[0], c='#1c2b2d', s=55, label='$G^n_i$')
+        sct_wl_x_tough = plt.scatter(x=[x_tough], y=[0], c='#cd4dcc', s=25, label='$A^n_i$')
+        sct_wl_x_tol = plt.scatter(x=[x_tol], y=[0], c='#400082', s=25, label='$S^n_i$')
+        # sct_wl_x_tol = plt.scatter(x=[-x_tol], y=[0], c='#400082', s=35, label='Sx_i`', marker=',')
+        sct_wl = plt.scatter(x=[beta_tough], y=[0], c='#0c9463', s=15, label='$\u03B2_{Tou}$', marker='x')
+        sct_wl = plt.scatter(x=[beta_tol], y=[0], c='#91bd3a', s=15, label='$\u03B2_{Tol}$', marker='x')
+        # sct_wl = plt.scatter(x=[x_tough], y=[alpha_tough], c='#682c0e', s=20, label='\u03B1_tou', marker='x')
+        # sct_wl = plt.scatter(x=[x_tol], y=[alpha_tol], c='#fdb827', s=20, label='\u03B1_tol', marker='x')
 
         # Shrink current axis's height by 10% on the bottom
         box = ax.get_position()
@@ -1237,6 +1258,13 @@ class ImageModification:
         # plt.axis('off')
         plt.savefig('name_' + str(type) + '_' + str(k) + '.png', bbox_inches='tight', dpi=400)
         # plt.show()
+        plt.clf()
+
+    def print_histogram(self, k, data):
+        plt.figure()
+        color = '#008891'
+        plt.hist(data, bins=50, color=color, alpha=0.9, histtype='bar')
+        plt.savefig('histo_' + str(k) + '.png', bbox_inches='tight', dpi=400)
         plt.clf()
 
     def print_histogram_plt(self, k, type, landmarks_arr):

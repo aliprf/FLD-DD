@@ -18,6 +18,28 @@ import csv
 
 class CofwClass:
     """PUBLIC"""
+    def depict_prediction_error_distribution(self, diff_net_w_path, student_w_path, teacher_w_path):
+        dif_model = keras.models.load_model(diff_net_w_path)
+        student_model = keras.models.load_model(student_w_path)
+        teacher_model = keras.models.load_model(teacher_w_path)
+        '''load test files and categories:'''
+        test_annotation_paths, test_image_paths = self._get_test_set()
+        '''stu'''
+        evaluation = Evaluation(model_name='-', model=student_model, anno_paths=test_annotation_paths,
+                                img_paths=test_image_paths, ds_name=DatasetName.dsCofw,
+                                ds_number_of_points=CofwConf.num_of_landmarks,
+                                fr_threshold=0.1, is_normalized=False, ds_type='full')
+        _, _, _, point_wise_nme_ar_stu = evaluation.predict_annotation()
+
+        '''teacher'''
+        evaluation = Evaluation(model_name='-', model=teacher_model, anno_paths=test_annotation_paths,
+                                img_paths=test_image_paths, ds_name=DatasetName.dsCofw,
+                                ds_number_of_points=CofwConf.num_of_landmarks,
+                                fr_threshold=0.1, is_normalized=False, ds_type='full')
+        _, _, _, point_wise_nme_ar_tou = evaluation.predict_annotation()
+        ''''''
+
+
 
     def batch_test(self, weight_files_path, csv_file_path):
         with open(csv_file_path, "w") as csv_file:

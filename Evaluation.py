@@ -64,8 +64,8 @@ class Evaluation:
 
             # img_mod.test_image_print(img_name='z_'+str(i)+'_pr_asm'+str(i)+'__', img=np.ones([224,224,3]), landmarks=anno_Pre_asm)
 
-            nme_i = self._calculate_nme(anno_GT=anno_GT, anno_Pre=anno_Pre, ds_name=self.ds_name,
-                                        ds_number_of_points=self.ds_number_of_points)
+            nme_i, norm_error = self._calculate_nme(anno_GT=anno_GT, anno_Pre=anno_Pre, ds_name=self.ds_name,
+                                                    ds_number_of_points=self.ds_number_of_points)
             nme_ar.append(nme_i)
             sum_loss += nme_i
             if nme_i > self.fr_threshold:
@@ -81,9 +81,103 @@ class Evaluation:
         print('AUC: ' + str(AUC))
         return nme, fr, AUC
 
-    def predict_annotation(self):
+    def calculate_pw_diff_error(self, student_model):
+        img_mod = ImageModification()
+
+        nme_ar = []
+        pointwise_nme_ar = []
+        fail_counter = 0
+        sum_loss = 0
+
+        st_err_all = []
+        te_err_all = []
+        gt_matrix = []
+        pr_matrix = []
+
+        for i in tqdm(range(len(sorted(self.anno_paths)))):
+            if i > 100: break
+            anno_GT = np.load(self.anno_paths[i])  # the GT are not normalized.
+            img = np.expand_dims(np.array(Image.open(self.img_paths[i])) / 255.0, axis=0)
+
+            '''calculate gt_dif and normalize by 224'''
+            anno_Pre_stu = student_model.predict(img)[0]
+            if self.is_normalized:
+                anno_Pre_stu = img_mod.de_normalized(annotation_norm=anno_Pre_stu)
+            gt_dif_gt_st = (anno_GT - anno_Pre_stu)
+            # gt_dif_gt_pt = (anno_GT - anno_Pre_tou)/224.0
+
+            '''diff model: normalized by 224'''
+            # dif_pr = dif_model.predict(img)
+            # pr_dif_gt_st = dif_pr[0][0]*224.0
+            # pr_dif_gt_pt = dif_pr[1][0]
+
+            err_st = gt_dif_gt_st
+            # err_st = np.abs(gt_dif_gt_st - pr_dif_gt_st)
+            # err_te = np.abs(gt_dif_gt_pt - pr_dif_gt_pt)
+
+            st_err_all.append(err_st)
+            pr_matrix.append(anno_Pre_stu)
+            gt_matrix.append(anno_GT)
+            # te_err_all.append(err_te)
+
+        return np.array(st_err_all), np.array(pr_matrix), np.array(gt_matrix)  # , np.array(te_err_all)
+
+    def calculate_error_with_diff(self, dif_model, student_model, teacher_model, confidence_vector):
+        img_mod = ImageModification()
+
+        nme_ar = []
+        pointwise_nme_ar = []
+        fail_counter = 0
+        sum_loss = 0
+
+        for i in tqdm(range(len(sorted(self.anno_paths)))):
+            anno_GT = np.load(self.anno_paths[i])  # the GT are not normalized.
+            img = np.expand_dims(np.array(Image.open(self.img_paths[i])) / 255.0, axis=0)
+
+            '''diff model: normalized by 224'''
+            dif_pr = dif_model.predict(img)
+            pr_dif_gt_st = dif_pr[0][0]
+            # pr_dif_gt_pt = dif_pr[1][0]
+
+            '''now calculate both st and tou points and denormalize both:'''
+            anno_Pre_stu = student_model.predict(img)[0]
+            # anno_Pre_tou = teacher_model.predict(img)[0]
+            if self.is_normalized:
+                anno_Pre_stu = img_mod.de_normalized(annotation_norm=anno_Pre_stu)
+            anno_Pre_stu_new = anno_Pre_stu + confidence_vector
+            # anno_Pre_stu_new = anno_Pre_stu# + confidence_vector
+            # anno_Pre_stu_new = anno_Pre_stu + pr_dif_gt_st*confidence_vector
+
+            # img_mod.test_image_print(img_name='z_' + str(i) + '_GT' + str(i) + '__',
+            #                          img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_GT)
+            # img_mod.test_image_print(img_name='z_' + str(i) + '_st' + str(i) + '__',
+            #                          img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_Pre_stu)
+            # img_mod.test_image_print(img_name='z_' + str(i) + '_tou' + str(i) + '__',
+            #                          img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_Pre_stu_new)
+            # new                       6.139649307861214   3.5736749350703283
+            # main: 4.06724982475122	6.13952694633844	3.56227254783015
+            nme_i, norm_error = self._calculate_nme(anno_GT=anno_GT, anno_Pre=anno_Pre_stu_new, ds_name=self.ds_name,
+                                                    ds_number_of_points=self.ds_number_of_points)
+            nme_ar.append(nme_i)
+            pointwise_nme_ar.append(norm_error)
+            sum_loss += nme_i
+            if nme_i > self.fr_threshold:
+                fail_counter += 1
+
+        '''calculate total:'''
+        AUC = self.calculate_AUC(nme_arr=nme_ar)
+        ''''''
+        fr = 100 * fail_counter / len(self.anno_paths)
+        nme = 100 * sum_loss / len(self.anno_paths)
+        print('fr: ' + str(fr))
+        print('nme: ' + str(nme))
+        print('AUC: ' + str(AUC))
+        return nme, fr, AUC, pointwise_nme_ar
+
+    def predict_annotation(self, confidence_vector=None, intercept_vec=None, reg_data=None):
         img_mod = ImageModification()
         nme_ar = []
+        pointwise_nme_ar = []
         fail_counter = 0
         sum_loss = 0
         for i in tqdm(range(len(sorted(self.anno_paths)))):
@@ -97,7 +191,19 @@ class Evaluation:
                 # anno_Pre_asm = img_mod.get_asm(input=anno_Pre, dataset_name='ibug', accuracy=90)
                 # anno_Pre_asm = img_mod.de_normalized(annotation_norm=anno_Pre_asm)
                 anno_Pre = img_mod.de_normalized(annotation_norm=anno_Pre)
-
+            if confidence_vector is not None and intercept_vec is not None:
+                if reg_data is not None:
+                    avg_err_st, sd_err_st = reg_data
+                    anno_Pre = confidence_vector[:, 0] * anno_Pre + \
+                               confidence_vector[:, 1] * (anno_Pre - avg_err_st) + \
+                               confidence_vector[:, 2] * (anno_Pre - sd_err_st) +\
+                               confidence_vector[:, 3] * (avg_err_st - sd_err_st) +\
+                               intercept_vec
+                else:
+                    anno_Pre = confidence_vector * anno_Pre + intercept_vec
+            elif confidence_vector is not None:
+                anno_Pre = confidence_vector * anno_Pre
+                # anno_Pre = anno_Pre + confidence_vector # this is for AVG
             '''print'''
             # img_mod.test_image_print(img_name='z_' + str(i) + '_pr' + str(i) + '__',
             #                          img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_Pre)
@@ -107,6 +213,37 @@ class Evaluation:
             # img_mod.test_image_print(img_name='z_'+str(i)+'_pr'+str(i)+'__', img=np.ones([224,224,3]), landmarks=anno_Pre)
             # img_mod.test_image_print(img_name='z_'+str(i)+'_gt'+str(i)+'__', img=np.ones([224,224,3]), landmarks=anno_GT)
             # img_mod.test_image_print(img_name='z_'+str(i)+'_pr_asm'+str(i)+'__', img=np.ones([224,224,3]), landmarks=anno_Pre_asm)
+
+            nme_i, norm_error = self._calculate_nme(anno_GT=anno_GT, anno_Pre=anno_Pre, ds_name=self.ds_name,
+                                                    ds_number_of_points=self.ds_number_of_points)
+            nme_ar.append(nme_i)
+            pointwise_nme_ar.append(norm_error)
+            sum_loss += nme_i
+            if nme_i > self.fr_threshold:
+                fail_counter += 1
+
+        '''calculate total:'''
+        AUC = self.calculate_AUC(nme_arr=nme_ar)
+        ''''''
+        fr = 100 * fail_counter / len(self.anno_paths)
+        nme = 100 * sum_loss / len(self.anno_paths)
+        print('fr: ' + str(fr))
+        print('nme: ' + str(nme))
+        print('AUC: ' + str(AUC))
+        return nme, fr, AUC, pointwise_nme_ar
+
+    def predict_pointwise_nme(self):
+        img_mod = ImageModification()
+        nme_ar = []
+        fail_counter = 0
+        sum_loss = 0
+        for i in tqdm(range(len(sorted(self.anno_paths)))):
+            anno_GT = np.load(self.anno_paths[i])  # the GT are not normalized.
+            img = np.expand_dims(np.array(Image.open(self.img_paths[i])) / 255.0, axis=0)
+            # anno_Pre = self.model.predict(img)[0][0]
+            anno_Pre = self.model.predict(img)[0]
+            if self.is_normalized:
+                anno_Pre = img_mod.de_normalized(annotation_norm=anno_Pre)
 
             nme_i = self._calculate_nme(anno_GT=anno_GT, anno_Pre=anno_Pre, ds_name=self.ds_name,
                                         ds_number_of_points=self.ds_number_of_points)
@@ -129,15 +266,24 @@ class Evaluation:
         normalizing_distance = self.calculate_interoccular_distance(anno_GT=anno_GT, ds_name=ds_name)
         '''here we round all data if needed'''
         sum_errors = 0
+        errors_arr = []
         for i in range(0, len(anno_Pre), 2):  # two step each time
             x_pr = anno_Pre[i]
             y_pr = anno_Pre[i + 1]
             x_gt = anno_GT[i]
             y_gt = anno_GT[i + 1]
             error = math.sqrt(((x_pr - x_gt) ** 2) + ((y_pr - y_gt) ** 2))
+
+            manhattan_error_x = abs(x_pr - x_gt) / 224.0
+            manhattan_error_y = abs(y_pr - y_gt) / 224.0
+
             sum_errors += error
+            errors_arr.append(manhattan_error_x)
+            errors_arr.append(manhattan_error_y)
+
         NME = sum_errors / (normalizing_distance * ds_number_of_points)
-        return NME
+        norm_error = errors_arr
+        return NME, norm_error
 
     # def calculate_AUC(self, nme_arr):
     #     x, y = self.ecdf(error_arr=nme_arr, threshold=0.1)
@@ -196,7 +342,7 @@ class Evaluation:
         # sorted_error_arr = np.sort(error_arr)
         data_range = np.linspace(start=0, stop=threshold, num=point_to_use)
         error_arr = np.array(error_arr)
-        sum_errors =0
+        sum_errors = 0
         for thre in data_range:
             sum_errors += len(error_arr[error_arr <= thre]) / len(error_arr)
             # sum_errors = len(error_arr[error_arr <= thre]) / len(error_arr)
@@ -293,8 +439,8 @@ class Evaluation:
         # x = np.mean(x_arr) * scalar
         # y = np.mean(y_arr) * scalar
 
-        x = ((5.0 * x_arr[1] + 2*x_arr[0]) / 7.0) * scalar
-        y = ((5.0 * y_arr[1] + 2*y_arr[0]) / 7.0) * scalar
+        x = ((5.0 * x_arr[1] + 2 * x_arr[0]) / 7.0) * scalar
+        y = ((5.0 * y_arr[1] + 2 * y_arr[0]) / 7.0) * scalar
 
         return y, x
 
