@@ -104,6 +104,12 @@ class Evaluation:
             if self.is_normalized:
                 anno_Pre_stu = img_mod.de_normalized(annotation_norm=anno_Pre_stu)
             gt_dif_gt_st = (anno_GT - anno_Pre_stu)
+
+            '''save'''
+            np.save('./reg_data'+str(i)+'_pr', anno_Pre_stu)
+            np.save('./reg_data'+str(i)+'_gt', anno_Pre_stu)
+            np.save('./reg_data'+str(i)+'_dif', gt_dif_gt_st)
+
             # gt_dif_gt_pt = (anno_GT - anno_Pre_tou)/224.0
 
             '''diff model: normalized by 224'''

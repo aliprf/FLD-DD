@@ -82,11 +82,12 @@ if __name__ == '__main__':
         # teacher_w_path='./models/300w/KD_main_correct/ds_300w_ef_100.h5')
 
     nme, fr, AUC, pointwise_nme_ar = w300w.evaluate_on_300w(model_name=models[0],
-                                                            model_file='./models/300w/KD_main_correct/ds_300w_mn_stu.h5',
+                                                            model_file='./models/ds_300w_mn_stu.h5',
+                                                            # model_file='./models/300w/KD_main_correct/ds_300w_mn_stu.h5',
                                                             # )
                                                             confidence_vector=confidence_vector,
                                                             intercept_vec=intercept_vector,
-                                                            reg_data = [avg_err_st, sd_err_st])
+                                                            reg_data=[avg_err_st, sd_err_st])
     # mn-stu:           ch->{nme:6.13, fr:3.70: ,AUC:0.6029}    co->{nme:3.56, fr:0.180 ,AUC: 0.8356}    full->{nme:4.067, fr: 0.870, AUC:0.790}
     # coef->mn-stu:     ch->{nme:, fr: ,AUC:}    co->{nme:, fr: ,AUC: 0}    full->{nme:, fr: , AUC:}
 
