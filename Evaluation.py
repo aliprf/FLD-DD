@@ -106,9 +106,9 @@ class Evaluation:
             gt_dif_gt_st = (anno_GT - anno_Pre_stu)
 
             '''save'''
-            np.save('./reg_data'+str(i)+'_pr', anno_Pre_stu)
-            np.save('./reg_data'+str(i)+'_gt', anno_Pre_stu)
-            np.save('./reg_data'+str(i)+'_dif', gt_dif_gt_st)
+            np.save('./reg_data/'+str(i)+'_pr', anno_Pre_stu)
+            np.save('./reg_data/'+str(i)+'_gt', anno_Pre_stu)
+            np.save('./reg_data/'+str(i)+'_dif', gt_dif_gt_st)
 
             # gt_dif_gt_pt = (anno_GT - anno_Pre_tou)/224.0
 
