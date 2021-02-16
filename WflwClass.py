@@ -218,7 +218,7 @@ class WflwClass:
             hm = img_mod.generate_hm(width=InputDataSize.hm_size, height=InputDataSize.hm_size,
                                      landmark_path=WflwConf.augmented_train_annotation, landmark_filename=anno_file,
                                      s=WflwConf.hm_sigma, de_normalize=False)
-            img_mod.print_image_arr_heat(i, hm, True)
+            # img_mod.print_image_arr_heat(i, hm, True)
             np.save(WflwConf.augmented_train_hm + anno_file, hm)
     """PRIVATE"""
 
@@ -284,9 +284,9 @@ class WflwClass:
                                                    ymin=ymin, ymax=ymax, xmin=xmin, xmax=xmax,
                                                    ds_name=DatasetName.dsWflw, bbox_me_orig=bbox_me, atr=atr)
         '''create pose'''
-        poses = None
-        if need_pose:
-            poses = tf_utility.detect_pose(images=imgs, pose_detector=pose_detector)
+        # poses = None
+        # if need_pose:
+        #     poses = tf_utility.detect_pose(images=imgs, pose_detector=pose_detector)
 
         '''this is the original image we save in the original path for ablation study'''
         self._save(img=imgs[0], annotation=annotations[0], file_name=str(index), atr=atr,
@@ -303,7 +303,7 @@ class WflwClass:
                        annotation_save_path=WflwConf.augmented_train_annotation,
                        atr_save_path=WflwConf.augmented_train_atr,
                        pose_save_path=WflwConf.augmented_train_pose)
-            img_mod.test_image_print('zzz_final'+str(index)+'-'+str(i), imgs[i], annotations[i])
+            # img_mod.test_image_print('zzz_final'+str(index)+'-'+str(i), imgs[i], annotations[i])
 
         return imgs, annotations
 

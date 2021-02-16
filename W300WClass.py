@@ -417,7 +417,7 @@ class W300WClass:
                            image_save_path=W300WConf.augmented_train_image,
                            annotation_save_path=W300WConf.augmented_train_annotation,
                            pose_save_path=W300WConf.augmented_train_pose)
-                img_mod.test_image_print('zzz_final'+str(index)+'-'+str(i), imgs[i], annotations[i])
+                # img_mod.test_image_print('zzz_final'+str(index)+'-'+str(i), imgs[i], annotations[i])
 
         return imgs, annotations
 
