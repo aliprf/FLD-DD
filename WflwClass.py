@@ -176,7 +176,7 @@ class WflwClass:
                                     ds_name=DatasetName.dsWflw, ds_number_of_points=WflwConf.num_of_landmarks,
                                     fr_threshold=0.1, is_normalized=True, ds_type=ds_type, model_name=model_name)
             '''predict labels:'''
-            nme, fr, AUC = evaluation.predict_annotation()
+            nme, fr, AUC, pointwise_nme_ar = evaluation.predict_annotation()
             nme_arr.append(nme)
             fr_arr.append(fr_arr)
             AUC_arr.append(AUC_arr)
@@ -218,6 +218,7 @@ class WflwClass:
             hm = img_mod.generate_hm(width=InputDataSize.hm_size, height=InputDataSize.hm_size,
                                      landmark_path=WflwConf.augmented_train_annotation, landmark_filename=anno_file,
                                      s=WflwConf.hm_sigma, de_normalize=False)
+            img_mod.print_image_arr_heat(i, hm, True)
             np.save(WflwConf.augmented_train_hm + anno_file, hm)
     """PRIVATE"""
 
@@ -266,7 +267,7 @@ class WflwClass:
         xmax = _bbox[6]
         ymax = _bbox[7]
         '''create 4-point bounding box'''
-        rand_padd = 1
+        rand_padd = 3 # both test and train path should be the same
         # rand_padd = random.randint(1, 5)
 
         ann_xy, ann_x, ann_y = img_mod.create_landmarks(annotation, 1, 1)
@@ -302,23 +303,30 @@ class WflwClass:
                        annotation_save_path=WflwConf.augmented_train_annotation,
                        atr_save_path=WflwConf.augmented_train_atr,
                        pose_save_path=WflwConf.augmented_train_pose)
-            # img_mod.test_image_print('zzz_final'+str(index)+'-'+str(i), imgs[i], annotations[i])
+            img_mod.test_image_print('zzz_final'+str(index)+'-'+str(i), imgs[i], annotations[i])
 
         return imgs, annotations
 
     def _crop(self, img, annotation, bbox):
         img_mod = ImageModification()
         ann_xy, ann_x, ann_y = img_mod.create_landmarks(annotation, 1, 1)
-        fix_pad = 3
-        xmin = bbox[0]
-        ymin = bbox[1]
-        xmax = bbox[6]
-        ymax = bbox[7]
 
-        xmin = max(0, min(min(ann_x) - fix_pad, xmin))
-        xmax = max(max(ann_x) + fix_pad, xmax)
-        ymin = max(0, min(min(ann_y) - fix_pad, ymin))
-        ymax = max(max(ann_y) + fix_pad, ymax)
+        rand_padd = 3
+        xmin = int(max(0, min(ann_x) - rand_padd))
+        xmax = int(max(ann_x) + rand_padd)
+        ymin = int(max(0, min(ann_y) - rand_padd))
+        ymax = int(max(ann_y) + rand_padd)
+
+        # fix_pad = 5
+        # xmin = bbox[0]
+        # ymin = bbox[1]
+        # xmax = bbox[6]
+        # ymax = bbox[7]
+
+        # xmin = max(0, min(min(ann_x) - fix_pad, xmin))
+        # xmax = max(max(ann_x) + fix_pad, xmax)
+        # ymin = max(0, min(min(ann_y) - fix_pad, ymin))
+        # ymax = max(max(ann_y) + fix_pad, ymax)
 
         img, annotation = img_mod.crop_image_test(img, ymin, ymax, xmin, xmax, annotation)
         # img_mod.test_image_print('zz'+str(annotation[0]), img, annotation)
@@ -352,7 +360,7 @@ class WflwClass:
         counter = 0
         with open(annotation_path) as fp:
             line = fp.readline()
-            while line:  # and counter < 200:
+            while line:# and counter < 200:
                 sys.stdout.write('\r \r line --> \033[92m' + str(counter))
 
                 total_data = line.strip().split(' ')

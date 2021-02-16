@@ -45,14 +45,17 @@ class W300WClass:
             st_err_all=[]
             pr_matrix=[]
             gt_matrix=[]
-            for i, file in enumerate(os.listdir('./reg_data/')):
+            for i in tqdm(range(len(os.listdir('./reg_data/')))):
                 pr_file = './reg_data/'+str(i) + "_pr.npy"
                 gt_file = './reg_data/'+str(i) + "_gt.npy"
                 dif_file = './reg_data/'+str(i) + "_dif.npy"
-                pr_matrix.append(np.load(pr_file))
-                gt_matrix.append(np.load(gt_file))
-                st_err_all.append(np.load(dif_file))
-
+                if os.path.exists(pr_file) and os.path.exists(gt_file)  and os.path.exists(dif_file):
+                    pr_matrix.append(np.load(pr_file))
+                    gt_matrix.append(np.load(gt_file))
+                    st_err_all.append(np.load(dif_file))
+        st_err_all = np.array(st_err_all)
+        pr_matrix = np.array(pr_matrix)
+        gt_matrix = np.array(gt_matrix)
 
         '''pivot to create pointset, so we can create '''
         img_mod = ImageModification()
@@ -77,11 +80,13 @@ class W300WClass:
         '''regression'''
         for i in range(W300WConf.num_of_landmarks * 2):
             pr_matrix[:, i] = pr_matrix[:, i]
-            point_avg = pr_matrix[:, i] - avg_err_st[i] * np.ones(np.array(st_err_all).shape[0])
-            point_sd = pr_matrix[:, i] - sd_err_st[i] * np.ones(np.array(st_err_all).shape[0])
-            point_avg_sd = avg_err_st[i] * np.ones(np.array(st_err_all).shape[0]) - sd_err_st[i] * np.ones(np.array(st_err_all).shape[0])
+            # point_avg = pr_matrix[:, i] - avg_err_st[i] * np.ones(np.array(st_err_all).shape[0])
+            # point_sd = pr_matrix[:, i] - sd_err_st[i] * np.ones(np.array(st_err_all).shape[0])
+            # point_avg_sd = avg_err_st[i] * np.ones(np.array(st_err_all).shape[0]) - sd_err_st[i] * np.ones(np.array(st_err_all).shape[0])
 
-            data = np.array([pr_matrix[:, i], point_avg, point_sd, point_avg_sd])
+            # data = np.array([pr_matrix[:, i], point_avg, point_sd, point_avg_sd])
+            # data = np.array([pr_matrix[:, i], point_avg, point_sd])
+            data = np.array([pr_matrix[:, i]])
             data_X.append(data.transpose())
             # data_X.append(pr_matrix[:, i])
             data_y.append(gt_matrix[:, i])
@@ -412,7 +417,7 @@ class W300WClass:
                            image_save_path=W300WConf.augmented_train_image,
                            annotation_save_path=W300WConf.augmented_train_annotation,
                            pose_save_path=W300WConf.augmented_train_pose)
-                # img_mod.test_image_print('zzz_final'+str(index)+'-'+str(i), imgs[i], annotations[i])
+                img_mod.test_image_print('zzz_final'+str(index)+'-'+str(i), imgs[i], annotations[i])
 
         return imgs, annotations
 
@@ -495,7 +500,7 @@ class W300WClass:
     def _load_image(self, path):
         return np.array(Image.open(path))
 
-    def _create_bbox(self, annotation, fix_padd=5):
+    def _create_bbox(self, annotation, fix_padd=10):
         img_mod = ImageModification()
         ann_xy, an_x, an_y = img_mod.create_landmarks(annotation, 1, 1)
 

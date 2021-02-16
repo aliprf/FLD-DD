@@ -46,7 +46,8 @@ class ImageModification:
         return hm
 
     def generate_hm(self, height, width, landmark_filename, landmark_path, s, de_normalize):
-        lnd_xy, lnd_x, lnd_y = self.create_landmarks(np.load(landmark_path+landmark_filename), 1, 1)
+        _data = np.load(landmark_path+landmark_filename)
+        lnd_xy, lnd_x, lnd_y = self.create_landmarks(_data, 1, 1)
         # self.test_image_print('1', np.zeros([224,224,3]), lnd_xy)
 
         hm_len = int(len(lnd_xy) // 2)
@@ -147,7 +148,11 @@ class ImageModification:
             if print_single:
                 plt.figure()
                 plt.imshow(image[:, :, i])
-                # implot = plt.imshow(image[:, :, i])
+                _data = image[:, :, i]
+                # for m in range(len(_data[:,0])):
+                #     for n in range(len(_data[0,:])):
+                #         plt.annotate(str(_data[n,m])[:4], (m, n), fontsize=2, color='red')
+
                 plt.axis('off')
                 plt.savefig('./out_imgs/single/single_heat_' + str(k) + '_' + str(i) + '.png', bbox_inches='tight', dpi=400)
                 plt.clf()
@@ -160,8 +165,8 @@ class ImageModification:
 
     def depict_AUC_CURVE(self):
         datasets = [DatasetName.dsCofw, DatasetName.ds300W, DatasetName.dsWflw]
-        models_kd = ['Teacher', 'Student', 'mnV2']
-        models_asm = ['ASM', 'mnV2']
+        models_kd = ['Teacher', 'Student', 'mnv2']
+        models_asm = ['ASM', 'mnv2']
         colors = ['#0e49b5', '#ec0101', '#79d70f']
         for i, dataset in enumerate(datasets):
             '''mn'''
@@ -190,26 +195,26 @@ class ImageModification:
             plt.clf()
 
             '''=====ASM======='''
-            for i, dataset in enumerate(datasets):
-                '''mn'''
-                x_mn = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_asm[1] + '_x.npy')
-                y_mn = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_asm[1] + '_y.npy')
-                sct_mn = plt.scatter(x=x_mn, y=y_mn, c=colors[2])
-                plt.plot(x_mn, y_mn, '-o', c=colors[2])
-                '''ASM'''
-                x_stu = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_asm[0] + '_x.npy')
-                y_stu = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_asm[0] + '_y.npy')
-                sct_asm = plt.scatter(x=x_stu, y=y_stu, c=colors[1])
-                plt.plot(x_stu, y_stu, '-o', c=colors[1])
-
-                ''''''
-                plt.legend((sct_asm, sct_mn),
-                           ('mnV2_aug', 'mnV2'))
-                plt.xlabel('Normalized Error')
-                plt.ylabel('Image Proportion')
-                plt.savefig('./auc_data/ASM_CED_' + dataset + '.png', bbox_inches='tight', dpi=400)
-                plt.savefig('./auc_data/ASM_CED_' + dataset + '.pdf', bbox_inches='tight', dpi=400)
-                plt.clf()
+            # for i, dataset in enumerate(datasets):
+            #     '''mn'''
+            #     x_mn = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_asm[1] + '_x.npy')
+            #     y_mn = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_asm[1] + '_y.npy')
+            #     sct_mn = plt.scatter(x=x_mn, y=y_mn, c=colors[2])
+            #     plt.plot(x_mn, y_mn, '-o', c=colors[2])
+            #     '''ASM'''
+            #     x_stu = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_asm[0] + '_x.npy')
+            #     y_stu = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_asm[0] + '_y.npy')
+            #     sct_asm = plt.scatter(x=x_stu, y=y_stu, c=colors[1])
+            #     plt.plot(x_stu, y_stu, '-o', c=colors[1])
+            #
+            #     ''''''
+            #     plt.legend((sct_asm, sct_mn),
+            #                ('mnV2_aug', 'mnV2'))
+            #     plt.xlabel('Normalized Error')
+            #     plt.ylabel('Image Proportion')
+            #     plt.savefig('./auc_data/ASM_CED_' + dataset + '.png', bbox_inches='tight', dpi=400)
+            #     plt.savefig('./auc_data/ASM_CED_' + dataset + '.pdf', bbox_inches='tight', dpi=400)
+            #     plt.clf()
 
     def random_augment(self, index, img_orig, landmark_orig, num_of_landmarks, augmentation_factor, ymin, ymax, xmin,
                        xmax, ds_name, bbox_me_orig, atr=None):
@@ -584,7 +589,7 @@ class ImageModification:
     def crop_image_train(self, img, bbox, annotation, ds_name):
         if ds_name != DatasetName.dsCofw:
             # rand_padd = 0.005 * img.shape[0] + random.randint(0, 5)
-            rand_padd = 3  # 0.005 * img.shape[0]
+            rand_padd = 5  # 0.005 * img.shape[0]
             ann_xy, ann_x, ann_y = self.create_landmarks(annotation, 1, 1)
             xmin = int(max(0, min(ann_x) - rand_padd))
             xmax = int(max(ann_x) + rand_padd)
@@ -781,7 +786,7 @@ class ImageModification:
 
     def _adjust_gamma(self, image):
         do_or_not = random.randint(0, 100)
-        if do_or_not % 2 == 0 or do_or_not % 3 == 0:
+        if do_or_not % 2 == 0:
             try:
                 image = image * 255
                 image = np.int8(image)
@@ -825,7 +830,7 @@ class ImageModification:
         return image
 
     def _noisy(self, image):
-        noise_typ = random.randint(0, 8)
+        noise_typ = random.randint(0, 4)
         if noise_typ == 0:
             s_vs_p = 0.1
             amount = 0.1
@@ -842,7 +847,7 @@ class ImageModification:
                       for i in image.shape]
             out[coords] = 0
             return out
-        if 1 <= noise_typ <= 2:  # "s&p":
+        if noise_typ == 1:  # "s&p":
             row, col, ch = image.shape
             s_vs_p = 0.5
             amount = 0.04

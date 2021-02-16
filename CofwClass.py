@@ -65,8 +65,8 @@ class CofwClass:
 
         for i in tqdm(range(len(images_path))):
             img = self._load_image(images_path[i])
-            bbox = self._load_bbox(bboxes_path[i])
             annotation = self._load_annotation(annotations_path[i])
+            bbox = self._load_bbox(bboxes_path[i])
 
             self._do_random_augment(index=i, img=img, annotation=annotation, _bbox=bbox, need_hm=need_hm,
                                     need_pose=need_pose)
@@ -142,7 +142,7 @@ class CofwClass:
                                 ds_name=DatasetName.dsCofw, ds_number_of_points=CofwConf.num_of_landmarks,
                                 fr_threshold=0.1, is_normalized=False, ds_type='full')
         '''predict labels:'''
-        nme, fr, AUC = evaluation.predict_annotation()
+        nme, fr, AUC, pointwise_nme_ar = evaluation.predict_annotation()
         if print_result:
             print('Dataset: ' + DatasetName.dsCofw
                   + '{ nme: ' + str(nme) + '}\n\r'
@@ -249,7 +249,8 @@ class CofwClass:
         ymax = ymin + _bbox[3]
 
         '''create 4-point bounding box'''
-        rand_padd = random.randint(0, 1)
+        # rand_padd = random.randint(0, 1)
+        rand_padd = 5
 
         ann_xy, ann_x, ann_y = img_mod.create_landmarks(annotation, 1, 1)
         xmin = min(min(ann_x) - rand_padd, xmin)
@@ -335,7 +336,9 @@ class CofwClass:
                 bbox_arr = line.strip().split('\t')
                 line = fp.readline()
         assert len(bbox_arr) == 4
-        return list(map(int, bbox_arr))
+        bbox_arr = list(map(int, bbox_arr))
+
+        return bbox_arr
 
     def _load_annotation(self, path):
         annotation_arr = []

@@ -34,9 +34,12 @@ class WflwConf:
     # Wflw_prefix_path = '/media/data3/ali/FL/new_data/wflw/'  # --> zeus
     # Wflw_prefix_path = '/media/data2/alip/FL/new_data/wflw/'  # --> atlas
     Wflw_prefix_path = '/media/ali/data/new_data/wflw/'  # --> local
+
+    # ts = 'training_set_256'
+    ts = 'training_set'
+
     '''original ds data'''
     orig_WFLW_test_path = Wflw_prefix_path + 'WFLW_annotations/list_98pt_test/'
-
     orig_WFLW_test = Wflw_prefix_path + 'WFLW_annotations/list_98pt_rect_attr_train_test/list_98pt_rect_attr_test.txt'
     orig_WFLW_train = Wflw_prefix_path + 'WFLW_annotations/list_98pt_rect_attr_train_test/list_98pt_rect_attr_train.txt'
     orig_WFLW_image = Wflw_prefix_path + 'WFLW_images/'
@@ -48,19 +51,19 @@ class WflwConf:
     test_tf_path = Wflw_prefix_path + 'testing_set/tf/'
     '''created trainset data'''
     '''     augmented version'''
-    augmented_train_pose = Wflw_prefix_path + 'training_set/augmented/pose/'
-    augmented_train_annotation = Wflw_prefix_path + 'training_set/augmented/annotations/'
-    augmented_train_hm = Wflw_prefix_path + 'training_set/augmented/hm/'
-    augmented_train_atr = Wflw_prefix_path + 'training_set/augmented/atrs/'
-    augmented_train_image = Wflw_prefix_path + 'training_set/augmented/images/'
-    augmented_train_tf_path = Wflw_prefix_path + 'training_set/augmented/tf/'
+    augmented_train_pose = Wflw_prefix_path + ts + '/augmented/pose/'
+    augmented_train_annotation = Wflw_prefix_path + ts + '/augmented/annotations/'
+    augmented_train_hm = Wflw_prefix_path + ts + '/augmented/hm/'
+    augmented_train_atr = Wflw_prefix_path + ts + '/augmented/atrs/'
+    augmented_train_image = Wflw_prefix_path + ts + '/augmented/images/'
+    augmented_train_tf_path = Wflw_prefix_path + ts + '/augmented/tf/'
     '''     original version'''
-    no_aug_train_annotation = Wflw_prefix_path + 'training_set/no_aug/annotations/'
-    no_aug_train_hm = Wflw_prefix_path + 'training_set/augmented/hm/'
-    no_aug_train_atr = Wflw_prefix_path + 'training_set/no_aug/atrs/'
-    no_aug_train_pose = Wflw_prefix_path + 'training_set/no_aug/pose/'
-    no_aug_train_image = Wflw_prefix_path + 'training_set/no_aug/images/'
-    no_aug_train_tf_path = Wflw_prefix_path + 'training_set/no_aug/tf/'
+    no_aug_train_annotation = Wflw_prefix_path + ts + '/no_aug/annotations/'
+    no_aug_train_hm = Wflw_prefix_path + ts + '/augmented/hm/'
+    no_aug_train_atr = Wflw_prefix_path + ts + '/no_aug/atrs/'
+    no_aug_train_pose = Wflw_prefix_path + ts + '/no_aug/pose/'
+    no_aug_train_image = Wflw_prefix_path + ts + '/no_aug/images/'
+    no_aug_train_tf_path = Wflw_prefix_path + ts + '/no_aug/tf/'
 
     orig_number_of_training = 7500
     orig_number_of_test = 2500
@@ -74,7 +77,7 @@ class WflwConf:
 
     augmentation_factor = 5  # create . image from 4
     num_of_landmarks = 98
-    hm_sigma = 3
+    hm_sigma = 2.0
     '''for tf record: 60890'''
     num_eval_samples_aug = int(orig_number_of_training * augmentation_factor * 0.05)  # 75000* 0.05 = 3750
     num_train_samples_aug = orig_number_of_training * augmentation_factor - num_eval_samples_aug  # 75000 - 3750 = 71250
@@ -88,6 +91,9 @@ class CofwConf:
     # Cofw_prefix_path = '/media/data2/alip/FL/new_data/cofw/'  # --> atlas
     Cofw_prefix_path = '/media/ali/data/new_data/cofw/'  # --> local
     #
+    ts = 'training_set_256'
+    # ts = 'training_set'
+
     orig_COFW_test = Cofw_prefix_path + 'orig_COFW_test/'
     test_annotation_path = Cofw_prefix_path + 'testing_set/annotations/'
     test_pose_path = Cofw_prefix_path + 'testing_set/pose/'
@@ -95,35 +101,38 @@ class CofwConf:
     test_tf_path = Cofw_prefix_path + 'testing_set/tf/'
 
     orig_COFW_train = Cofw_prefix_path + 'orig_COFW_train/'
-    augmented_train_pose = Cofw_prefix_path + 'training_set/augmented/pose/'
-    augmented_train_hm = Cofw_prefix_path + 'training_set/augmented/hm/'
-    augmented_train_annotation = Cofw_prefix_path + 'training_set/augmented/annotations/'
-    augmented_train_image = Cofw_prefix_path + 'training_set/augmented/images/'
-    augmented_train_tf_path = Cofw_prefix_path + 'training_set/augmented/tf/'
+    augmented_train_pose = Cofw_prefix_path + ts + '/augmented/pose/'
+    augmented_train_hm = Cofw_prefix_path + ts + '/augmented/hm/'
+    augmented_train_annotation = Cofw_prefix_path + ts + '/augmented/annotations/'
+    augmented_train_image = Cofw_prefix_path + ts + '/augmented/images/'
+    augmented_train_tf_path = Cofw_prefix_path + ts + '/augmented/tf/'
 
-    no_aug_train_annotation = Cofw_prefix_path + 'training_set/no_aug/annotations/'
-    no_aug_train_pose = Cofw_prefix_path + 'training_set/no_aug/pose/'
-    no_aug_train_image = Cofw_prefix_path + 'training_set/no_aug/images/'
-    no_aug_train_tf_path = Cofw_prefix_path + 'training_set/no_aug/tf/'
+    no_aug_train_annotation = Cofw_prefix_path + ts + '/no_aug/annotations/'
+    no_aug_train_pose = Cofw_prefix_path + ts + '/no_aug/pose/'
+    no_aug_train_image = Cofw_prefix_path + ts + '/no_aug/images/'
+    no_aug_train_tf_path = Cofw_prefix_path + ts + '/no_aug/tf/'
 
     orig_number_of_training = 1345
     orig_number_of_test = 507
 
     augmentation_factor = 10
     num_of_landmarks = 29
-    hm_sigma = 3.5
+    hm_sigma = 2.0
     '''for tf record:'''
-    num_eval_samples_aug = 2670 #int(orig_number_of_training * augmentation_factor * 0.05)
-    num_train_samples_aug = 50720 #orig_number_of_training * augmentation_factor - num_eval_samples_aug  # 13450 - 670 = 12775
+    num_eval_samples_aug = 2670  # int(orig_number_of_training * augmentation_factor * 0.05)
+    num_train_samples_aug = 50720  # orig_number_of_training * augmentation_factor - num_eval_samples_aug  # 13450 - 670 = 12775
 
     num_eval_samples_orig = int(orig_number_of_training * 0.05)  #
     num_train_samples_orig = orig_number_of_training - num_eval_samples_orig  #
 
 
 class W300WConf:
-    w300w_prefix_path = '/media/data3/ali/FL/new_data/300W/'  # --> zeus/
+    # w300w_prefix_path = '/media/data3/ali/FL/new_data/300W/'  # --> zeus/
     # w300w_prefix_path = '/media/data2/alip/FL/new_data/300W/'  # --> atlas
-    # w300w_prefix_path = '/media/ali/data/new_data/300W/'  # --> local
+    w300w_prefix_path = '/media/ali/data/new_data/300W/'  # --> local
+
+    ts = 'training_set_256'
+    # ts = 'training_set'
 
     orig_300W_test = w300w_prefix_path + 'orig_300W_test/'
     test_annotation_path = w300w_prefix_path + 'testing_set/annotations/'
@@ -132,17 +141,17 @@ class W300WConf:
     test_tf_path = w300w_prefix_path + 'testing_set/tf/'
 
     orig_300W_train = w300w_prefix_path + 'orig_300W_train/'
-    augmented_train_pose = w300w_prefix_path + 'training_set/augmented/pose/'
-    augmented_train_annotation = w300w_prefix_path + 'training_set/augmented/annotations/'
-    augmented_train_hm = w300w_prefix_path + 'training_set/augmented/hm/'
-    augmented_train_image = w300w_prefix_path + 'training_set/augmented/images/'
-    augmented_train_tf_path = w300w_prefix_path + 'training_set/augmented/tf/'
+    augmented_train_pose = w300w_prefix_path + ts + '/augmented/pose/'
+    augmented_train_annotation = w300w_prefix_path + ts + '/augmented/annotations/'
+    augmented_train_hm = w300w_prefix_path + ts + '/augmented/hm/'
+    augmented_train_image = w300w_prefix_path + ts + '/augmented/images/'
+    augmented_train_tf_path = w300w_prefix_path + ts + '/augmented/tf/'
 
-    no_aug_train_annotation = w300w_prefix_path + 'training_set/no_aug/annotations/'
-    no_aug_train_hm = w300w_prefix_path + 'training_set/augmented/hm/'
-    no_aug_train_pose = w300w_prefix_path + 'training_set/no_aug/pose/'
-    no_aug_train_image = w300w_prefix_path + 'training_set/no_aug/images/'
-    no_aug_train_tf_path = w300w_prefix_path + 'training_set/no_aug/tf/'
+    no_aug_train_annotation = w300w_prefix_path + ts + '/no_aug/annotations/'
+    no_aug_train_hm = w300w_prefix_path + ts + '/augmented/hm/'
+    no_aug_train_pose = w300w_prefix_path + ts + '/no_aug/pose/'
+    no_aug_train_image = w300w_prefix_path + ts + '/no_aug/images/'
+    no_aug_train_tf_path = w300w_prefix_path + ts + '/no_aug/tf/'
 
     orig_number_of_training = 3148
     orig_number_of_test_full = 689
@@ -151,9 +160,9 @@ class W300WConf:
 
     augmentation_factor = 6  # create . image from 1 16155
     num_of_landmarks = 68
-    hm_sigma = 3
+    hm_sigma = 2.0
     '''for tf record:'''
-    num_eval_samples_aug = 807 #int(3507 * augmentation_factor * 0.05)  #
-    num_train_samples_aug = 15347 #3507 * augmentation_factor - num_eval_samples_aug  #
+    num_eval_samples_aug = 807  # int(3507 * augmentation_factor * 0.05)  #
+    num_train_samples_aug = 15347  # 3507 * augmentation_factor - num_eval_samples_aug  #
     num_eval_samples_orig = int(orig_number_of_training * 0.05)  # 13450* 0.05 = 670
     num_train_samples_orig = orig_number_of_training - num_eval_samples_orig  # 13450 - 670 = 12775

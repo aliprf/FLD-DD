@@ -106,9 +106,9 @@ class Evaluation:
             gt_dif_gt_st = (anno_GT - anno_Pre_stu)
 
             '''save'''
-            np.save('./reg_data/'+str(i)+'_pr', anno_Pre_stu)
-            np.save('./reg_data/'+str(i)+'_gt', anno_GT)
-            np.save('./reg_data/'+str(i)+'_dif', gt_dif_gt_st)
+            # np.save('./reg_data/'+str(i)+'_pr', anno_Pre_stu)
+            # np.save('./reg_data/'+str(i)+'_gt', anno_GT)
+            # np.save('./reg_data/'+str(i)+'_dif', gt_dif_gt_st)
 
             # gt_dif_gt_pt = (anno_GT - anno_Pre_tou)/224.0
 
@@ -197,18 +197,18 @@ class Evaluation:
                 # anno_Pre_asm = img_mod.get_asm(input=anno_Pre, dataset_name='ibug', accuracy=90)
                 # anno_Pre_asm = img_mod.de_normalized(annotation_norm=anno_Pre_asm)
                 anno_Pre = img_mod.de_normalized(annotation_norm=anno_Pre)
-            if confidence_vector is not None and intercept_vec is not None:
-                if reg_data is not None:
-                    avg_err_st, sd_err_st = reg_data
-                    anno_Pre = confidence_vector[:, 0] * anno_Pre + \
-                               confidence_vector[:, 1] * (anno_Pre - avg_err_st) + \
-                               confidence_vector[:, 2] * (anno_Pre - sd_err_st) +\
-                               confidence_vector[:, 3] * (avg_err_st - sd_err_st) +\
-                               intercept_vec
-                else:
-                    anno_Pre = confidence_vector * anno_Pre + intercept_vec
-            elif confidence_vector is not None:
-                anno_Pre = confidence_vector * anno_Pre
+            # if confidence_vector is not None and intercept_vec is not None:
+            #     if reg_data is not None:
+            #         avg_err_st, sd_err_st = reg_data
+            #         anno_Pre = confidence_vector[:, 0] * anno_Pre + intercept_vec
+            #                    # confidence_vector[:, 1] * (anno_Pre - avg_err_st) + \
+            #                    # confidence_vector[:, 2] * (anno_Pre - sd_err_st) \
+            #                    # + intercept_vec
+            #                    # +confidence_vector[:, 3] * (avg_err_st - sd_err_st) \
+            #     else:
+            #         anno_Pre = confidence_vector * anno_Pre + intercept_vec
+            # elif confidence_vector is not None:
+            #     anno_Pre = confidence_vector * anno_Pre
                 # anno_Pre = anno_Pre + confidence_vector # this is for AVG
             '''print'''
             # img_mod.test_image_print(img_name='z_' + str(i) + '_pr' + str(i) + '__',
@@ -323,7 +323,7 @@ class Evaluation:
     #     return I2 # this is AUC
     def calculate_AUC(self, nme_arr):
         '''https://arxiv.org/pdf/1511.05049.pdf'''
-        x, y = self.ecdf(error_arr=nme_arr, threshold=0.1)
+        x, y_AUC, y_CED = self.ecdf(error_arr=nme_arr, threshold=0.1)
 
         # plt.scatter(x=x, y=y)
         #
@@ -335,25 +335,28 @@ class Evaluation:
 
         if self.ds_type == 'full' or self.ds_type == 'full/':
             np.save('./auc_data/' + self.ds_name + '_' + self.model_name + '_x', x)
-            np.save('./auc_data/' + self.ds_name + '_' + self.model_name + '_y', y)
+            np.save('./auc_data/' + self.ds_name + '_' + self.model_name + '_y', y_CED)
         #
-        I2 = trapz(np.array(x), np.array(y))
+        I2 = trapz(np.array(x), np.array(y_AUC))
         # I2 = trapz(np.array(y), np.array(x))
 
         return I2  # this is AUC
 
     def ecdf(self, error_arr, threshold=0.1):
         point_to_use = 20
-        ce = []
+        ce_AUC = []
+        ce_CED = []
         # sorted_error_arr = np.sort(error_arr)
         data_range = np.linspace(start=0, stop=threshold, num=point_to_use)
         error_arr = np.array(error_arr)
-        sum_errors = 0
+        sum_errors_AUC = 0
+        sum_errors_CED = 0
         for thre in data_range:
-            sum_errors += len(error_arr[error_arr <= thre]) / len(error_arr)
-            # sum_errors = len(error_arr[error_arr <= thre]) / len(error_arr)
-            ce.append(sum_errors)
-        return data_range, ce
+            sum_errors_AUC += len(error_arr[error_arr <= thre]) / len(error_arr)
+            sum_errors_CED = len(error_arr[error_arr <= thre]) / len(error_arr)
+            ce_AUC.append(sum_errors_AUC)
+            ce_CED.append(sum_errors_CED)
+        return data_range, ce_AUC, ce_CED
 
     # def ecdf(self, data):
     #     """ Compute ECDF """
