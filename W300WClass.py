@@ -423,12 +423,21 @@ class W300WClass:
 
     def _crop(self, img, annotation, bbox):
         img_mod = ImageModification()
-        ann_xy, ann_x, ann_y = img_mod.create_landmarks(annotation, 1, 1)
-        # fix_pad = 10
-        xmin = bbox[0]
-        ymin = bbox[1]
-        xmax = bbox[6]
-        ymax = bbox[7]
+
+        '''train based bounding box'''
+        an_xy, an_x, an_y = img_mod.create_landmarks(annotation, 1, 1)
+        fix_padd = 10
+        xmin = int(max(0, min(an_x) - fix_padd))
+        ymin = int(max(0, min(an_y) - fix_padd))
+        xmax = int(max(an_x) + fix_padd)
+        ymax = int(max(an_y) + fix_padd)
+        bbox_me = [xmin, ymin, xmin, ymax, xmax, ymin, xmax, ymax]
+
+        '''original bounding box'''
+        # xmin = bbox[0]
+        # ymin = bbox[1]
+        # xmax = bbox[6]
+        # ymax = bbox[7]
 
         img, annotation = img_mod.crop_image_test(img, ymin, ymax, xmin, xmax, annotation)
         # img_mod.test_image_print('zz'+str(annotation[0]), img, annotation)
