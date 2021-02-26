@@ -38,7 +38,7 @@ if __name__ == '__main__':
     need_pose = False
     need_hm = True
     models = ['Teacher', 'Student', 'mnv2', 'ASM']
-    img_mod.depict_AUC_CURVE()
+    # img_mod.depict_AUC_CURVE()
     '''cofw'''
     cofw = CofwClass()
     # confidence_vector, avg_err_st, var_err_st, sd_err_st, intercept_vector = cofw.point_wise_diff_evaluation(
