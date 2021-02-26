@@ -99,7 +99,7 @@ if __name__ == '__main__':
     # coef->mn-stu:     ch->{nme:, fr: ,AUC:}    co->{nme:, fr: ,AUC: 0}    full->{nme:, fr: , AUC:}
 
     # print('6')
-    w300w.create_test_set(need_pose=need_pose, need_tf_ref=False)
+    # w300w.create_test_set(need_pose=need_pose, need_tf_ref=False)
     # w300w.batch_test(weight_files_path='/media/data3/ali/kd_weights/300w/24_jan_2021/', csv_file_path='./300w_CSV_BATCH_RESULT.csv')
 
     # w300w.create_train_set(need_pose=False, need_hm=False, accuracy=pca_accuracy)  #
