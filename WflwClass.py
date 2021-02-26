@@ -165,6 +165,7 @@ class WflwClass:
         model = tf.keras.models.load_model(model_file)
         '''load test files and categories:'''
         ds_types = ['full', 'pose', 'expression', 'illumination', 'makeup', 'occlusion', 'blur']
+        # ds_types = [ 'pose', 'expression', 'illumination', 'makeup', 'occlusion', 'blur']
         nme_arr = []
         fr_arr = []
         AUC_arr = []

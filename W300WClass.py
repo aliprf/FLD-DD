@@ -243,7 +243,7 @@ class W300WClass:
             print('=========================================')
         '''evaluate with meta data: best to worst'''
 
-    def evaluate_on_300w(self, model_name, model_file, print_result=True, confidence_vector=None, intercept_vec=None, reg_data = None):
+    def evaluate_on_300w(self, model_name, model_file, print_result=True, confidence_vector=None, intercept_vec=None, reg_data=None):
         '''create model using the h.5 model and its wights'''
         model = tf.keras.models.load_model(model_file)
         '''load test files and categories:'''
@@ -339,11 +339,11 @@ class W300WClass:
     def _get_train_set(self):
         t_annotation_paths = []
         t_image_paths = []
-        for file in tqdm(os.listdir(W300WConf.no_aug_train_image)):
+        for file in tqdm(os.listdir(W300WConf.augmented_train_image)):
             if file.endswith(".png") or file.endswith(".jpg"):
                 t_annotation_paths.append(
-                    os.path.join(W300WConf.no_aug_train_annotation, str(file)[:-3] + "npy"))
-                t_image_paths.append(os.path.join(W300WConf.no_aug_train_image, str(file)))
+                    os.path.join(W300WConf.augmented_train_annotation, str(file)[:-3] + "npy"))
+                t_image_paths.append(os.path.join(W300WConf.augmented_train_image, str(file)))
         return t_annotation_paths, t_image_paths
 
     def _get_test_set(self, ds_type):

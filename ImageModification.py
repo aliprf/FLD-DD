@@ -75,7 +75,7 @@ class ImageModification:
         x = np.arange(0, width, 1, float)
         y = np.arange(0, height, 1, float)[:, np.newaxis]
         gaus = np.exp(-((x - x0) ** 2 + (y - y0) ** 2) / (2 * sigma ** 2))
-        gaus[gaus <= 0.15] = 0
+        gaus[gaus <= 0.1] = 0
         return gaus
 
     def print_heatmap_distribution(self, k, image):
@@ -167,7 +167,8 @@ class ImageModification:
         datasets = [DatasetName.dsCofw, DatasetName.ds300W, DatasetName.dsWflw]
         models_kd = ['Teacher', 'Student', 'mnv2']
         models_asm = ['ASM', 'mnv2']
-        colors = ['#0e49b5', '#ec0101', '#79d70f']
+        # colors = ['#0e49b5', '#ec0101', '#79d70f']
+        colors = ['#0e49b5', '#ec4646', '#03c4a1']
         for i, dataset in enumerate(datasets):
             '''mn'''
             x_mn = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_kd[2] + '_x.npy')
@@ -190,31 +191,31 @@ class ImageModification:
                        ('Teacher', 'Student', 'mnV2'))
             plt.xlabel('Normalized Error')
             plt.ylabel('Image Proportion')
-            plt.savefig('./auc_data/KD_CED_' + dataset + '.png', bbox_inches='tight', dpi=400)
+            plt.savefig('./auc_data/KD_CED_' + dataset + '.png', bbox_inches='tight', dpi=100)
             plt.savefig('./auc_data/KD_CED_' + dataset + '.pdf', bbox_inches='tight', dpi=400)
             plt.clf()
 
             '''=====ASM======='''
-            # for i, dataset in enumerate(datasets):
-            #     '''mn'''
-            #     x_mn = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_asm[1] + '_x.npy')
-            #     y_mn = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_asm[1] + '_y.npy')
-            #     sct_mn = plt.scatter(x=x_mn, y=y_mn, c=colors[2])
-            #     plt.plot(x_mn, y_mn, '-o', c=colors[2])
-            #     '''ASM'''
-            #     x_stu = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_asm[0] + '_x.npy')
-            #     y_stu = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_asm[0] + '_y.npy')
-            #     sct_asm = plt.scatter(x=x_stu, y=y_stu, c=colors[1])
-            #     plt.plot(x_stu, y_stu, '-o', c=colors[1])
-            #
-            #     ''''''
-            #     plt.legend((sct_asm, sct_mn),
-            #                ('mnV2_aug', 'mnV2'))
-            #     plt.xlabel('Normalized Error')
-            #     plt.ylabel('Image Proportion')
-            #     plt.savefig('./auc_data/ASM_CED_' + dataset + '.png', bbox_inches='tight', dpi=400)
-            #     plt.savefig('./auc_data/ASM_CED_' + dataset + '.pdf', bbox_inches='tight', dpi=400)
-            #     plt.clf()
+            for i, dataset in enumerate(datasets):
+                '''mn'''
+                x_mn = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_asm[1] + '_x.npy')
+                y_mn = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_asm[1] + '_y.npy')
+                sct_mn = plt.scatter(x=x_mn, y=y_mn, c=colors[2])
+                plt.plot(x_mn, y_mn, '-o', c=colors[2])
+                '''ASM'''
+                x_stu = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_asm[0] + '_x.npy')
+                y_stu = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_asm[0] + '_y.npy')
+                sct_asm = plt.scatter(x=x_stu, y=y_stu, c=colors[1])
+                plt.plot(x_stu, y_stu, '-o', c=colors[1])
+
+                ''''''
+                plt.legend((sct_asm, sct_mn),
+                           ('$mn_{FAWL}$', '$mn_{base}$'))
+                plt.xlabel('Normalized Error')
+                plt.ylabel('Image Proportion')
+                plt.savefig('./auc_data/ASM_CED_' + dataset + '.png', bbox_inches='tight', dpi=100)
+                # plt.savefig('./auc_data/ASM_CED_' + dataset + '.pdf', bbox_inches='tight', dpi=400)
+                plt.clf()
 
     def random_augment(self, index, img_orig, landmark_orig, num_of_landmarks, augmentation_factor, ymin, ymax, xmin,
                        xmax, ds_name, bbox_me_orig, atr=None):
@@ -273,7 +274,7 @@ class ImageModification:
                         img, landmark, bbox_me = self._flip_and_relabel(img, landmark, ds_name, num_of_landmarks,
                                                                         bbox_me)
 
-                    rot = np.random.uniform(-1 * 0.5, 0.5)
+                    rot = np.random.uniform(-1 * 0.35, 0.35)
                     sx, sy = scale
                     t_matrix = np.array([
                         [sx * math.cos(rot), -sy * math.sin(rot + shear), 0],
@@ -588,8 +589,8 @@ class ImageModification:
 
     def crop_image_train(self, img, bbox, annotation, ds_name):
         if ds_name != DatasetName.dsCofw:
-            # rand_padd = 0.005 * img.shape[0] + random.randint(0, 5)
-            rand_padd = 5  # 0.005 * img.shape[0]
+            rand_padd = random.randint(5, 10)
+            # rand_padd = 5  # 0.005 * img.shape[0]
             ann_xy, ann_x, ann_y = self.create_landmarks(annotation, 1, 1)
             xmin = int(max(0, min(ann_x) - rand_padd))
             xmax = int(max(ann_x) + rand_padd)
@@ -613,7 +614,8 @@ class ImageModification:
             # croped_img = img[ymin:ymax, xmin:xmax]
             # return croped_img, annotation
             '''this block use the landmarks'''
-            rand_padd = 0.005 * img.shape[0] + random.randint(5, 10)
+            # rand_padd = 0.005 * img.shape[0] + random.randint(5, 10)
+            rand_padd = random.randint(5, 10)
             ann_xy, ann_x, ann_y = self.create_landmarks(annotation, 1, 1)
             xmin = int(max(0, min(ann_x) - rand_padd))
             xmax = int(max(ann_x) + rand_padd)
@@ -682,7 +684,7 @@ class ImageModification:
 
         return croped_img, landmarks_new
 
-    def test_image_print(self, img_name, img, landmarks, bbox_me=None):
+    def test_image_print(self, img_name, img, landmarks, bbox_me=None, offsets=None):
         plt.figure()
         plt.imshow(img)
         ''''''
@@ -694,16 +696,21 @@ class ImageModification:
         ''''''
         landmarks_x = []
         landmarks_y = []
-        for i in range(0, len(landmarks), 2):
-            landmarks_x.append(landmarks[i])
-            landmarks_y.append(landmarks[i + 1])
+        if offsets is not None:
+            for i in range(0, len(landmarks), 2):
+                landmarks_x.append(landmarks[i] + offsets[0])
+                landmarks_y.append(landmarks[i + 1] + offsets[1])
+        else:
+            for i in range(0, len(landmarks), 2):
+                landmarks_x.append(landmarks[i])
+                landmarks_y.append(landmarks[i + 1])
 
         # for i in range(len(landmarks_x)):
         #     plt.annotate(str(i), (landmarks_x[i], landmarks_y[i]), fontsize=9, color='red')
 
         # plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#ffcc00', s=35)
-        plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#c0e218', s=40)
-        plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#2c061f', s=20)
+        plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#c0e218', s=15)
+        plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#2c061f', s=10)
         # plt.tight_layout(True)
         plt.axis('off')
         plt.savefig(img_name + '.png',bbox_inches='tight', dpi=100, pad_inches=0)
@@ -740,6 +747,18 @@ class ImageModification:
             annotation_norm.append((x_center - annotation[p]) / width)
             annotation_norm.append((y_center - annotation[p + 1]) / height)
         return annotation_norm
+
+    def de_normalized_hm(self, annotation_norm):
+        """for training we dont normalize"""
+        width = InputDataSize.image_input_size
+        height = InputDataSize.image_input_size
+        x_center = width / 2
+        y_center = height / 2
+        annotation = []
+        for p in range(0, len(annotation_norm), 2):
+            annotation.append(x_center + annotation_norm[p] * width)
+            annotation.append(y_center + annotation_norm[p + 1] * height)
+        return annotation
 
     def de_normalized(self, annotation_norm):
         """for training we dont normalize"""
@@ -793,9 +812,9 @@ class ImageModification:
 
                 dark_or_light = random.randint(0, 100)
                 if dark_or_light % 2 == 0 or dark_or_light % 3 == 0:
-                    gamma = np.random.uniform(0.3, 0.8)
+                    gamma = np.random.uniform(0.2, 0.6)
                 else:
-                    gamma = np.random.uniform(1.5, 3.5)
+                    gamma = np.random.uniform(1.2, 3.5)
                 invGamma = 1.0 / gamma
                 table = np.array([((i / 255.0) ** invGamma) * 255
                                   for i in np.arange(0, 256)]).astype("uint8")
@@ -928,6 +947,40 @@ class ImageModification:
         #     elif x_pr > beta:
         #         weight_loss_t = alpha
         # return weight_loss_t
+    def ASM_weight_depict(self, gamma=0.2, sigma=50):
+        delta_values = np.linspace(-0.02, 0.25, 1000)
+        omega = []
+        for i, x in enumerate(delta_values):
+            omega.append(1/(gamma + np.exp(-sigma*x)))
+
+        '''depicting'''
+        fig = plt.figure(figsize=(5, 5))
+        ax = fig.add_subplot(1, 1, 1)
+
+        ax.set_xlim(-0.01, 0.25)
+        ax.set_ylim(-0.1, 5.1)
+
+        ax.yaxis.set_minor_locator(AutoMinorLocator(5))
+        ax.xaxis.set_minor_locator(AutoMinorLocator(5))
+        ax.grid(which='major', color='#968c83', linestyle='--', linewidth=0.4)
+        ax.grid(which='minor', color='#9ba4b4', linestyle=':', linewidth=0.3)
+
+        sct_l, = ax.plot(delta_values[:], omega[:], '#e63946', linewidth=2.2, label='$\omega$')
+        sct_wl = plt.scatter(x=0.2, y=1/(gamma + np.exp(-sigma*0.2)), c='#4361ee', s=45, label='Average Max', marker='x')
+        sct_wl = plt.scatter(x=0.002, y=1/(gamma + np.exp(-sigma*0.002)), c='#48cae4', s=45, label='Average Min', marker='x')
+
+        plt.xlabel('$ \Delta ~~Values $', fontsize=15)
+        plt.ylabel('Weight Values', fontsize=15)
+
+        # box = ax.get_position()
+        # ax.set_position([box.x0, box.y0 + box.height * 0.22,
+        #                  box.width, box.height * 0.88])
+        #
+        # ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
+        #           fancybox=True, shadow=True, ncol=3)
+
+        plt.savefig('ASM_omega.png', bbox_inches='tight', dpi=200)
+
 
     def weight_loss_depict(self, x_gt, x_tough, beta_tough, beta_mi_tough, alpha_tough,
                            x_tol, beta_tol, beta_mi_tol, alpha_tol):

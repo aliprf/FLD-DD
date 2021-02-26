@@ -8,7 +8,7 @@ from scipy.integrate import trapz
 from Config import DatasetName, InputDataSize
 from ImageModification import ImageModification
 from Config import InputDataSize
-
+import random
 """in evaluation, round all numbers with 3 demical"""
 
 
@@ -46,11 +46,19 @@ class Evaluation:
         sum_loss = 0
         for i in tqdm(range(len(sorted(self.anno_paths)))):
             anno_GT = np.load(self.anno_paths[i])  # the GT are not normalized.
-            # anno_GT_hm = img_mod.generate_hm_from_points(height=56, width=56, lnd_xy=anno_GT, s=3.5, de_normalize=False)
+            # anno_GT_hm = img_mod.generate_hm_from_points(height=64, width=64, lnd_xy=anno_GT, s=2, de_normalize=False)
             img = np.expand_dims(np.array(Image.open(self.img_paths[i])) / 255.0, axis=0)
-            anno_Pre_hm = self.model.predict(img)
-            anno_Pre_hm = anno_Pre_hm[3][0]
+            anno_Pre_hm = self.model.predict(img)[3][0]
             _, _, anno_Pre = self._hm_to_points(heatmaps=anno_Pre_hm)
+
+            # anno_Pre_hm = anno_Pre_hm[3][0] # hg
+
+            # anno_Pre_hm = anno_Pre_hm[0][0] # efn
+            _, _, anno_Pre = self._hm_to_points(heatmaps=anno_Pre_hm)
+            #
+            # anno_Pre_reg = anno_Pre_hm[1][0] # efn
+            # anno_Pre = img_mod.de_normalized_hm(annotation_norm=anno_Pre_reg)
+
             '''print'''
             img_mod.test_image_print(img_name='z_' + str(i) + '_pr' + str(i) + '__',
                                      img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_Pre)
@@ -95,7 +103,7 @@ class Evaluation:
         pr_matrix = []
 
         for i in tqdm(range(len(sorted(self.anno_paths)))):
-            # if i > 100: break
+            # if i > 20: break
             anno_GT = np.load(self.anno_paths[i])  # the GT are not normalized.
             img = np.expand_dims(np.array(Image.open(self.img_paths[i])) / 255.0, axis=0)
 
@@ -103,6 +111,7 @@ class Evaluation:
             anno_Pre_stu = student_model.predict(img)[0]
             if self.is_normalized:
                 anno_Pre_stu = img_mod.de_normalized(annotation_norm=anno_Pre_stu)
+
             gt_dif_gt_st = (anno_GT - anno_Pre_stu)
 
             '''save'''
@@ -197,19 +206,19 @@ class Evaluation:
                 # anno_Pre_asm = img_mod.get_asm(input=anno_Pre, dataset_name='ibug', accuracy=90)
                 # anno_Pre_asm = img_mod.de_normalized(annotation_norm=anno_Pre_asm)
                 anno_Pre = img_mod.de_normalized(annotation_norm=anno_Pre)
-            # if confidence_vector is not None and intercept_vec is not None:
-            #     if reg_data is not None:
-            #         avg_err_st, sd_err_st = reg_data
-            #         anno_Pre = confidence_vector[:, 0] * anno_Pre + intercept_vec
-            #                    # confidence_vector[:, 1] * (anno_Pre - avg_err_st) + \
-            #                    # confidence_vector[:, 2] * (anno_Pre - sd_err_st) \
-            #                    # + intercept_vec
-            #                    # +confidence_vector[:, 3] * (avg_err_st - sd_err_st) \
-            #     else:
-            #         anno_Pre = confidence_vector * anno_Pre + intercept_vec
-            # elif confidence_vector is not None:
-            #     anno_Pre = confidence_vector * anno_Pre
-                # anno_Pre = anno_Pre + confidence_vector # this is for AVG
+            if confidence_vector is not None and intercept_vec is not None:
+                if reg_data is not None:
+                    avg_err_st, sd_err_st = reg_data
+                    anno_Pre = confidence_vector[:, 0] * anno_Pre + intercept_vec
+                               # confidence_vector[:, 1] * (anno_Pre - avg_err_st) + \
+                               # confidence_vector[:, 2] * (anno_Pre - sd_err_st) \
+                               # + intercept_vec
+                               # +confidence_vector[:, 3] * (avg_err_st - sd_err_st) \
+                else:
+                    anno_Pre = confidence_vector * anno_Pre + intercept_vec
+            elif confidence_vector is not None:
+                anno_Pre = confidence_vector * anno_Pre
+                anno_Pre = anno_Pre + confidence_vector # this is for AVG
             '''print'''
             # img_mod.test_image_print(img_name='z_' + str(i) + '_pr' + str(i) + '__',
             #                          img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_Pre)
@@ -437,7 +446,7 @@ class Evaluation:
             x_arr.append(index[0])
             y_arr.append(index[1])
             w_arr.append(heatmap[index[0], index[1]])
-
+        #
         # for i in range(len(x_arr)):
         #     x_s += w_arr[i]*x_arr[i]
         #     y_s += w_arr[i]*y_arr[i]
@@ -445,11 +454,8 @@ class Evaluation:
         # x = (x_s * scalar)/w_s
         # y = (y_s * scalar)/w_s
 
-        # x = np.mean(x_arr) * scalar
-        # y = np.mean(y_arr) * scalar
-
-        x = ((5.0 * x_arr[1] + 2 * x_arr[0]) / 7.0) * scalar
-        y = ((5.0 * y_arr[1] + 2 * y_arr[0]) / 7.0) * scalar
+        x = (0.75 * x_arr[1] + 0.25 * x_arr[0]) * scalar
+        y = (0.75 * y_arr[1] + 0.25 * y_arr[0]) * scalar
 
         return y, x
 

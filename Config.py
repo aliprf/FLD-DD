@@ -24,6 +24,7 @@ class DatasetType:
 
 class InputDataSize:
     image_input_size = 256
+    # image_input_size = 224
     img_center = image_input_size // 2  # 128
 
     hm_size = image_input_size // 4  # 64
@@ -31,12 +32,15 @@ class InputDataSize:
 
 
 class WflwConf:
-    Wflw_prefix_path = '/media/data3/ali/FL/new_data/wflw/'  # --> zeus
+    # Wflw_prefix_path = '/media/data3/ali/FL/new_data/wflw/'  # --> zeus
     # Wflw_prefix_path = '/media/data2/alip/FL/new_data/wflw/'  # --> atlas
-    # Wflw_prefix_path = '/media/ali/data/new_data/wflw/'  # --> local
+    Wflw_prefix_path = '/media/ali/data/new_data/wflw/'  # --> local
 
-    ts = 'training_set_256'
-    # ts = 'training_set'
+    # ts = 'training_set_256'
+    ts = 'training_set'
+
+    test_s = 'testing_set'
+    # test_s = 'testing_set_256'
 
     '''original ds data'''
     orig_WFLW_test_path = Wflw_prefix_path + 'WFLW_annotations/list_98pt_test/'
@@ -44,11 +48,11 @@ class WflwConf:
     orig_WFLW_train = Wflw_prefix_path + 'WFLW_annotations/list_98pt_rect_attr_train_test/list_98pt_rect_attr_train.txt'
     orig_WFLW_image = Wflw_prefix_path + 'WFLW_images/'
     '''created testset data'''
-    test_annotation_path = Wflw_prefix_path + 'testing_set/annotations/'
-    test_atr_path = Wflw_prefix_path + 'testing_set/atrs/'
-    test_pose_path = Wflw_prefix_path + 'testing_set/pose/'
-    test_image_path = Wflw_prefix_path + 'testing_set/images/'
-    test_tf_path = Wflw_prefix_path + 'testing_set/tf/'
+    test_annotation_path = Wflw_prefix_path + test_s + '/annotations/'
+    test_atr_path = Wflw_prefix_path + test_s + '/atrs/'
+    test_pose_path = Wflw_prefix_path + test_s + '/pose/'
+    test_image_path = Wflw_prefix_path + test_s + '/images/'
+    test_tf_path = Wflw_prefix_path + test_s + '/tf/'
     '''created trainset data'''
     '''     augmented version'''
     augmented_train_pose = Wflw_prefix_path + ts + '/augmented/pose/'
@@ -87,18 +91,21 @@ class WflwConf:
 
 
 class CofwConf:
-    Cofw_prefix_path = '/media/data3/ali/FL/new_data/cofw/'  # --> zeus
+    # Cofw_prefix_path = '/media/data3/ali/FL/new_data/cofw/'  # --> zeus
     # Cofw_prefix_path = '/media/data2/alip/FL/new_data/cofw/'  # --> atlas
-    # Cofw_prefix_path = '/media/ali/data/new_data/cofw/'  # --> local
+    Cofw_prefix_path = '/media/ali/data/new_data/cofw/'  # --> local
     #
-    ts = 'training_set_256'
-    # ts = 'training_set'
+    # ts = 'training_set_256'
+    ts = 'training_set'
+
+    # test_s = 'testing_set'
+    test_s = 'testing_set_256'
 
     orig_COFW_test = Cofw_prefix_path + 'orig_COFW_test/'
-    test_annotation_path = Cofw_prefix_path + 'testing_set/annotations/'
-    test_pose_path = Cofw_prefix_path + 'testing_set/pose/'
-    test_image_path = Cofw_prefix_path + 'testing_set/images/'
-    test_tf_path = Cofw_prefix_path + 'testing_set/tf/'
+    test_annotation_path = Cofw_prefix_path + test_s + '/annotations/'
+    test_pose_path = Cofw_prefix_path + test_s + '/pose/'
+    test_image_path = Cofw_prefix_path + test_s + '/images/'
+    test_tf_path = Cofw_prefix_path + test_s + '/tf/'
 
     orig_COFW_train = Cofw_prefix_path + 'orig_COFW_train/'
     augmented_train_pose = Cofw_prefix_path + ts + '/augmented/pose/'
@@ -115,7 +122,8 @@ class CofwConf:
     orig_number_of_training = 1345
     orig_number_of_test = 507
 
-    augmentation_factor = 10
+    # augmentation_factor = 10
+    augmentation_factor = 3
     num_of_landmarks = 29
     hm_sigma = 2.0
     '''for tf record:'''
@@ -134,11 +142,14 @@ class W300WConf:
     ts = 'training_set_256'
     # ts = 'training_set'
 
+    # test_s = 'testing_set'
+    test_s = 'testing_set_256'
+
     orig_300W_test = w300w_prefix_path + 'orig_300W_test/'
-    test_annotation_path = w300w_prefix_path + 'testing_set/annotations/'
-    test_pose_path = w300w_prefix_path + 'testing_set/pose/'
-    test_image_path = w300w_prefix_path + 'testing_set/images/'
-    test_tf_path = w300w_prefix_path + 'testing_set/tf/'
+    test_annotation_path = w300w_prefix_path + test_s + '/annotations/'
+    test_pose_path = w300w_prefix_path + test_s + '/pose/'
+    test_image_path = w300w_prefix_path + test_s + '/images/'
+    test_tf_path = w300w_prefix_path + test_s + '/tf/'
 
     orig_300W_train = w300w_prefix_path + 'orig_300W_train/'
     augmented_train_pose = w300w_prefix_path + ts + '/augmented/pose/'
@@ -158,7 +169,7 @@ class W300WConf:
     orig_number_of_test_common = 554
     orig_number_of_test_challenging = 135
 
-    augmentation_factor = 6  # create . image from 1 16155
+    augmentation_factor = 2  # create . image from 1 16155
     num_of_landmarks = 68
     hm_sigma = 2.0
     '''for tf record:'''

@@ -14,10 +14,12 @@ from tensorflow import keras
 import efficientnet.tfkeras
 import tensorflow as tf
 import csv
+from sklearn.linear_model import LinearRegression
 
 
 class CofwClass:
     """PUBLIC"""
+
     def depict_prediction_error_distribution(self, diff_net_w_path, student_w_path, teacher_w_path):
         dif_model = keras.models.load_model(diff_net_w_path)
         student_model = keras.models.load_model(student_w_path)
@@ -39,17 +41,16 @@ class CofwClass:
         _, _, _, point_wise_nme_ar_tou = evaluation.predict_annotation()
         ''''''
 
-
-
     def batch_test(self, weight_files_path, csv_file_path):
         with open(csv_file_path, "w") as csv_file:
-            header = ['wight_file_name', 'nme', 'fr',  'AUC']
+            header = ['wight_file_name', 'nme', 'fr', 'AUC']
             writer = csv.writer(csv_file, delimiter=',')
             writer.writerow(header)
 
             for file in tqdm(os.listdir(weight_files_path)):
                 if file.endswith(".h5"):
-                    nme, fr, AUC = self.evaluate_on_cofw(model_name='---', model_file=os.path.join(weight_files_path, file),
+                    nme, fr, AUC = self.evaluate_on_cofw(model_name='---',
+                                                         model_file=os.path.join(weight_files_path, file),
                                                          print_result=False)
                     line = [str(file), str(nme), str(fr), str(AUC)]
                     writer.writerow(line)
@@ -117,7 +118,7 @@ class CofwClass:
                                 fr_threshold=0.1, is_normalized=True, ds_type='full', model_name=model_name)
         '''predict labels:'''
         '''predict labels:'''
-        nme, fr, AUC = evaluation.predict_hm()
+        # nme, fr, AUC = evaluation.predict_hm()
         # nme, fr, AUC = evaluation.predict_hm()
 
         nme, fr, AUC = evaluation.predict_annotation_hm()
@@ -130,7 +131,8 @@ class CofwClass:
 
     '''evaluate with meta data: best to worst'''
 
-    def evaluate_on_cofw(self, model_name, model_file, print_result=True):
+    def evaluate_on_cofw(self, model_name, model_file, print_result=True, confidence_vector=None, intercept_vec=None,
+                         reg_data=None):
         '''create model using the h.5 model and its wights'''
         model = keras.models.load_model(model_file)
         '''load test files and categories:'''
@@ -142,7 +144,9 @@ class CofwClass:
                                 ds_name=DatasetName.dsCofw, ds_number_of_points=CofwConf.num_of_landmarks,
                                 fr_threshold=0.1, is_normalized=False, ds_type='full')
         '''predict labels:'''
-        nme, fr, AUC, pointwise_nme_ar = evaluation.predict_annotation()
+        nme, fr, AUC, pointwise_nme_ar = evaluation.predict_annotation(confidence_vector=confidence_vector,
+                                                                       intercept_vec=intercept_vec,
+                                                                       reg_data=reg_data)
         if print_result:
             print('Dataset: ' + DatasetName.dsCofw
                   + '{ nme: ' + str(nme) + '}\n\r'
@@ -277,6 +281,7 @@ class CofwClass:
                    pose_save_path=CofwConf.no_aug_train_pose)
 
         '''this is the augmented images+original one'''
+        # for i in range(1, len(imgs)):
         for i in range(len(imgs)):
             self._save(img=imgs[i], annotation=annotations[i], file_name=str(index) + '_' + str(i),
                        image_save_path=CofwConf.augmented_train_image,
@@ -355,3 +360,101 @@ class CofwClass:
             annotation_arr_correct.append(np.round(annotation_arr[i + CofwConf.num_of_landmarks], 3))
 
         return annotation_arr_correct
+
+    def point_wise_diff_evaluation(self, student_w_path, use_save):
+        # dif_model = keras.models.load_model(diff_net_w_path)
+        student_model = keras.models.load_model(student_w_path)
+        # teacher_model = keras.models.load_model(teacher_w_path)
+
+        pw_st_d_all = []
+        pw_gt_all = []
+        pw_pr_all = []
+        pw_te_all = []
+        '''load test files and categories:'''
+        t_annotation_paths, t_image_paths = self._get_train_set()
+        '''define pointwise error for all faces'''
+        evaluation = Evaluation(model_name='-', model=student_model, anno_paths=t_annotation_paths,
+                                img_paths=t_image_paths, ds_name=DatasetName.ds300W,
+                                ds_number_of_points=CofwConf.num_of_landmarks,
+                                fr_threshold=0.1, is_normalized=False, ds_type='full')
+        # st_err_all, te_err_all = evaluation.calculate_pw_diff_error(dif_model=dif_model,
+        if not use_save:
+            st_err_all, pr_matrix, gt_matrix = evaluation.calculate_pw_diff_error(student_model=student_model)
+        else:
+            st_err_all = []
+            pr_matrix = []
+            gt_matrix = []
+            for i in tqdm(range(len(os.listdir('./reg_data/')))):
+                pr_file = './reg_data/' + str(i) + "_pr.npy"
+                gt_file = './reg_data/' + str(i) + "_gt.npy"
+                dif_file = './reg_data/' + str(i) + "_dif.npy"
+                if os.path.exists(pr_file) and os.path.exists(gt_file) and os.path.exists(dif_file):
+                    pr_matrix.append(np.load(pr_file))
+                    gt_matrix.append(np.load(gt_file))
+                    st_err_all.append(np.load(dif_file))
+        st_err_all = np.array(st_err_all)
+        pr_matrix = np.array(pr_matrix)
+        gt_matrix = np.array(gt_matrix)
+
+        '''pivot to create pointset, so we can create '''
+        img_mod = ImageModification()
+        data_X = []
+        data_y = []
+        for i in range(CofwConf.num_of_landmarks * 2):
+            # pw_te_all.append(te_err_all[:,i])
+            pw_st_d_all.append(st_err_all[:, i])
+            pw_gt_all.append(gt_matrix[:, i])
+            pw_pr_all.append(pr_matrix[:, i])
+        '''the following contains all the errors for each points'''
+        pw_st_all = np.array(pw_st_d_all)  # 136 * num_of_samples
+        # pw_te_all = np.array(pw_te_all)  # 136 * num_of_samples
+        #
+        # print('--------')
+        # img_mod.print_histogram(k=1, data=pw_st_all[1,:])
+        avg_err_st = np.mean(pw_st_all, axis=1)
+        var_err_st = np.var(pw_st_all, axis=1)
+        sd_err_st = np.sqrt(var_err_st)
+        # img_mod.print_histogram(k=0, data=avg_err_st)
+
+        '''regression'''
+        for i in range(CofwConf.num_of_landmarks * 2):
+            pr_matrix[:, i] = pr_matrix[:, i]
+            # point_avg = pr_matrix[:, i] - avg_err_st[i] * np.ones(np.array(st_err_all).shape[0])
+            # point_sd = pr_matrix[:, i] - sd_err_st[i] * np.ones(np.array(st_err_all).shape[0])
+            # point_avg_sd = avg_err_st[i] * np.ones(np.array(st_err_all).shape[0]) - sd_err_st[i] * np.ones(np.array(st_err_all).shape[0])
+
+            # data = np.array([pr_matrix[:, i], point_avg, point_sd, point_avg_sd])
+            # data = np.array([pr_matrix[:, i], point_avg, point_sd])
+            data = np.array([pr_matrix[:, i]])
+            data_X.append(data.transpose())
+            # data_X.append(pr_matrix[:, i])
+            data_y.append(gt_matrix[:, i])
+
+        intercept_arr = []
+        coef_arr = []
+        regressor = LinearRegression()
+        # regressor = linear_model.BayesianRidge()#linear_model.LassoLars(alpha=.1)
+
+        for i in range(CofwConf.num_of_landmarks * 2):
+            d_X = np.array(data_X[i])
+            d_y = np.array(data_y[i])
+            regressor.fit(d_X, d_y)
+            intercept_arr.append(regressor.intercept_)
+            coef_arr.append(regressor.coef_)
+
+        # confidence_vector = (9*avg_err_st + np.sign(avg_err_st) * sd_err_st)/10.0
+        confidence_vector_old = avg_err_st + 0.5 * avg_err_st
+        confidence_vector = np.array(coef_arr)
+        intercept_arr = np.array(intercept_arr)
+        return confidence_vector, avg_err_st, var_err_st, sd_err_st, intercept_arr
+
+    def _get_train_set(self):
+        t_annotation_paths = []
+        t_image_paths = []
+        for file in tqdm(os.listdir(CofwConf.augmented_train_image)):
+            if file.endswith(".png") or file.endswith(".jpg"):
+                t_annotation_paths.append(
+                    os.path.join(CofwConf.augmented_train_annotation, str(file)[:-3] + "npy"))
+                t_image_paths.append(os.path.join(CofwConf.augmented_train_image, str(file)))
+        return t_annotation_paths, t_image_paths
+    # calcuate diff errors for each point of a face
