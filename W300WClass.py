@@ -220,7 +220,7 @@ class W300WClass:
         '''create model using the h.5 model and its wights'''
         model = tf.keras.models.load_model(model_file)
         '''load test files and categories:'''
-        ds_types = ['common/', 'challenging/', 'full/']
+        ds_types = ['challenging/', 'common/', 'full/']
         for ds_type in ds_types:
             test_annotation_paths, test_image_paths = self._get_test_set(ds_type)
 
