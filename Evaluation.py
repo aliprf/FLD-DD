@@ -60,10 +60,10 @@ class Evaluation:
             # anno_Pre = img_mod.de_normalized_hm(annotation_norm=anno_Pre_reg)
 
             '''print'''
-            img_mod.test_image_print(img_name='z_' + str(i) + '_pr' + str(i) + '__',
-                                     img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_Pre)
-            img_mod.test_image_print(img_name='z_' + str(i) + '_gt' + str(i) + '__',
-                                     img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_GT)
+            # img_mod.test_image_print(img_name='z_' + str(i) + '_pr' + str(i) + '__',
+            #                          img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_Pre)
+            # img_mod.test_image_print(img_name='z_' + str(i) + '_gt' + str(i) + '__',
+            #                          img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_GT)
 
             nme_i, norm_error = self._calculate_nme(anno_GT=anno_GT, anno_Pre=anno_Pre, ds_name=self.ds_name,
                                                     ds_number_of_points=self.ds_number_of_points)
@@ -417,7 +417,7 @@ class Evaluation:
         xy_points = []
         # print(heatmaps.shape) 56,56,68
         for i in range(heatmaps.shape[2]):
-            x, y = self._find_nth_biggest_avg(heatmaps[:, :, i], number_of_selected_points=3,
+            x, y = self._find_nth_biggest_avg(heatmaps[:, :, i], number_of_selected_points=2,
                                               scalar=4.0)
             x_points.append(x)
             y_points.append(y)
