@@ -99,7 +99,7 @@ if __name__ == '__main__':
     # coef->mn-stu:     ch->{nme:, fr: ,AUC:}    co->{nme:, fr: ,AUC: 0}    full->{nme:, fr: , AUC:}
 
     # print('6')
-    w300w.create_test_set(need_pose=need_pose, need_tf_ref=False)
+    # w300w.create_test_set(need_pose=need_pose, need_tf_ref=False)
     # w300w.batch_test(weight_files_path='/media/data3/ali/kd_weights/300w/24_jan_2021/', csv_file_path='./300w_CSV_BATCH_RESULT.csv')
 
     # w300w.create_train_set(need_pose=False, need_hm=False, accuracy=pca_accuracy)  #
@@ -116,7 +116,7 @@ if __name__ == '__main__':
     # w300w.create_inter_face_web_distance(ds_type=1)
     # w300w.create_sample(ds_type=1)
     #
-    # w300w.hm_evaluate_on_300w(model_name='hm', model_file='./models/IAL8_300W_0.h5')
+    w300w.hm_evaluate_on_300w(model_name='hm', model_file='./models/IAL8_300W_0.h5')
 
     # w300w.evaluate_on_300w(model_name='stu_tol', model_file='./models/300w/KD_main_correct/stu_tol.h5')
     # w300w.evaluate_on_300w(model_name='stu_tou', model_file='./models/300w/KD_main_correct/stu_tou.h5')

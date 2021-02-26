@@ -60,17 +60,10 @@ class Evaluation:
             # anno_Pre = img_mod.de_normalized_hm(annotation_norm=anno_Pre_reg)
 
             '''print'''
-            img_mod.test_image_print(img_name='z_' + str(i) + '_pr' + str(i) + '__',
-                                     img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_Pre)
-            img_mod.test_image_print(img_name='z_' + str(i) + '_gt' + str(i) + '__',
-                                     img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_GT)
-
-            # img_mod.test_image_print(img_name='z_' + str(i) + '_pr' + str(i) + '__', img=np.ones([224, 224, 3]),
-            #                          landmarks=anno_Pre)
-            # img_mod.test_image_print(img_name='z_' + str(i) + '_gt' + str(i) + '__', img=np.ones([224, 224, 3]),
-            #                          landmarks=anno_GT)
-
-            # img_mod.test_image_print(img_name='z_'+str(i)+'_pr_asm'+str(i)+'__', img=np.ones([224,224,3]), landmarks=anno_Pre_asm)
+            # img_mod.test_image_print(img_name='z_' + str(i) + '_pr' + str(i) + '__',
+            #                          img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_Pre)
+            # img_mod.test_image_print(img_name='z_' + str(i) + '_gt' + str(i) + '__',
+            #                          img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_GT)
 
             nme_i, norm_error = self._calculate_nme(anno_GT=anno_GT, anno_Pre=anno_Pre, ds_name=self.ds_name,
                                                     ds_number_of_points=self.ds_number_of_points)
