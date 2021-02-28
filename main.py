@@ -45,7 +45,7 @@ if __name__ == '__main__':
     #     student_w_path='./models/cofw/kd/ds_cofw_stu.h5',
     #     use_save=False)
 
-    cofw.create_test_set(need_pose=need_pose, need_tf_ref=False)
+    # cofw.create_test_set(need_pose=need_pose, need_tf_ref=False)
     # cofw.batch_test(weight_files_path='/media/data2/alip/kd_weights/cofw/24_jan_2021/', csv_file_path='./cofw_CSV_BATCH_RESULT.csv')
 
     # cofw.create_test_set(need_pose=need_pose, need_tf_ref=False)

@@ -39,8 +39,8 @@ class WflwConf:
     # ts = 'training_set_256'
     ts = 'training_set'
 
-    test_s = 'testing_set'
-    # test_s = 'testing_set_256'
+    # test_s = 'testing_set'
+    test_s = 'testing_set_256'
 
     '''original ds data'''
     orig_WFLW_test_path = Wflw_prefix_path + 'WFLW_annotations/list_98pt_test/'
