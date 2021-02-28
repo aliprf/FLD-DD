@@ -116,7 +116,7 @@ if __name__ == '__main__':
     # w300w.create_inter_face_web_distance(ds_type=1)
     # w300w.create_sample(ds_type=1)
     #
-    w300w.hm_evaluate_on_300w(model_name='hm', model_file='../IAl_FLD/models/IAL49_300W_0.h5')
+    w300w.hm_evaluate_on_300w(model_name='hm', model_file='../IAl_FLD/models/last.h5')
 
     # w300w.evaluate_on_300w(model_name='stu_tol', model_file='./models/300w/KD_main_correct/stu_tol.h5')
     # w300w.evaluate_on_300w(model_name='stu_tou', model_file='./models/300w/KD_main_correct/stu_tou.h5')
