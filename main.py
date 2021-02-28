@@ -45,7 +45,7 @@ if __name__ == '__main__':
     #     student_w_path='./models/cofw/kd/ds_cofw_stu.h5',
     #     use_save=False)
 
-    # cofw.create_test_set(need_pose=need_pose, need_tf_ref=False)
+    cofw.create_test_set(need_pose=need_pose, need_tf_ref=False)
     # cofw.batch_test(weight_files_path='/media/data2/alip/kd_weights/cofw/24_jan_2021/', csv_file_path='./cofw_CSV_BATCH_RESULT.csv')
 
     # cofw.create_test_set(need_pose=need_pose, need_tf_ref=False)
@@ -116,7 +116,7 @@ if __name__ == '__main__':
     # w300w.create_inter_face_web_distance(ds_type=1)
     # w300w.create_sample(ds_type=1)
     #
-    w300w.hm_evaluate_on_300w(model_name='hm', model_file='../IAl_FLD/models/last.h5')
+    # w300w.hm_evaluate_on_300w(model_name='hm', model_file='../IAl_FLD/models/last.h5')
 
     # w300w.evaluate_on_300w(model_name='stu_tol', model_file='./models/300w/KD_main_correct/stu_tol.h5')
     # w300w.evaluate_on_300w(model_name='stu_tou', model_file='./models/300w/KD_main_correct/stu_tou.h5')
@@ -144,7 +144,7 @@ if __name__ == '__main__':
     '''wflw'''
     '''for this dataset, for evaluation part we DON'T use the Tf record, just we load the data and images'''
     wflw = WflwClass()  # todo DON'T FORGET to remove THE LOAD_DATA LINE LIMIT
-    # wflw.create_test_set(need_pose=need_pose, need_tf_ref=False)
+    wflw.create_test_set(need_pose=need_pose, need_tf_ref=False)
     # wflw.batch_test(weight_files_path='/media/data2/alip/kd_weights/wflw/24_jan_2021/', csv_file_path='./wflw_CSV_BATCH_RESULT.csv')
 
     # wflw.create_train_set(need_pose=False, need_hm=False, accuracy=pca_accuracy)  #
