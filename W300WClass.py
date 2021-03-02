@@ -154,7 +154,7 @@ class W300WClass:
                                      landmark_path=W300WConf.augmented_train_annotation, landmark_filename=anno_file,
                                      s=W300WConf.hm_sigma, de_normalize=False)
             np.save(W300WConf.augmented_train_hm + anno_file, hm)
-            img_mod.print_image_arr_heat(k=i, image=hm, print_single=True)
+            # img_mod.print_image_arr_heat(k=i, image=hm, print_single=True)
             # img_mod.print_heatmap_distribution(k=i, image=hm)
 
     def batch_test(self, weight_files_path, csv_file_path):
