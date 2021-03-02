@@ -36,8 +36,8 @@ class WflwConf:
     Wflw_prefix_path = '/media/data2/alip/FL/new_data/wflw/'  # --> atlas
     # Wflw_prefix_path = '/media/ali/data/new_data/wflw/'  # --> local
 
-    # ts = 'training_set_256'
-    ts = 'training_set'
+    ts = 'training_set_256'
+    # ts = 'training_set'
 
     # test_s = 'testing_set'
     test_s = 'testing_set_256'
@@ -95,8 +95,8 @@ class CofwConf:
     Cofw_prefix_path = '/media/data2/alip/FL/new_data/cofw/'  # --> atlas
     # Cofw_prefix_path = '/media/ali/data/new_data/cofw/'  # --> local
     #
-    # ts = 'training_set_256'
-    ts = 'training_set'
+    ts = 'training_set_256'
+    # ts = 'training_set'
 
     # test_s = 'testing_set'
     test_s = 'testing_set_256'
