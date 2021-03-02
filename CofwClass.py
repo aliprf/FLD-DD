@@ -231,6 +231,7 @@ class CofwClass:
                                      landmark_path=CofwConf.augmented_train_annotation, landmark_filename=anno_file,
                                      s=CofwConf.hm_sigma, de_normalize=False)
             np.save(CofwConf.augmented_train_hm + anno_file, hm)
+            img_mod.print_image_arr_heat(k=i, image=hm, print_single=True)
 
     """PRIVATE"""
 

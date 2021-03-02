@@ -81,7 +81,7 @@ class WflwConf:
 
     augmentation_factor = 5  # create . image from 4
     num_of_landmarks = 98
-    hm_sigma = 2.0
+    hm_sigma = 7.0
     '''for tf record: 60890'''
     num_eval_samples_aug = int(orig_number_of_training * augmentation_factor * 0.05)  # 75000* 0.05 = 3750
     num_train_samples_aug = orig_number_of_training * augmentation_factor - num_eval_samples_aug  # 75000 - 3750 = 71250
@@ -125,7 +125,7 @@ class CofwConf:
     # augmentation_factor = 10
     augmentation_factor = 3
     num_of_landmarks = 29
-    hm_sigma = 2.0
+    hm_sigma = 7.0
     '''for tf record:'''
     num_eval_samples_aug = 2670  # int(orig_number_of_training * augmentation_factor * 0.05)
     num_train_samples_aug = 50720  # orig_number_of_training * augmentation_factor - num_eval_samples_aug  # 13450 - 670 = 12775
@@ -135,8 +135,8 @@ class CofwConf:
 
 
 class W300WConf:
-    w300w_prefix_path = '/media/data3/ali/FL/new_data/300W/'  # --> zeus/
-    # w300w_prefix_path = '/media/data2/alip/FL/new_data/300W/'  # --> atlas
+    # w300w_prefix_path = '/media/data3/ali/FL/new_data/300W/'  # --> zeus/
+    w300w_prefix_path = '/media/data2/alip/FL/new_data/300W/'  # --> atlas
     # w300w_prefix_path = '/media/ali/data/new_data/300W/'  # --> local
 
     ts = 'training_set_256'
@@ -171,7 +171,7 @@ class W300WConf:
 
     augmentation_factor = 2  # create . image from 1 16155
     num_of_landmarks = 68
-    hm_sigma = 2.0
+    hm_sigma = 7.0
     '''for tf record:'''
     num_eval_samples_aug = 807  # int(3507 * augmentation_factor * 0.05)  #
     num_train_samples_aug = 15347  # 3507 * augmentation_factor - num_eval_samples_aug  #

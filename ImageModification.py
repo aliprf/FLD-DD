@@ -75,7 +75,7 @@ class ImageModification:
         x = np.arange(0, width, 1, float)
         y = np.arange(0, height, 1, float)[:, np.newaxis]
         gaus = np.exp(-((x - x0) ** 2 + (y - y0) ** 2) / (2 * sigma ** 2))
-        gaus[gaus <= 0.1] = 0
+        gaus[gaus <= 0.01] = 0
         return gaus
 
     def print_heatmap_distribution(self, k, image):
