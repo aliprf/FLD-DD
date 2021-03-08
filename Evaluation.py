@@ -46,7 +46,7 @@ class Evaluation:
         sum_loss = 0
         for i in tqdm(range(len(sorted(self.anno_paths)))):
             anno_GT = np.load(self.anno_paths[i])  # the GT are not normalized.
-            # anno_GT_hm = img_mod.generate_hm_from_points(height=64, width=64, lnd_xy=anno_GT, s=2, de_normalize=False)
+            anno_GT_hm = img_mod.generate_hm_from_points(height=64, width=64, lnd_xy=anno_GT, s=7, de_normalize=False)
             img = np.expand_dims(np.array(Image.open(self.img_paths[i])) / 255.0, axis=0)
             anno_Pre_hm = self.model.predict(img)[3][0]
             _, _, anno_Pre = self._hm_to_points(heatmaps=anno_Pre_hm)
@@ -54,16 +54,16 @@ class Evaluation:
             # anno_Pre_hm = anno_Pre_hm[3][0] # hg
 
             # anno_Pre_hm = anno_Pre_hm[0][0] # efn
-            _, _, anno_Pre = self._hm_to_points(heatmaps=anno_Pre_hm)
+            # _, _, anno_Pre = self._hm_to_points(heatmaps=anno_Pre_hm)
             #
             # anno_Pre_reg = anno_Pre_hm[1][0] # efn
             # anno_Pre = img_mod.de_normalized_hm(annotation_norm=anno_Pre_reg)
 
             '''print'''
-            # img_mod.test_image_print(img_name='z_' + str(i) + '_pr' + str(i) + '__',
-            #                          img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_Pre)
-            # img_mod.test_image_print(img_name='z_' + str(i) + '_gt' + str(i) + '__',
-            #                          img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_GT)
+            img_mod.test_image_print(img_name='z_' + str(i) + '_pr' + str(i) + '__',
+                                     img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_Pre)
+            img_mod.test_image_print(img_name='z_' + str(i) + '_gt' + str(i) + '__',
+                                     img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_GT)
 
             nme_i, norm_error = self._calculate_nme(anno_GT=anno_GT, anno_Pre=anno_Pre, ds_name=self.ds_name,
                                                     ds_number_of_points=self.ds_number_of_points)
@@ -213,10 +213,10 @@ class Evaluation:
                 anno_Pre = confidence_vector * anno_Pre
                 anno_Pre = anno_Pre + confidence_vector # this is for AVG
             '''print'''
-            # img_mod.test_image_print(img_name='z_' + str(i) + '_pr' + str(i) + '__',
-            #                          img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_Pre)
-            # img_mod.test_image_print(img_name='z_' + str(i) + '_gt' + str(i) + '__',
-            #                          img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_GT)
+            img_mod.test_image_print(img_name='z_' + str(i) + '_pr' + str(i) + '__',
+                                     img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_Pre)
+            img_mod.test_image_print(img_name='z_' + str(i) + '_gt' + str(i) + '__',
+                                     img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_GT)
 
             # img_mod.test_image_print(img_name='z_'+str(i)+'_pr'+str(i)+'__', img=np.ones([224,224,3]), landmarks=anno_Pre)
             # img_mod.test_image_print(img_name='z_'+str(i)+'_gt'+str(i)+'__', img=np.ones([224,224,3]), landmarks=anno_GT)
@@ -417,7 +417,7 @@ class Evaluation:
         xy_points = []
         # print(heatmaps.shape) 56,56,68
         for i in range(heatmaps.shape[2]):
-            x, y = self._find_nth_biggest_avg(heatmaps[:, :, i], number_of_selected_points=5,
+            x, y = self._find_nth_biggest_avg(heatmaps[:, :, i], number_of_selected_points=2,
                                               scalar=4.0)
             x_points.append(x)
             y_points.append(y)

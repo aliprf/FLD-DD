@@ -37,10 +37,7 @@ def detect_face(detect_face):
     img = cv2.imread(detect_face)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    faces = face_cascade.detectMultiScale(gray,
-                                          scaleFactor=1.1,
-                                          minNeighbors=5,
-                                          minSize=(30, 30))
+    faces = face_cascade.detectMultiScale(gray)
     if len(faces) == 0:
         return None
     return faces
@@ -50,19 +47,32 @@ def detect_FLP(img_path, save_path, model_path):
     model = tf.keras.models.load_model(model_path)
     img_mod = ImageModification()
     offsets = []
-    padding = 5
+    padding = 20
+
     for i, file in tqdm(enumerate(os.listdir(img_path))):
         img_addr = img_path + file
-        img = np.array(Image.open(img_addr)) / 255.0
-        face_img = detect_face(img_addr)
-        if face_img is None: continue
-        x, y, w, h = face_img[0]
-        x = x - padding
-        y = y + int(5*padding)
-        w = w + int(2*padding)
-        h = h + int(2*padding)
 
-        img_cropped = img[y:y+h, x:x+w]
+        bb = file.split('-')[1].split('_')
+
+        ymin = int(bb[0][0: 3]) + int(2*padding)
+        xmin = int(bb[2][0: 3]) - int(padding)
+        ymax = int(bb[4][0: 3]) + int(1*padding)
+        xmax = int(bb[6][0: 3]) + int(2*padding)
+
+        img = np.array(Image.open(img_addr)) / 255.0
+
+        # face_img = detect_face(img_addr)
+
+        # xmin = x
+        # ymin = y + int(2*padding)
+        # xmax = xmin + w + int(padding)
+        # ymax = ymin + h+int(padding)
+
+        img_cropped = img[ymin:ymax, xmin:xmax]
+        # img_cropped = img[y:y + h, x:x + w]
+
+        bbox = [xmin, ymin, xmin, ymax, xmax, ymin, xmax, ymax]
+
         resized_img = resize(img_cropped, (InputDataSize.image_input_size, InputDataSize.image_input_size, 3),
                              anti_aliasing=True)
 
@@ -70,9 +80,8 @@ def detect_FLP(img_path, save_path, model_path):
         anno_Pre = model.predict(img_d)[0]
         anno_Pre = img_mod.de_normalized(annotation_norm=anno_Pre)
 
-        img_mod.test_image_print(img_name=save_path + 'fr_' + str(i),
-                                 img=resized_img, landmarks=anno_Pre)
+        # img_mod.test_image_print(img_name=save_path + 'fr_' + str(i),
+        #                          img=resized_img, landmarks=anno_Pre, bbox_me=bbox)
 
-
-        # img_mod.test_image_print(img_name=save_path +'fr_' + str(i) + '_pr' + str(i) + '__',
-        #                          img=img, landmarks=anno_Pre, offsets=[x,y])
+        img_mod.test_image_print(img_name=save_path + 'fr_' + str(i) + '_pr' + str(i) + '__',
+                                 img=img, landmarks=anno_Pre, offsets=[xmin, ymin], bbox_me=bbox)

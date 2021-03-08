@@ -20,7 +20,8 @@ from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 from numpy import log as ln
 
-
+from skimage.draw import rectangle
+from skimage.draw import line, set_color
 # from Evaluation import Evaluation
 
 
@@ -340,6 +341,8 @@ class ImageModification:
                     ''''''
                     _img = self._blur(_img)
                     ''''''
+                    _img = self._add_occlusion(_img)
+
                     augmented_images.append(_img)
 
                     # '''normalized annotations WE DON'T NORMALIZE as the accuracy will reduce'''
@@ -589,7 +592,7 @@ class ImageModification:
 
     def crop_image_train(self, img, bbox, annotation, ds_name):
         if ds_name != DatasetName.dsCofw:
-            rand_padd = random.randint(5, 10)
+            rand_padd = random.randint(5, 15)
             # rand_padd = 5  # 0.005 * img.shape[0]
             ann_xy, ann_x, ann_y = self.create_landmarks(annotation, 1, 1)
             xmin = int(max(0, min(ann_x) - rand_padd))
@@ -615,7 +618,7 @@ class ImageModification:
             # return croped_img, annotation
             '''this block use the landmarks'''
             # rand_padd = 0.005 * img.shape[0] + random.randint(5, 10)
-            rand_padd = random.randint(5, 10)
+            rand_padd = random.randint(5, 15)
             ann_xy, ann_x, ann_y = self.create_landmarks(annotation, 1, 1)
             xmin = int(max(0, min(ann_x) - rand_padd))
             xmax = int(max(ann_x) + rand_padd)
@@ -691,7 +694,7 @@ class ImageModification:
         if bbox_me is not None:
             bb_x = [bbox_me[0], bbox_me[2], bbox_me[4], bbox_me[6]]
             bb_y = [bbox_me[1], bbox_me[3], bbox_me[5], bbox_me[7]]
-            plt.scatter(x=bb_x[:], y=bb_y[:], c='red', s=15)
+            plt.scatter(x=bb_x[:], y=bb_y[:], c='red', s=5)
 
         ''''''
         landmarks_x = []
@@ -709,8 +712,8 @@ class ImageModification:
         #     plt.annotate(str(i), (landmarks_x[i], landmarks_y[i]), fontsize=9, color='red')
 
         # plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#ffcc00', s=35)
-        plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#c0e218', s=15)
-        plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#2c061f', s=10)
+        plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#c0e218', s=5)
+        plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#2c061f', s=2)
         # plt.tight_layout(True)
         plt.axis('off')
         plt.savefig(img_name + '.png',bbox_inches='tight', dpi=100, pad_inches=0)
@@ -788,6 +791,21 @@ class ImageModification:
 
         return landmark_arr_xy, landmark_arr_x, landmark_arr_y
 
+    def _add_occlusion(self, image):
+        try:
+            for i in range(15):
+                do_or_not = random.randint(0, 10)
+                if do_or_not % 2 == 0:
+                    start = (random.randint(0, 170), random.randint(0, 170))
+                    extent = (random.randint(10, 50), random.randint(10, 50))
+                    rr, cc = rectangle(start, extent=extent, shape=image.shape)
+                    color = (np.random.uniform(0, 1), random.randint(0, 1), random.randint(0, 1))
+                    set_color(image, (rr, cc), color, alpha=1.0)
+                    # image[rr, cc] = 1.0
+        except Exception as e:
+            print('_add_occlusion:: ' + str(e))
+        return image
+
     def _blur(self, image):
         do_or_not = random.randint(0, 100)
         if do_or_not % 2 == 0:
@@ -797,7 +815,7 @@ class ImageModification:
                 image = cv.medianBlur(image, 5)
                 image = image / 255.0
             except Exception as e:
-                print(str(e))
+                print('_blur:: '+ str(e))
                 pass
             return image
 
@@ -815,6 +833,7 @@ class ImageModification:
                     gamma = np.random.uniform(0.2, 0.6)
                 else:
                     gamma = np.random.uniform(1.2, 3.5)
+                # gamma = np.random.uniform(0.2, 3.6)
                 invGamma = 1.0 / gamma
                 table = np.array([((i / 255.0) ** invGamma) * 255
                                   for i in np.arange(0, 256)]).astype("uint8")
@@ -851,8 +870,8 @@ class ImageModification:
     def _noisy(self, image):
         noise_typ = random.randint(0, 4)
         if noise_typ == 0:
-            s_vs_p = 0.1
-            amount = 0.1
+            s_vs_p = 0.3
+            amount = 0.02
             out = np.copy(image)
             # Salt mode
             num_salt = np.ceil(amount * image.size * s_vs_p)
@@ -869,7 +888,7 @@ class ImageModification:
         if noise_typ == 1:  # "s&p":
             row, col, ch = image.shape
             s_vs_p = 0.5
-            amount = 0.04
+            amount = 0.2
             out = np.copy(image)
             # Salt mode
             num_salt = np.ceil(amount * image.size * s_vs_p)

@@ -7,8 +7,10 @@ import run_presentation_utils as demo_u
 if __name__ == '__main__':
     '''create demo'''
     # demo_u.convert_movie_to_imge(video_address='./demo/KD/1.mp4', save_path='./demo/KD/imgs/')
-    # demo_u.detect_FLP(img_path='./demo/KD/imgs/', save_path='./demo/KD/annotated_img/', model_path='./models/300w/KD_main_correct/ds_300w_mn_stu.h5')
-
+    # demo_u.detect_FLP(img_path='./demo/KD/imgs/', save_path='./demo/KD/annotated_img/',
+    #                   # model_path='./models/300w/KD_main_correct/ds_300w_ef_100.h5')
+    #                   model_path='./models/wflw/kd/ds_wflw_efn_100.h5')
+    #
 
     img_mod = ImageModification()
     # img_mod.depict_face_distribution()
@@ -49,8 +51,8 @@ if __name__ == '__main__':
     # cofw.batch_test(weight_files_path='/media/data2/alip/kd_weights/cofw/24_jan_2021/', csv_file_path='./cofw_CSV_BATCH_RESULT.csv')
 
     # cofw.create_test_set(need_pose=need_pose, need_tf_ref=False)
-    # cofw.create_train_set(need_pose=need_pose, need_hm=False, need_tf_ref=False,
-    #                       accuracy=pca_accuracy)
+    cofw.create_train_set(need_pose=need_pose, need_hm=False, need_tf_ref=False,
+                          accuracy=pca_accuracy)
     cofw.create_heatmap() #
     # cofw.create_pca_obj(accuracy=80)
     # cofw.create_pca_obj(accuracy=80)
@@ -104,7 +106,7 @@ if __name__ == '__main__':
 
     # w300w.create_train_set(need_pose=False, need_hm=False, accuracy=pca_accuracy)  #
     # w300w.create_mean_face()  #
-    w300w.create_heatmap() #
+    # w300w.create_heatmap() #
     # w300w.create_pca_obj(accuracy=80, normalize=True)
     # w300w.create_pca_obj(accuracy=85, normalize=True)
     # w300w.create_pca_obj(accuracy=90, normalize=True)
@@ -116,7 +118,9 @@ if __name__ == '__main__':
     # w300w.create_inter_face_web_distance(ds_type=1)
     # w300w.create_sample(ds_type=1)
     #
-    # w300w.hm_evaluate_on_300w(model_name='hm', model_file='../IAl_FLD/models/last.h5')
+    # w300w.evaluate_on_300w(model_name='', model_file='./models/ASM_1_300W_nme_.h5')
+
+    # w300w.hm_evaluate_on_300w(model_name='hm', model_file='./models/IAL_hr0_300W_nme_5.938706933955821_fr_5.925925925925926.h5')
 
     # w300w.evaluate_on_300w(model_name='stu_tol', model_file='./models/300w/KD_main_correct/stu_tol.h5')
     # w300w.evaluate_on_300w(model_name='stu_tou', model_file='./models/300w/KD_main_correct/stu_tou.h5')
@@ -148,7 +152,7 @@ if __name__ == '__main__':
     # wflw.batch_test(weight_files_path='/media/data2/alip/kd_weights/wflw/24_jan_2021/', csv_file_path='./wflw_CSV_BATCH_RESULT.csv')
 
     # wflw.create_train_set(need_pose=False, need_hm=False, accuracy=pca_accuracy)  #
-    wflw.create_heatmap()
+    # wflw.create_heatmap()
     # wflw.create_pca_obj(accuracy=pca_accuracy, normalize=True)
     # wflw.create_pca_obj(accuracy=80, normalize=True)
     # wflw.create_pca_obj(accuracy=85, normalize=True)

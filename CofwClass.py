@@ -254,8 +254,8 @@ class CofwClass:
         ymax = ymin + _bbox[3]
 
         '''create 4-point bounding box'''
-        # rand_padd = random.randint(0, 1)
-        rand_padd = 5
+        rand_padd = random.randint(4, 15)
+        # rand_padd = 5
 
         ann_xy, ann_x, ann_y = img_mod.create_landmarks(annotation, 1, 1)
         xmin = min(min(ann_x) - rand_padd, xmin)
@@ -288,7 +288,7 @@ class CofwClass:
                        image_save_path=CofwConf.augmented_train_image,
                        annotation_save_path=CofwConf.augmented_train_annotation,
                        pose_save_path=CofwConf.augmented_train_pose)
-            # img_mod.test_image_print('zzz_final'+str(index)+'-'+str(i), imgs[i], annotations[i])
+            img_mod.test_image_print('zzz_final'+str(index)+'-'+str(i), imgs[i], annotations[i])
         #
         return imgs, annotations
 

@@ -23,8 +23,8 @@ class DatasetType:
 
 
 class InputDataSize:
-    image_input_size = 256
-    # image_input_size = 224
+    # image_input_size = 256
+    image_input_size = 224
     img_center = image_input_size // 2  # 128
 
     hm_size = image_input_size // 4  # 64
@@ -36,11 +36,11 @@ class WflwConf:
     # Wflw_prefix_path = '/media/data2/alip/FL/new_data/wflw/'  # --> atlas
     # Wflw_prefix_path = '/media/ali/data/new_data/wflw/'  # --> local
 
-    ts = 'training_set_256'
-    # ts = 'training_set'
+    # ts = 'training_set_256'
+    ts = 'training_set'
 
-    # test_s = 'testing_set'
-    test_s = 'testing_set_256'
+    test_s = 'testing_set'
+    # test_s = 'testing_set_256'
 
     '''original ds data'''
     orig_WFLW_test_path = Wflw_prefix_path + 'WFLW_annotations/list_98pt_test/'
@@ -91,15 +91,15 @@ class WflwConf:
 
 
 class CofwConf:
-    Cofw_prefix_path = '/media/data3/ali/FL/new_data/cofw/'  # --> zeus
-    # Cofw_prefix_path = '/media/data2/alip/FL/new_data/cofw/'  # --> atlas
+    # Cofw_prefix_path = '/media/data3/ali/FL/new_data/cofw/'  # --> zeus
+    Cofw_prefix_path = '/media/data2/alip/FL/new_data/cofw/'  # --> atlas
     # Cofw_prefix_path = '/media/ali/data/new_data/cofw/'  # --> local
     #
-    ts = 'training_set_256'
-    # ts = 'training_set'
+    # ts = 'training_set_256'
+    ts = 'training_set'
 
-    # test_s = 'testing_set'
-    test_s = 'testing_set_256'
+    test_s = 'testing_set'
+    # test_s = 'testing_set_256'
 
     orig_COFW_test = Cofw_prefix_path + 'orig_COFW_test/'
     test_annotation_path = Cofw_prefix_path + test_s + '/annotations/'
@@ -122,8 +122,8 @@ class CofwConf:
     orig_number_of_training = 1345
     orig_number_of_test = 507
 
-    # augmentation_factor = 10
-    augmentation_factor = 3
+    augmentation_factor = 10
+    # augmentation_factor = 3
     num_of_landmarks = 29
     hm_sigma = 7.0
     '''for tf record:'''
@@ -135,15 +135,15 @@ class CofwConf:
 
 
 class W300WConf:
-    w300w_prefix_path = '/media/data3/ali/FL/new_data/300W/'  # --> zeus/
+    # w300w_prefix_path = '/media/data3/ali/FL/new_data/300W/'  # --> zeus/
     # w300w_prefix_path = '/media/data2/alip/FL/new_data/300W/'  # --> atlas
-    # w300w_prefix_path = '/media/ali/data/new_data/300W/'  # --> local
+    w300w_prefix_path = '/media/ali/data/new_data/300W/'  # --> local
 
-    ts = 'training_set_256'
-    # ts = 'training_set'
+    # ts = 'training_set_256'
+    ts = 'training_set'
 
-    # test_s = 'testing_set'
-    test_s = 'testing_set_256'
+    test_s = 'testing_set'
+    # test_s = 'testing_set_256'
 
     orig_300W_test = w300w_prefix_path + 'orig_300W_test/'
     test_annotation_path = w300w_prefix_path + test_s + '/annotations/'
