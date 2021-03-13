@@ -51,8 +51,8 @@ if __name__ == '__main__':
     # cofw.batch_test(weight_files_path='/media/data2/alip/kd_weights/cofw/24_jan_2021/', csv_file_path='./cofw_CSV_BATCH_RESULT.csv')
 
     # cofw.create_test_set(need_pose=need_pose, need_tf_ref=False)
-    # cofw.create_train_set(need_pose=need_pose, need_hm=False, need_tf_ref=False,
-    #                       accuracy=pca_accuracy)
+    cofw.create_train_set(need_pose=need_pose, need_hm=False, need_tf_ref=False,
+                          accuracy=pca_accuracy)
     cofw.create_heatmap() #
     # cofw.create_pca_obj(accuracy=80)
     # cofw.create_pca_obj(accuracy=80)
@@ -111,7 +111,7 @@ if __name__ == '__main__':
     # w300w.create_test_set(need_pose=need_pose, need_tf_ref=False)
     # w300w.batch_test(weight_files_path='/media/data3/ali/kd_weights/300w/24_jan_2021/', csv_file_path='./300w_CSV_BATCH_RESULT.csv')
 
-    # w300w.create_train_set(need_pose=False, need_hm=False, accuracy=pca_accuracy)  #
+    w300w.create_train_set(need_pose=False, need_hm=False, accuracy=pca_accuracy)  #
     # w300w.create_mean_face()  #
     w300w.create_heatmap() #
     # w300w.create_pca_obj(accuracy=80, normalize=True)
@@ -163,7 +163,7 @@ if __name__ == '__main__':
     # wflw.create_test_set(need_pose=need_pose, need_tf_ref=False)
     # wflw.batch_test(weight_files_path='/media/data2/alip/kd_weights/wflw/24_jan_2021/', csv_file_path='./wflw_CSV_BATCH_RESULT.csv')
 
-    # wflw.create_train_set(need_pose=False, need_hm=False, accuracy=pca_accuracy)  #
+    wflw.create_train_set(need_pose=False, need_hm=False, accuracy=pca_accuracy)  #
     wflw.create_heatmap()
     # wflw.create_pca_obj(accuracy=pca_accuracy, normalize=True)
     # wflw.create_pca_obj(accuracy=80, normalize=True)
