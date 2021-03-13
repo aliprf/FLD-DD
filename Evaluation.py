@@ -46,10 +46,15 @@ class Evaluation:
         sum_loss = 0
         for i in tqdm(range(len(sorted(self.anno_paths)))):
             anno_GT = np.load(self.anno_paths[i])  # the GT are not normalized.
-            anno_GT_hm = img_mod.generate_hm_from_points(height=64, width=64, lnd_xy=anno_GT, s=7, de_normalize=False)
+            # anno_GT_hm = img_mod.generate_hm_from_points(height=64, width=64, lnd_xy=anno_GT, s=7, de_normalize=False)
             img = np.expand_dims(np.array(Image.open(self.img_paths[i])) / 255.0, axis=0)
             anno_Pre_hm = self.model.predict(img)[3][0]
             _, _, anno_Pre = self._hm_to_points(heatmaps=anno_Pre_hm)
+
+            # anno_pre_norm = img_mod.normalize_annotations(annotation=anno_Pre)
+            # anno_Pre_asm = img_mod.get_asm(input=anno_pre_norm, dataset_name='300W', accuracy=97)
+            #
+            # anno_Pre_asm = img_mod.de_normalized(annotation_norm=anno_Pre_asm)
 
             # anno_Pre_hm = anno_Pre_hm[3][0] # hg
 
@@ -60,10 +65,14 @@ class Evaluation:
             # anno_Pre = img_mod.de_normalized_hm(annotation_norm=anno_Pre_reg)
 
             '''print'''
-            img_mod.test_image_print(img_name='z_' + str(i) + '_pr' + str(i) + '__',
-                                     img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_Pre)
-            img_mod.test_image_print(img_name='z_' + str(i) + '_gt' + str(i) + '__',
-                                     img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_GT)
+            # img_mod.test_image_print(img_name='z_' + str(i) + '_pr' + str(i) + '__',
+            #                          img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_Pre)
+
+            # img_mod.test_image_print(img_name='z_' + str(i) + '_prASM' + str(i) + '__',
+            #                          img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_Pre_asm)
+            #
+            # img_mod.test_image_print(img_name='z_' + str(i) + '_gt' + str(i) + '__',
+            #                          img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_GT)
 
             nme_i, norm_error = self._calculate_nme(anno_GT=anno_GT, anno_Pre=anno_Pre, ds_name=self.ds_name,
                                                     ds_number_of_points=self.ds_number_of_points)
@@ -77,6 +86,7 @@ class Evaluation:
         ''''''
         fr = 100 * fail_counter / len(self.anno_paths)
         nme = 100 * sum_loss / len(self.anno_paths)
+        print('fail_counter: ' + str(fail_counter))
         print('fr: ' + str(fr))
         print('nme: ' + str(nme))
         print('AUC: ' + str(AUC))
@@ -213,10 +223,10 @@ class Evaluation:
                 anno_Pre = confidence_vector * anno_Pre
                 anno_Pre = anno_Pre + confidence_vector # this is for AVG
             '''print'''
-            img_mod.test_image_print(img_name='z_' + str(i) + '_pr' + str(i) + '__',
-                                     img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_Pre)
-            img_mod.test_image_print(img_name='z_' + str(i) + '_gt' + str(i) + '__',
-                                     img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_GT)
+            # img_mod.test_image_print(img_name='z_' + str(i) + '_pr' + str(i) + '__',
+            #                          img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_Pre)
+            # img_mod.test_image_print(img_name='z_' + str(i) + '_gt' + str(i) + '__',
+            #                          img=np.array(Image.open(self.img_paths[i])) / 255.0, landmarks=anno_GT)
 
             # img_mod.test_image_print(img_name='z_'+str(i)+'_pr'+str(i)+'__', img=np.ones([224,224,3]), landmarks=anno_Pre)
             # img_mod.test_image_print(img_name='z_'+str(i)+'_gt'+str(i)+'__', img=np.ones([224,224,3]), landmarks=anno_GT)
@@ -440,15 +450,15 @@ class Evaluation:
             y_arr.append(index[1])
             w_arr.append(heatmap[index[0], index[1]])
         #
-        # for i in range(len(x_arr)):
-        #     x_s += w_arr[i]*x_arr[i]
-        #     y_s += w_arr[i]*y_arr[i]
-        #     w_s += w_arr[i]
-        # x = (x_s * scalar)/w_s
-        # y = (y_s * scalar)/w_s
+        for i in range(len(x_arr)):
+            x_s += w_arr[i]*x_arr[i]
+            y_s += w_arr[i]*y_arr[i]
+            w_s += w_arr[i]
+        x = (x_s * scalar)/w_s
+        y = (y_s * scalar)/w_s
 
-        x = (0.75 * x_arr[1] + 0.25 * x_arr[0]) * scalar
-        y = (0.75 * y_arr[1] + 0.25 * y_arr[0]) * scalar
+        # x = (0.75 * x_arr[1] + 0.25 * x_arr[0]) * scalar
+        # y = (0.75 * y_arr[1] + 0.25 * y_arr[0]) * scalar
 
         return y, x
 

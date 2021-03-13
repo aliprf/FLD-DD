@@ -169,53 +169,63 @@ class ImageModification:
         models_kd = ['Teacher', 'Student', 'mnv2']
         models_asm = ['ASM', 'mnv2']
         # colors = ['#0e49b5', '#ec0101', '#79d70f']
-        colors = ['#0e49b5', '#ec4646', '#03c4a1']
+        # colors = ['#eebb4d', '#96bb7c', '#b83b5e', '#535204']
+        colors = ['#0e49b5', '#ec0101', '#79d70f', '#93329e']
         for i, dataset in enumerate(datasets):
-            '''mn'''
-            x_mn = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_kd[2] + '_x.npy')
-            y_mn = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_kd[2] + '_y.npy')
-            sct_mn = plt.scatter(x=x_mn, y=y_mn, c=colors[2])
-            plt.plot(x_mn, y_mn, '-o', c=colors[2])
-            '''teacher'''
-            x_te = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_kd[0] + '_x.npy')
-            y_te = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_kd[0] + '_y.npy')
-            sct_te = plt.scatter(x=x_te, y=y_te, c=colors[0])
-            plt.plot(x_te, y_te, '-o', c=colors[0])
-            '''stu'''
-            x_stu = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_kd[1] + '_x.npy')
-            y_stu = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_kd[1] + '_y.npy')
-            sct_stu = plt.scatter(x=x_stu, y=y_stu, c=colors[1])
-            plt.plot(x_stu, y_stu, '-o', c=colors[1])
-
-            ''''''
-            plt.legend((sct_te, sct_stu, sct_mn),
-                       ('Teacher', 'Student', 'mnV2'))
-            plt.xlabel('Normalized Error')
-            plt.ylabel('Image Proportion')
-            plt.savefig('./auc_data/KD_CED_' + dataset + '.png', bbox_inches='tight', dpi=100)
-            plt.savefig('./auc_data/KD_CED_' + dataset + '.pdf', bbox_inches='tight', dpi=400)
-            plt.clf()
+            # '''mn'''
+            # x_mn = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_kd[2] + '_x.npy')
+            # y_mn = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_kd[2] + '_y.npy')
+            # sct_mn = plt.scatter(x=x_mn, y=y_mn, c=colors[2])
+            # plt.plot(x_mn, y_mn, '-o', c=colors[2])
+            # '''teacher'''
+            # x_te = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_kd[0] + '_x.npy')
+            # y_te = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_kd[0] + '_y.npy')
+            # sct_te = plt.scatter(x=x_te, y=y_te, c=colors[0])
+            # plt.plot(x_te, y_te, '-o', c=colors[0])
+            # '''stu'''
+            # x_stu = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_kd[1] + '_x.npy')
+            # y_stu = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_kd[1] + '_y.npy')
+            # sct_stu = plt.scatter(x=x_stu, y=y_stu, c=colors[1])
+            # plt.plot(x_stu, y_stu, '-o', c=colors[1])
+            #
+            # ''''''
+            # plt.legend((sct_te, sct_stu, sct_mn),
+            #            ('Teacher', 'Student', 'mnV2'))
+            # plt.xlabel('Normalized Error')
+            # plt.ylabel('Image Proportion')
+            # plt.savefig('./auc_data/KD_CED_' + dataset + '.png', bbox_inches='tight', dpi=100)
+            # plt.savefig('./auc_data/KD_CED_' + dataset + '.pdf', bbox_inches='tight', dpi=400)
+            # plt.clf()
 
             '''=====ASM======='''
             for i, dataset in enumerate(datasets):
-                '''mn'''
-                x_mn = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_asm[1] + '_x.npy')
-                y_mn = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_asm[1] + '_y.npy')
-                sct_mn = plt.scatter(x=x_mn, y=y_mn, c=colors[2])
+                '''base'''
+                x_mn = np.load('./auc_data/' + dataset + '/' + dataset + '_' + 'mn_base' + '_x.npy')
+                y_mn = np.load('./auc_data/' + dataset + '/' + dataset + '_' + 'mn_base' + '_y.npy')
+                sct_mn_base = plt.scatter(x=x_mn, y=y_mn, c=colors[2])
                 plt.plot(x_mn, y_mn, '-o', c=colors[2])
-                '''ASM'''
-                x_stu = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_asm[0] + '_x.npy')
-                y_stu = np.load('./auc_data/' + dataset + '/' + dataset + '_' + models_asm[0] + '_y.npy')
-                sct_asm = plt.scatter(x=x_stu, y=y_stu, c=colors[1])
+
+                x_mn = np.load('./auc_data/' + dataset + '/' + dataset + '_' + 'efn_base' + '_x.npy')
+                y_mn = np.load('./auc_data/' + dataset + '/' + dataset + '_' + 'efn_base' + '_y.npy')
+                sct_efn_base = plt.scatter(x=x_mn, y=y_mn, c=colors[3])
+                plt.plot(x_mn, y_mn, '-o', c=colors[3])
+                '''FAWL'''
+                x_stu = np.load('./auc_data/' + dataset + '/' + dataset + '_' + 'mn_fawl' + '_x.npy')
+                y_stu = np.load('./auc_data/' + dataset + '/' + dataset + '_' + 'mn_fawl' + '_y.npy')
+                sct_mn_fawl = plt.scatter(x=x_stu, y=y_stu, c=colors[0])
+                plt.plot(x_stu, y_stu, '-o', c=colors[0])
+
+                x_stu = np.load('./auc_data/' + dataset + '/' + dataset + '_' + 'efn_fawl' + '_x.npy')
+                y_stu = np.load('./auc_data/' + dataset + '/' + dataset + '_' + 'efn_fawl' + '_y.npy')
+                sct_efn_fawl = plt.scatter(x=x_stu, y=y_stu, c=colors[1])
                 plt.plot(x_stu, y_stu, '-o', c=colors[1])
 
                 ''''''
-                plt.legend((sct_asm, sct_mn),
-                           ('$mn_{FAWL}$', '$mn_{base}$'))
+                plt.legend((sct_mn_fawl, sct_efn_fawl, sct_mn_base,sct_efn_base),
+                           ('$mn_{FAWL}$', '$efn_{FAWL}$', '$mn_{base}$', '$efn_{base}$'))
                 plt.xlabel('Normalized Error')
                 plt.ylabel('Image Proportion')
                 plt.savefig('./auc_data/ASM_CED_' + dataset + '.png', bbox_inches='tight', dpi=100)
-                # plt.savefig('./auc_data/ASM_CED_' + dataset + '.pdf', bbox_inches='tight', dpi=400)
                 plt.clf()
 
     def random_augment(self, index, img_orig, landmark_orig, num_of_landmarks, augmentation_factor, ymin, ymax, xmin,
@@ -415,7 +425,8 @@ class ImageModification:
             new_labels[index_dst[i] * 2 + 1] = labels[index_src[i] * 2 + 1]
         return new_labels
 
-    def create_normalized_web_facial_distance(self, inter_points, intera_points, annotation_file_path, img_file_path,
+    def create_normalized_web_facial_distance(self, inter_points, intera_points,
+                                              annotation_file_path, img_file_path,
                                               ds_name):
         """"""
         annotations = []

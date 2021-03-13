@@ -142,7 +142,7 @@ class CofwClass:
         evaluation = Evaluation(model_name=model_name, model=model, anno_paths=test_annotation_paths,
                                 img_paths=test_image_paths,
                                 ds_name=DatasetName.dsCofw, ds_number_of_points=CofwConf.num_of_landmarks,
-                                fr_threshold=0.1, is_normalized=False, ds_type='full')
+                                fr_threshold=0.1, is_normalized=True, ds_type='full')
         '''predict labels:'''
         nme, fr, AUC, pointwise_nme_ar = evaluation.predict_annotation(confidence_vector=confidence_vector,
                                                                        intercept_vec=intercept_vec,
