@@ -46,11 +46,13 @@ class Evaluation:
         sum_loss = 0
         for i in tqdm(range(len(sorted(self.anno_paths)))):
             anno_GT = np.load(self.anno_paths[i])  # the GT are not normalized.
-            # anno_GT_hm = img_mod.generate_hm_from_points(height=64, width=64, lnd_xy=anno_GT, s=7, de_normalize=False)
+            # anno_GT_hm = img_mod.generate_hm_from_points(height=64, width=64, lnd_xy=anno_GT, s=2, de_normalize=False)
             img = np.expand_dims(np.array(Image.open(self.img_paths[i])) / 255.0, axis=0)
+            # anno_Pre_hm = self.model.predict(img)[0]
             anno_Pre_hm = self.model.predict(img)[3][0]
             _, _, anno_Pre = self._hm_to_points(heatmaps=anno_Pre_hm)
 
+            img_mod.print_image_arr_heat(k=i, image=anno_Pre_hm, print_single=True)
             # anno_pre_norm = img_mod.normalize_annotations(annotation=anno_Pre)
             # anno_Pre_asm = img_mod.get_asm(input=anno_pre_norm, dataset_name='300W', accuracy=97)
             #
