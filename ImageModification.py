@@ -22,6 +22,8 @@ from numpy import log as ln
 
 from skimage.draw import rectangle
 from skimage.draw import line, set_color
+
+
 # from Evaluation import Evaluation
 
 
@@ -46,15 +48,42 @@ class ImageModification:
             j += 1
         return hm
 
+    def generate_hm_1d(self, height, width, landmark_filename, landmark_path, s, de_normalize):
+        _data = np.load(landmark_path + landmark_filename)
+        lnd_xy, lnd_x, lnd_y = self.create_landmarks(_data, 1, 1)
+
+        hm_len = int(len(lnd_xy) // 2)
+        # hm_x = np.zeros((width, hm_len), dtype=np.float32)
+        # hm_y = np.zeros((height, hm_len), dtype=np.float32)
+        hm = np.zeros((height, 2, hm_len), dtype=np.float32)
+        j = 0
+
+        for i in range(0, hm_len * 2, 2):
+
+            if de_normalize:
+                x = float(lnd_xy[i]) * InputDataSize.image_input_size + InputDataSize.img_center
+                y = float(lnd_xy[i + 1]) * InputDataSize.image_input_size + InputDataSize.img_center
+            else:
+                x = lnd_xy[i]
+                y = lnd_xy[i + 1]
+
+            x = x / 4.0
+            y = y / 4.0
+
+            hm[:, 0, j] = self._gaussian_k_1d(x, s, height)
+            hm[:, 1, j] = self._gaussian_k_1d(y, s, height)
+            j += 1
+        return hm
+
     def generate_hm(self, height, width, landmark_filename, landmark_path, s, de_normalize):
-        _data = np.load(landmark_path+landmark_filename)
+        _data = np.load(landmark_path + landmark_filename)
         lnd_xy, lnd_x, lnd_y = self.create_landmarks(_data, 1, 1)
         # self.test_image_print('1', np.zeros([224,224,3]), lnd_xy)
 
         hm_len = int(len(lnd_xy) // 2)
         hm = np.zeros((height, width, hm_len), dtype=np.float32)
         j = 0
-        for i in range(0, hm_len*2, 2):
+        for i in range(0, hm_len * 2, 2):
 
             if de_normalize:
                 x = float(lnd_xy[i]) * InputDataSize.image_input_size + InputDataSize.img_center
@@ -69,6 +98,15 @@ class ImageModification:
             hm[:, :, j] = self._gaussian_k(x, y, s, height, width)
             j += 1
         return hm
+
+    def _gaussian_k_1d(self, cord0, sigma, size):
+        """ Make a square gaussian kernel centered at (x0, y0) with sigma as SD.
+                """
+        cord = np.arange(0, size, 1, float)
+
+        gaus = np.exp(-((cord - cord0) ** 2) / (2 * sigma ** 2))
+        gaus[gaus <= 0.01] = 0
+        return gaus
 
     def _gaussian_k(self, x0, y0, sigma, width, height):
         """ Make a square gaussian kernel centered at (x0, y0) with sigma as SD.
@@ -123,11 +161,11 @@ class ImageModification:
             y = np.linspace(0, 56, 56)
             X, Y = np.meshgrid(x, y)
             surf = ax.plot_surface(X, Y, fg_1, alpha=1, color='#f6416c', linewidth=0.5, antialiased=False, zorder=0.1)
-                                   # ,vmin=np.amin(s_hm), vmax=np.amax(s_hm))
+            # ,vmin=np.amin(s_hm), vmax=np.amax(s_hm))
             ax.plot_surface(X, Y, fg_2, alpha=0.99, color='#a7ff83', linewidth=0.5, antialiased=False, zorder=0.2)
-                            # ,vmin=np.amin(s_hm), vmax=np.amax(s_hm))
+            # ,vmin=np.amin(s_hm), vmax=np.amax(s_hm))
             ax.plot_surface(X, Y, bg, alpha=0.90, color='#574b90', linewidth=0.5, antialiased=False, zorder=0.3)
-                            # ,vmin=np.amin(s_hm), vmax=np.amax(s_hm))
+            # ,vmin=np.amin(s_hm), vmax=np.amax(s_hm))
 
             # surf = ax.plot_surface(X, Y, fg_1, alpha=1, cmap=cm.coolwarm, linewidth=0.5, antialiased=False, zorder=0.1,
             #                        vmin=np.amin(s_hm), vmax=np.amax(s_hm))
@@ -141,7 +179,15 @@ class ImageModification:
             ax.zaxis.set_major_locator(LinearLocator(20))
             ax.zaxis.set_major_formatter(FormatStrFormatter('%.1f'))
             fig_1.colorbar(surf, shrink=1, aspect=25)
-            plt.savefig('./out_imgs/single/dist_3d_heat_' + str(i) + '_' + str(k) + '.png', bbox_inches='tight', dpi=400)
+            plt.savefig('./out_imgs/single/dist_3d_heat_' + str(i) + '_' + str(k) + '.png', bbox_inches='tight',
+                        dpi=400)
+
+    def print_image_arr_heat_1d(self, name, image):
+        plt.figure()
+        plt.imshow(image)
+        plt.axis('off')
+        plt.savefig('./out_imgs/1d_' + name + '_.png', bbox_inches='tight', dpi=200)
+        plt.clf()
 
     def print_image_arr_heat(self, k, image, print_single=True):
         for i in range(image.shape[2]):
@@ -155,7 +201,8 @@ class ImageModification:
                 #         plt.annotate(str(_data[n,m])[:4], (m, n), fontsize=2, color='red')
 
                 plt.axis('off')
-                plt.savefig('./out_imgs/single/single_heat_' + str(k) + '_' + str(i) + '.png', bbox_inches='tight', dpi=400)
+                plt.savefig('./out_imgs/single/single_heat_' + str(k) + '_' + str(i) + '.png', bbox_inches='tight',
+                            dpi=400)
                 plt.clf()
 
         plt.figure()
@@ -221,7 +268,7 @@ class ImageModification:
                 plt.plot(x_stu, y_stu, '-o', c=colors[1])
 
                 ''''''
-                plt.legend((sct_mn_fawl, sct_efn_fawl, sct_mn_base,sct_efn_base),
+                plt.legend((sct_mn_fawl, sct_efn_fawl, sct_mn_base, sct_efn_base),
                            ('$mn_{FAWL}$', '$efn_{FAWL}$', '$mn_{base}$', '$efn_{base}$'))
                 plt.xlabel('Normalized Error')
                 plt.ylabel('Image Proportion')
@@ -438,11 +485,11 @@ class ImageModification:
                 annotations.append(np.load(os.path.join(annotation_file_path, str(file))))
                 img_adr = os.path.join(img_file_path, str(file)[:-3] + "jpg")
                 self._print_intra_fb(landmark=annotations[counter], points=intera_points,
-                                     img=np.ones([224,224,3]),#np.array(Image.open(img_adr)),
+                                     img=np.ones([224, 224, 3]),  # np.array(Image.open(img_adr)),
                                      title=ds_name + ' Intra_Face_Web',
                                      name='zz_' + ds_name + '_intra_fb_' + str(counter))
                 self._print_inter_fb(landmark=annotations[counter], points=inter_points,
-                                     img=np.ones([224,224,3]),#np.array(Image.open(img_adr)),
+                                     img=np.ones([224, 224, 3]),  # np.array(Image.open(img_adr)),
                                      title=ds_name + ' Inter_Face_Web',
                                      name='zz_' + ds_name + '_inter_fb_' + str(counter))
                 counter += 1
@@ -727,7 +774,7 @@ class ImageModification:
         plt.scatter(x=landmarks_x[:], y=landmarks_y[:], c='#2c061f', s=2)
         # plt.tight_layout(True)
         plt.axis('off')
-        plt.savefig(img_name + '.png',bbox_inches='tight', dpi=100, pad_inches=0)
+        plt.savefig(img_name + '.png', bbox_inches='tight', dpi=100, pad_inches=0)
         # plt.show()
         plt.clf()
 
@@ -826,7 +873,7 @@ class ImageModification:
                 image = cv.medianBlur(image, 5)
                 image = image / 255.0
             except Exception as e:
-                print('_blur:: '+ str(e))
+                print('_blur:: ' + str(e))
                 pass
             return image
 
@@ -977,11 +1024,12 @@ class ImageModification:
         #     elif x_pr > beta:
         #         weight_loss_t = alpha
         # return weight_loss_t
+
     def ASM_weight_depict(self, gamma=0.2, sigma=50):
         delta_values = np.linspace(-0.02, 0.25, 1000)
         omega = []
         for i, x in enumerate(delta_values):
-            omega.append(1/(gamma + np.exp(-sigma*x)))
+            omega.append(1 / (gamma + np.exp(-sigma * x)))
 
         '''depicting'''
         fig = plt.figure(figsize=(5, 5))
@@ -996,8 +1044,10 @@ class ImageModification:
         ax.grid(which='minor', color='#9ba4b4', linestyle=':', linewidth=0.3)
 
         sct_l, = ax.plot(delta_values[:], omega[:], '#e63946', linewidth=2.2, label='$\omega$')
-        sct_wl = plt.scatter(x=0.2, y=1/(gamma + np.exp(-sigma*0.2)), c='#4361ee', s=45, label='Average Max', marker='x')
-        sct_wl = plt.scatter(x=0.002, y=1/(gamma + np.exp(-sigma*0.002)), c='#48cae4', s=45, label='Average Min', marker='x')
+        sct_wl = plt.scatter(x=0.2, y=1 / (gamma + np.exp(-sigma * 0.2)), c='#4361ee', s=45, label='Average Max',
+                             marker='x')
+        sct_wl = plt.scatter(x=0.002, y=1 / (gamma + np.exp(-sigma * 0.002)), c='#48cae4', s=45, label='Average Min',
+                             marker='x')
 
         plt.xlabel('$ \Delta ~~Values $', fontsize=15)
         plt.ylabel('Weight Values', fontsize=15)
@@ -1010,7 +1060,6 @@ class ImageModification:
         #           fancybox=True, shadow=True, ncol=3)
 
         plt.savefig('ASM_omega.png', bbox_inches='tight', dpi=200)
-
 
     def weight_loss_depict(self, x_gt, x_tough, beta_tough, beta_mi_tough, alpha_tough,
                            x_tol, beta_tol, beta_mi_tol, alpha_tol):
@@ -1039,7 +1088,7 @@ class ImageModification:
         x_tou_sym = x_gt - abs(x_tough - x_gt)
         x_tol_sym = x_gt - abs(x_tol - x_gt)
         for i, x in enumerate(x_values):
-            gamma = abs(x_gt-x)
+            gamma = abs(x_gt - x)
             if x >= x_gt:
                 loss_Tough[i] = weight_loss_tough[i] * np.abs(x_tough - x)
                 loss_Tol[i] = weight_loss_tol[i] * np.abs(x_tol - x)
@@ -1061,7 +1110,7 @@ class ImageModification:
             #     # loss_M[i] = np.square(x_gt - x) + abs(x_gt - abs(x_gt-0.5)) - np.square(x_gt - abs(x_gt-0.5))
             #     der_loss_M[i] = 2 * abs(x)
 
-                # loss_M[i] = 1*np.square(x_gt - x) + abs(x_gt - x_tol) - np.square(x_gt - x_tol)
+            # loss_M[i] = 1*np.square(x_gt - x) + abs(x_gt - x_tol) - np.square(x_gt - x_tol)
             # elif -0.5 < gamma:#abs(x_gt+0.5):
             #     loss_M[i] = np.square(x_gt - x) #+ abs(x_gt - gamma) - np.square(x_gt - gamma)
             #     # loss_M[i] = 1 * np.square(x_gt - x) + abs(x_gt + abs(x_gt-0.5)) - np.square(x_gt + abs(x_gt-0.5))

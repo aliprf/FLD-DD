@@ -59,12 +59,14 @@ class WflwConf:
     augmented_train_pose = Wflw_prefix_path + ts + '/augmented/pose/'
     augmented_train_annotation = Wflw_prefix_path + ts + '/augmented/annotations/'
     augmented_train_hm = Wflw_prefix_path + ts + '/augmented/hm/'
+    augmented_train_hm_1d = Wflw_prefix_path + ts + '/augmented/hm_1d/'
     augmented_train_atr = Wflw_prefix_path + ts + '/augmented/atrs/'
     augmented_train_image = Wflw_prefix_path + ts + '/augmented/images/'
     augmented_train_tf_path = Wflw_prefix_path + ts + '/augmented/tf/'
     '''     original version'''
     no_aug_train_annotation = Wflw_prefix_path + ts + '/no_aug/annotations/'
     no_aug_train_hm = Wflw_prefix_path + ts + '/augmented/hm/'
+    no_aug_train_hm_1d = Wflw_prefix_path + ts + '/augmented/hm_1d/'
     no_aug_train_atr = Wflw_prefix_path + ts + '/no_aug/atrs/'
     no_aug_train_pose = Wflw_prefix_path + ts + '/no_aug/pose/'
     no_aug_train_image = Wflw_prefix_path + ts + '/no_aug/images/'
@@ -82,7 +84,7 @@ class WflwConf:
 
     augmentation_factor = 5  # create . image from 4
     num_of_landmarks = 98
-    hm_sigma = 2.0
+    hm_sigma = 3
     '''for tf record: 60890'''
     num_eval_samples_aug = int(orig_number_of_training * augmentation_factor * 0.05)  # 75000* 0.05 = 3750
     num_train_samples_aug = orig_number_of_training * augmentation_factor - num_eval_samples_aug  # 75000 - 3750 = 71250
@@ -111,6 +113,7 @@ class CofwConf:
     orig_COFW_train = Cofw_prefix_path + 'orig_COFW_train/'
     augmented_train_pose = Cofw_prefix_path + ts + '/augmented/pose/'
     augmented_train_hm = Cofw_prefix_path + ts + '/augmented/hm/'
+    augmented_train_hm_1d = Cofw_prefix_path + ts + '/augmented/hm_1d/'
     augmented_train_annotation = Cofw_prefix_path + ts + '/augmented/annotations/'
     augmented_train_image = Cofw_prefix_path + ts + '/augmented/images/'
     augmented_train_tf_path = Cofw_prefix_path + ts + '/augmented/tf/'
@@ -126,7 +129,7 @@ class CofwConf:
     augmentation_factor = 20
     # augmentation_factor = 3
     num_of_landmarks = 29
-    hm_sigma = 2.0
+    hm_sigma = 3
     '''for tf record:'''
     num_eval_samples_aug = 2670  # int(orig_number_of_training * augmentation_factor * 0.05)
     num_train_samples_aug = 50720  # orig_number_of_training * augmentation_factor - num_eval_samples_aug  # 13450 - 670 = 12775
@@ -156,11 +159,14 @@ class W300WConf:
     augmented_train_pose = w300w_prefix_path + ts + '/augmented/pose/'
     augmented_train_annotation = w300w_prefix_path + ts + '/augmented/annotations/'
     augmented_train_hm = w300w_prefix_path + ts + '/augmented/hm/'
+    augmented_train_hm_1d = w300w_prefix_path + ts + '/augmented/hm_1d/'
     augmented_train_image = w300w_prefix_path + ts + '/augmented/images/'
     augmented_train_tf_path = w300w_prefix_path + ts + '/augmented/tf/'
 
     no_aug_train_annotation = w300w_prefix_path + ts + '/no_aug/annotations/'
     no_aug_train_hm = w300w_prefix_path + ts + '/augmented/hm/'
+    no_aug_train_hm_1d = w300w_prefix_path + ts + '/augmented/hm_1d/'
+
     no_aug_train_pose = w300w_prefix_path + ts + '/no_aug/pose/'
     no_aug_train_image = w300w_prefix_path + ts + '/no_aug/images/'
     no_aug_train_tf_path = w300w_prefix_path + ts + '/no_aug/tf/'
@@ -172,7 +178,7 @@ class W300WConf:
 
     augmentation_factor = 10  # create . image from 1 16155
     num_of_landmarks = 68
-    hm_sigma = 2.0
+    hm_sigma = 3
     '''for tf record:'''
     num_eval_samples_aug = 807  # int(3507 * augmentation_factor * 0.05)  #
     num_train_samples_aug = 15347  # 3507 * augmentation_factor - num_eval_samples_aug  #

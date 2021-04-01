@@ -42,14 +42,14 @@ class W300WClass:
         if not use_save:
             st_err_all, pr_matrix, gt_matrix = evaluation.calculate_pw_diff_error(student_model=student_model)
         else:
-            st_err_all=[]
-            pr_matrix=[]
-            gt_matrix=[]
+            st_err_all = []
+            pr_matrix = []
+            gt_matrix = []
             for i in tqdm(range(len(os.listdir('./reg_data/')))):
-                pr_file = './reg_data/'+str(i) + "_pr.npy"
-                gt_file = './reg_data/'+str(i) + "_gt.npy"
-                dif_file = './reg_data/'+str(i) + "_dif.npy"
-                if os.path.exists(pr_file) and os.path.exists(gt_file)  and os.path.exists(dif_file):
+                pr_file = './reg_data/' + str(i) + "_pr.npy"
+                gt_file = './reg_data/' + str(i) + "_gt.npy"
+                dif_file = './reg_data/' + str(i) + "_dif.npy"
+                if os.path.exists(pr_file) and os.path.exists(gt_file) and os.path.exists(dif_file):
                     pr_matrix.append(np.load(pr_file))
                     gt_matrix.append(np.load(gt_file))
                     st_err_all.append(np.load(dif_file))
@@ -147,6 +147,20 @@ class W300WClass:
 
         print("create_train_set DONE!!")
 
+    def create_heatmap_1d(self):
+        img_mod = ImageModification()
+        for i, anno_file in tqdm(enumerate(os.listdir(W300WConf.augmented_train_annotation))):
+            hm = img_mod.generate_hm_1d(width=InputDataSize.hm_size, height=InputDataSize.hm_size,
+                                        landmark_path=W300WConf.augmented_train_annotation,
+                                        landmark_filename=anno_file,
+                                        s=W300WConf.hm_sigma, de_normalize=False)
+
+            np.save(W300WConf.augmented_train_hm_1d + anno_file, hm)
+            # img_mod.print_image_arr_heat(k=i, image=hm, print_single=True)
+
+            # img_mod.print_image_arr_heat_1d(name='x' + str(i), image=hm)
+            # img_mod.print_heatmap_distribution(k=i, image=hm)
+
     def create_heatmap(self):
         img_mod = ImageModification()
         for i, anno_file in tqdm(enumerate(os.listdir(W300WConf.augmented_train_annotation))):
@@ -243,7 +257,8 @@ class W300WClass:
             print('=========================================')
         '''evaluate with meta data: best to worst'''
 
-    def evaluate_on_300w(self, model_name, model_file, print_result=True, confidence_vector=None, intercept_vec=None, reg_data=None):
+    def evaluate_on_300w(self, model_name, model_file, print_result=True, confidence_vector=None, intercept_vec=None,
+                         reg_data=None):
         '''create model using the h.5 model and its wights'''
         model = tf.keras.models.load_model(model_file)
         '''load test files and categories:'''

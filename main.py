@@ -61,7 +61,8 @@ if __name__ == '__main__':
     # cofw.create_test_set(need_pose=need_pose, need_tf_ref=False)
     # cofw.create_train_set(need_pose=need_pose, need_hm=False, need_tf_ref=False,
     #                       accuracy=pca_accuracy)
-    cofw.create_heatmap() #
+    # cofw.create_heatmap() #
+    cofw.create_heatmap_1d() #
     # cofw.create_pca_obj(accuracy=80)
     # cofw.create_pca_obj(accuracy=80)
     # cofw.create_pca_obj(accuracy=85)
@@ -86,7 +87,7 @@ if __name__ == '__main__':
     # cofw.evaluate_on_cofw(model_name='efn_base', model_file='./models/ASM_69_cofw_nme_4.948433464921171_fr_3.9447731755424065.h5')
 
 
-    # cofw.hm_evaluate_on_cofw(model_name='hm', model_file='models/IAL_hr1_cofw_nme.h5')
+    # cofw.hm_evaluate_on_cofw(model_name='hm', model_file='models/IAL_hr6_cofw_nme.h5')
     #
     # mn-base:      ch->{nme: 5.04, fr: 3.74,  AUC: 0.7213}
     # mn-stu:       ch->{nme: 4.11, fr: 2.366  AUC: 0.7907}
@@ -121,7 +122,8 @@ if __name__ == '__main__':
 
     # w300w.create_train_set(need_pose=False, need_hm=False, accuracy=pca_accuracy)  #
     # w300w.create_mean_face()  #
-    w300w.create_heatmap() #
+    # w300w.create_heatmap() #
+    w300w.create_heatmap_1d() #
     # w300w.create_pca_obj(accuracy=80, normalize=True)
     # w300w.create_pca_obj(accuracy=85, normalize=True)
     # w300w.create_pca_obj(accuracy=90, normalize=True)
@@ -135,7 +137,7 @@ if __name__ == '__main__':
     #
     # w300w.evaluate_on_300w(model_name='', model_file='./models/ASM_1_300W_nme_.h5')
 
-    # w300w.hm_evaluate_on_300w(model_name='hm', model_file='./models/last_hr.h5')
+    # w300w.hm_evaluate_on_300w(model_name='hm', model_file='./models/')
 
     # w300w.evaluate_on_300w(model_name='stu_tol', model_file='./models/300w/KD_main_correct/stu_tol.h5')
     # w300w.evaluate_on_300w(model_name='stu_tou', model_file='./models/300w/KD_main_correct/stu_tou.h5')
@@ -152,7 +154,6 @@ if __name__ == '__main__':
     # w300w.evaluate_on_300w(model_name='efn_base',
     #                        model_file='./models/ASM_32_300W_nme_8.138384697607048_fr_26.666666666666668.h5')
     # w300w.evaluate_on_300w(model_name='efn_fawl', model_file='./models/ASM_33_300W_nme_7.648649876718097_fr_22.962962962962962.h5')
-
 
     # mn-base:  ch->{nme:6.84, fr:7.40, AUC:0.5425}  co->{nme:3.93, fr:0.18, AUC:0.8102} full->{nme:4.50, fr:1.59, AUC:0.7578}
     # mn-stu:   ch->{nme:6.13, fr:3.70, AUC:0.6029}  co->{nme:3.56, fr:0.18, AUC:0.8356} full->{nme:4.06, fr:0.87, AUC:0.7900}
@@ -172,7 +173,8 @@ if __name__ == '__main__':
     # wflw.batch_test(weight_files_path='/media/data2/alip/kd_weights/wflw/24_jan_2021/', csv_file_path='./wflw_CSV_BATCH_RESULT.csv')
 
     # wflw.create_train_set(need_pose=False, need_hm=False, accuracy=pca_accuracy)  #
-    wflw.create_heatmap()
+    # wflw.create_heatmap()
+    wflw.create_heatmap_1d()
     # wflw.create_pca_obj(accuracy=pca_accuracy, normalize=True)
     # wflw.create_pca_obj(accuracy=80, normalize=True)
     # wflw.create_pca_obj(accuracy=85, normalize=True)

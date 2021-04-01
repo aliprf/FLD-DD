@@ -213,6 +213,21 @@ class WflwClass:
                                                       annotation_file_path=annotation_file_path,
                                                       ds_name=DatasetName.dsWflw, img_file_path=img_file_path)
 
+
+    def create_heatmap_1d(self):
+        img_mod = ImageModification()
+        for i, anno_file in tqdm(enumerate(os.listdir(WflwConf.augmented_train_annotation))):
+            hm = img_mod.generate_hm_1d(width=InputDataSize.hm_size, height=InputDataSize.hm_size,
+                                        landmark_path=WflwConf.augmented_train_annotation,
+                                        landmark_filename=anno_file,
+                                        s=WflwConf.hm_sigma, de_normalize=False)
+
+            np.save(WflwConf.augmented_train_hm_1d + anno_file, hm)
+            # img_mod.print_image_arr_heat(k=i, image=hm, print_single=True)
+
+            # img_mod.print_image_arr_heat_1d(name='x' + str(i), image=hm)
+            # img_mod.print_heatmap_distribution(k=i, image=hm)
+
     def create_heatmap(self):
         img_mod = ImageModification()
         for i, anno_file in tqdm(enumerate(os.listdir(WflwConf.augmented_train_annotation))):
